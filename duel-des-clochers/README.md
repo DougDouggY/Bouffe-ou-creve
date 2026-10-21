@@ -1,11 +1,18 @@
-# Les Convaincants — version 4
+# Les Convaincants — laboratoire version 5
 
-Jeu en tours avec tirs simultanés. Souris ou doigt : appuyer sur son personnage, tirer en arrière pour régler direction et puissance, puis relâcher. Les deux meneurs partent ensemble, rebondissent, puis s'arrêtent avant le prochain tour. L'IA ne joue jamais pendant la préparation. Aucun chronomètre ni joystick.
+Souris ou doigt : tirer son meneur en arrière pour régler axe et puissance, relâcher pour lancer simultanément les deux meneurs et les habitants. Le tour suivant attend l'arrêt de tous. Ni chrono ni limite de tours.
 
-40 habitants ; conversion au contact, protégée pour le tour courant ; vol possible au tour suivant. Majorité après 10 tours, ou victoire immédiate lorsque les 40 habitants sont ralliés.
+Les neutres se déplacent peu et au hasard. Les convertis rejoignent leur camp à partir du tour suivant, en contournant les obstacles. Ils peuvent être volés sur la place ; la conversion protège pour le tour courant. Une fois dans leur église ou mosquée, ils sont définitivement acquis et quittent le terrain. Quand les 40 sont à l'abri, le camp le plus peuplé gagne (égalité possible).
 
-Depuis la racine : `python -m http.server 8000`, puis ouvrir `/duel-des-clochers/`.
+Le laboratoire permet d'activer indépendamment les obstacles et trois catégories de collisions : habitants entre eux, meneurs entre eux, meneurs/habitants. Préréglages : aucune, habitants seulement, meneurs seulement, meneurs/habitants seulement, toutes. Les murs et les obstacles activés restent solides. La conversion au contact reste possible même sans collision physique. « Appliquer et recommencer » relance avec les réglages sélectionnés ; la disposition initiale est identique pour comparer les essais.
 
-Publication : copier uniquement ce dossier sur la dernière version de `gh-pages`, préserver l'index racine et tous les autres dossiers. Ne jamais remplacer toute la branche à partir d'une ancienne copie. Attendre le déploiement Pages et vérifier les fichiers publics avant d'annoncer la mise en ligne.
+## Développement
 
-Adresse : https://dougdouggy.github.io/Test/duel-des-clochers/?v=turns4
+Depuis la racine : `python -m http.server 8000`, ouvrir `/duel-des-clochers/`.
+Tests : `node --test duel-des-clochers/tests/engine.test.mjs`.
+
+## Publication
+
+Copier uniquement ce dossier sur la DERNIÈRE version distante de `gh-pages`, préserver l'index racine, `.nojekyll`, AGENTS.md et tous les autres sites. Ne jamais vider la branche. Attendre la fin du déploiement et vérifier les deux sites publics.
+
+Adresse : https://dougdouggy.github.io/Test/duel-des-clochers/?v=camps5
