@@ -7,7 +7,7 @@ const radius=p=>p.leader?19:10;
 function seeded(seed=42){return ()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};}
 export function createGame(team=0,options={},random=seeded()){
  const g={team,options:{...DEFAULTS,...options},turn:1,phase:'aim',running:true,paused:false,winner:null,elapsed:0,particles:[],leaders:[{x:170,y:280,vx:0,vy:0,team:0,leader:true},{x:830,y:280,vx:0,vy:0,team:1,leader:true}],people:[]};g.obstacles=g.options.obstacles?OBSTACLES:[];
- while(g.people.length<COUNT){const p={x:155+random()*690,y:60+random()*440,team:-1,shield:0,secured:false,vx:0,vy:0,path:[]};if(g.obstacles.some(o=>Math.hypot(p.x-o.x,p.y-o.y)<o.r+18)||g.people.some(q=>Math.hypot(p.x-q.x,p.y-q.y)<24))continue;g.people.push(p);}
+ while(g.people.length<COUNT){const p={x:155+random()*690,y:60+random()*440,team:-1,shield:0,secured:false,vx:0,vy:0,path:[]};if(OBSTACLES.some(o=>Math.hypot(p.x-o.x,p.y-o.y)<o.r+18)||g.people.some(q=>Math.hypot(p.x-q.x,p.y-q.y)<24))continue;g.people.push(p);}
  return g;
 }
 export function scores(g){return [0,1].map(t=>g.people.filter(p=>p.secured&&p.team===t).length);}
