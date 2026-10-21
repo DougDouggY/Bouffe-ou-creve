@@ -22,6 +22,6 @@ Ouvrir `/duel-des-clochers/` sur ce serveur. Aucun paquet, compilation, compte o
 
 ## Publication séparée
 
-Le prototype n'est pas publié automatiquement. Pour l'ajouter au site existant, copier **uniquement ce dossier** à la racine des fichiers servis par GitHub Pages, en conservant l'`index.html` existant. L'adresse résultante serait `https://dougdouggy.github.io/Test/duel-des-clochers/`.
+Le jeu est ajouté à la branche `gh-pages`, dans son propre dossier. Adresse prévue après le déploiement GitHub Pages : `https://dougdouggy.github.io/Test/duel-des-clochers/`. Pour les mises à jour, copier uniquement ce dossier en conservant l'`index.html` du site existant.
 
 Les règles et la simulation sont dans `engine.js`, l'affichage et les contrôles dans `game.js`. Le gameplay constitue une première proposition à ajuster après essai.
