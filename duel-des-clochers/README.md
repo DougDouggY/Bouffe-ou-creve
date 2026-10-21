@@ -1,27 +1,11 @@
-# Les Convaincants
+# Les Convaincants — version 4
 
-Prototype indépendant de « Bouffe ou Crève ». Aucun fichier du site existant ni de la branche `gh-pages` n'est remplacé.
+Jeu en tours avec tirs simultanés. Souris ou doigt : appuyer sur son personnage, tirer en arrière pour régler direction et puissance, puis relâcher. Les deux meneurs partent ensemble, rebondissent, puis s'arrêtent avant le prochain tour. L'IA ne joue jamais pendant la préparation. Aucun chronomètre ni joystick.
 
-Depuis la racine du dépôt :
+40 habitants ; conversion au contact, protégée pour le tour courant ; vol possible au tour suivant. Majorité après 10 tours, ou victoire immédiate lorsque les 40 habitants sont ralliés.
 
-```sh
-python -m http.server 8000
-```
+Depuis la racine : `python -m http.server 8000`, puis ouvrir `/duel-des-clochers/`.
 
-Ouvrir `/duel-des-clochers/` sur ce serveur. Aucun paquet, compilation, compte ou service externe requis. Les fichiers utilisent des modules JavaScript : passer par HTTP plutôt qu'ouvrir directement le fichier HTML.
+Publication : copier uniquement ce dossier sur la dernière version de `gh-pages`, préserver l'index racine et tous les autres dossiers. Ne jamais remplacer toute la branche à partir d'une ancienne copie. Attendre le déploiement Pages et vérifier les fichiers publics avant d'annoncer la mise en ligne.
 
-## Règles du prototype
-
-- Choix entre un prêtre catholique et un imam musulman ; capacités identiques.
-- 40 habitants, manche de 90 secondes, adversaire IA.
-- Contact avec un habitant : conversion, puis protection de 3 secondes. Après cette protection, l'autre camp peut le récupérer.
-- Seuls les deux meneurs convertissent. Les habitants se promènent dans la place.
-- Le plus grand groupe gagne à la fin ; égalité possible. Les 40 habitants dans le même camp déclenchent une victoire immédiate.
-- Flèches, ZQSD ou WASD ; Espace pour un élan (recharge 4 secondes), P pour la pause. Joystick et élan tactiles sur mobile.
-- Le jeu se met en pause quand la fenêtre perd le focus.
-
-## Publication séparée
-
-Le jeu est ajouté à la branche `gh-pages`, dans son propre dossier. Adresse prévue après le déploiement GitHub Pages : `https://dougdouggy.github.io/Test/duel-des-clochers/`. Pour les mises à jour, copier uniquement ce dossier en conservant l'`index.html` du site existant.
-
-Les règles et la simulation sont dans `engine.js`, l'affichage et les contrôles dans `game.js`. Le gameplay constitue une première proposition à ajuster après essai.
+Adresse : https://dougdouggy.github.io/Test/duel-des-clochers/?v=turns4
