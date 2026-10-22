@@ -8,16 +8,16 @@ export const REMOVED_MAPS = new Set([
   "train",
   "haunted",
   "beach",
+  "fair",
+  "crepe",
+  "parking",
 ]);
 
 export const WORK_IN_PROGRESS_MAPS = new Set([
-  "parking",
   "station",
   "rooftop",
   "underwater",
   "wok",
-  "fair",
-  "crepe",
   "picnic",
   "garden",
   "palace",

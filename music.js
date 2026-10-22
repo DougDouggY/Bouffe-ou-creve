@@ -1,4 +1,4 @@
-const MUSIC_GAIN = 0.6;
+const MUSIC_GAIN = 0.2;
 export const MUSIC_TRACKS = [
   {
     id: "bistrot",
@@ -46,7 +46,7 @@ export function createAmbientMusic({
   const sound = new AudioClass(trackURL(trackId));
   sound.loop = true;
   sound.preload = "none";
-  sound.volume = volume * MUSIC_GAIN;
+  sound.volume = MUSIC_GAIN * volume ** 2;
   const notify = () => {
     for (const listener of listeners) listener();
   };
@@ -115,7 +115,7 @@ export function createAmbientMusic({
     },
     setVolume(value) {
       volume = clampVolume(value);
-      sound.volume = volume * MUSIC_GAIN;
+      sound.volume = MUSIC_GAIN * volume ** 2;
       persist();
       if (wanted()) resume();
       else pause();

@@ -126,16 +126,16 @@ try {
   const classicMenuPoint = await point(768,478);
   await page.mouse.click(classicMenuPoint.x,classicMenuPoint.y);
   await page.locator("#map-screen").waitFor({state:"visible"});
-  for (const id of ['sushi','cinema','gym','space','candy','train','haunted','beach']) {
+  for (const id of ['sushi','cinema','gym','space','candy','train','haunted','beach','fair','crepe','parking']) {
     assert.equal(await page.locator(`[data-map="${id}"], #map-select option[value="${id}"]`).count(),0);
   }
   const catalog = await page.evaluate(async()=>{
     const {WORK_IN_PROGRESS_MAPS}=await import('/map-catalog.js');
     return [...WORK_IN_PROGRESS_MAPS];
   });
-  assert.equal(catalog.length,12);
+  assert.equal(catalog.length,9);
   assert.deepEqual((await page.locator('#maps-in-progress .map-card').evaluateAll(cards=>cards.map(card=>card.dataset.map))).sort(),catalog.sort());
-  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),12);
+  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),9);
   for(const id of ['cold','pirate'])assert(await page.locator(`#maps-available [data-map="${id}"]`).isVisible());
   checks++;
   await page.locator('#maps-in-progress').scrollIntoViewIfNeeded();
@@ -365,7 +365,7 @@ try {
   await musicPage.locator('#music-enabled').check();
   await musicPage.waitForFunction(()=>window.__musicVoices[0]?.currentTime>0.1);
   const playing=await musicPage.evaluate(()=>{const a=window.__musicVoices[0];return {loop:a.loop,volume:a.volume,paused:a.paused};});
-  assert(playing.loop && !playing.paused);assert.equal(playing.volume,.09);
+  assert(playing.loop && !playing.paused);assert.equal(playing.volume,.0045);
   assert.equal(await musicPage.locator('#music-track option').count(),3);
   for (const track of ['balade','nuage','bistrot','nuage']) {
     await musicPage.locator('#music-track').selectOption(track);
@@ -377,12 +377,12 @@ try {
   await musicPage.locator('#music-volume').focus();
   await musicPage.keyboard.press('End');
   assert.equal(await musicPage.locator('#music-volume-value').textContent(),'100 %');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.6);
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.2);
   await musicPage.keyboard.press('Home');
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   for(let i=0;i<30;i++)await musicPage.keyboard.press('ArrowRight');
   assert.equal(await musicPage.locator('#music-volume-value').textContent(),'30 %');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.18);
+  assert.equal(await musicPage.evaluate(()=>Number((window.__musicVoices[0].volume).toFixed(6))),.018);
   await musicPage.locator('#option-sound').click();
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   assert.equal(await musicPage.locator('#music-status').textContent(),'Le son général est coupé.');
@@ -395,7 +395,7 @@ try {
   assert(await musicPage.locator('#music-enabled').isChecked());
   assert.equal(await musicPage.locator('#music-volume').inputValue(),'30');
   assert.equal(await musicPage.locator('#music-track').inputValue(),'nuage');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.18);
+  assert.equal(await musicPage.evaluate(()=>Number((window.__musicVoices[0].volume).toFixed(6))),.018);
   await musicPage.locator('#music-enabled').uncheck();
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   await musicPage.reload();await openMusicOptions();
@@ -403,6 +403,57 @@ try {
   checks++;
   assert.deepEqual(errors,[]);
   await musicContext.close();
+  const artContext=await browser.newContext({viewport:{width:1280,height:1000}});
+  const artPage=await artContext.newPage();
+  artPage.on('pageerror',error=>errors.push(error.message));
+  await artPage.addInitScript(()=>{
+    if(!localStorage.getItem('bouffe-profile-v1'))localStorage.setItem('bouffe-profile-v1',JSON.stringify({points:100000,earned:100000,owned:['plain','none'],equipped:{hat:'none',outfit:'plain'}}));
+  });
+  await artPage.goto(url);
+  await artPage.locator('#menu-shop').focus();await artPage.keyboard.press('Enter');
+  await artPage.locator('#shop-dialog').waitFor({state:'visible'});
+  assert.equal(await artPage.locator('.shop-card').count(),46);
+  assert.equal(await artPage.locator('.new-cosmetic').count(),30);
+  const items=await artPage.evaluate(async()=>{
+    const {EXTRA_COSMETICS,extraCosmeticImage}=await import('/cosmetics.js');
+    await Promise.all(EXTRA_COSMETICS.map(item=>extraCosmeticImage(item.id).decode()));
+    return EXTRA_COSMETICS;
+  });
+  for(const slot of ['hat','outfit']){
+    await artPage.locator(`[data-cosmetics-filter="${slot}"]`).click();
+    assert.equal(await artPage.locator('.shop-card:visible').count(),slot==='hat'?24:22);
+  }
+  await artPage.locator('[data-cosmetics-filter="all"]').click();
+  for(const item of items)await artPage.locator(`[data-item="${item.id}"]`).click();
+  const profile=await artPage.evaluate(()=>JSON.parse(localStorage.getItem('bouffe-profile-v1')));
+  assert.equal(profile.points,100000-items.reduce((sum,item)=>sum+item.price,0));
+  for(const item of items)assert(profile.owned.includes(item.id));
+  assert.equal(profile.equipped.hat,'hat_teapot');
+  assert.equal(profile.equipped.outfit,'outfit_tropical');
+  await artPage.locator('[data-item="hat_croissant"]').click();
+  assert.equal(await artPage.evaluate(()=>JSON.parse(localStorage.getItem('bouffe-profile-v1')).points),profile.points);
+  await artPage.screenshot({path:path.join(output,'boutique-30-nouveautes.png')});
+  checks++;
+  await artPage.reload();
+  assert.equal(await artPage.evaluate(()=>JSON.parse(localStorage.getItem('bouffe-profile-v1')).equipped.hat),'hat_croissant');
+  await artPage.locator('[data-menu-mode="classic"]').focus();await artPage.keyboard.press('Enter');
+  await artPage.locator('#map-screen').waitFor({state:'visible'});
+  assert.equal(await artPage.locator('.map-preview').count(),9);
+  await artPage.evaluate(()=>Promise.all([...document.querySelectorAll('.map-preview')].map(img=>img.decode())));
+  const illustrated=await artPage.locator('.map-preview').evaluateAll(imgs=>imgs.map(img=>img.closest('[data-map]').dataset.map));
+  for(const id of illustrated){
+    await artPage.locator(`[data-map="${id}"]`).click();await artPage.locator('#start-game').click();
+    await artPage.locator('#close-briefing').click();
+    assert.equal(await artPage.evaluate(()=>window.__gameTest.active.mapId),id);
+    await artPage.waitForTimeout(150);
+    await artPage.screenshot({path:path.join(output,`carte-illustree-${id}.png`)});
+    await artPage.locator('#back-menu').click();
+    await artPage.locator('[data-menu-mode="classic"]').focus();await artPage.keyboard.press('Enter');
+    await artPage.locator('#map-screen').waitFor({state:'visible'});
+  }
+  checks++;
+  assert.deepEqual(errors,[]);
+  await artContext.close();
   console.log(`${checks} browser checks passed. Screenshots: test-results/`);
 } finally {
   await browser.close();

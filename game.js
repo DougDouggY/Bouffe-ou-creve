@@ -1,4 +1,11 @@
 import {
+  EXTRA_COSMETICS,
+  EXTRA_HAT_BOUNDS,
+  drawExtraCosmetic,
+  extraCosmeticImage,
+} from "./cosmetics.js?v=illustrated-maps-7";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=illustrated-maps-7";
+import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
@@ -9,8 +16,8 @@ import {
   lightOpacity,
 } from "./visibility.js?v=small-halo-menu-3";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=music-choice-stable-view-6";
-import { setupMusicControls } from "./music.js?v=music-choice-stable-view-6";
+import { createGameAudio } from "./audio.js?v=illustrated-maps-7";
+import { setupMusicControls } from "./music.js?v=illustrated-maps-7";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -110,6 +117,7 @@ const ZI = {
   beanie: { width: 1.2, height: 1.02 },
   halo: { width: 1.38, height: 0.94, lift: 0.48 },
 };
+Object.assign(ZI, EXTRA_HAT_BOUNDS);
 function dI(e, g = 1) {
   const o = ZI[e];
   return o
@@ -433,6 +441,7 @@ const Oe = "bouffe-profile-v1",
       color: "#334558",
       icon: "🤵",
     },
+    ...EXTRA_COSMETICS,
   ];
 function Te() {
   return {
@@ -578,6 +587,8 @@ const He = {
     plain: [625, 937, 943, 1198],
   };
 function Ie(e, g, o, u, E, A) {
+  const extra = drawExtraCosmetic(e, g, o, u, E, A);
+  if (extra !== null) return extra;
   if (He[g] && g !== "halo") {
     if (!DA.complete || !DA.naturalWidth) return !1;
     let C = qe.get(g);
@@ -622,6 +633,9 @@ function TI(e, g) {
     }
     Ie(u, g, 9, 0, 122, 122);
   };
+  const extra = extraCosmeticImage(g);
+  if (extra && !extra.complete)
+    extra.addEventListener("load", o, { once: true });
   (o(),
     lA.complete || lA.addEventListener("load", o, { once: !0 }),
     DA.complete || DA.addEventListener("load", o, { once: !0 }));
@@ -1911,6 +1925,7 @@ function Qt({ start: e, appearance: g }) {
     }
   }
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
+  document.addEventListener("extra-cosmetics-loaded", k);
   function t() {
     (document
       .querySelectorAll("[data-wallet]")
@@ -1936,17 +1951,35 @@ function Qt({ start: e, appearance: g }) {
     const R = KA.find((h) => h.id === l);
     R && (I ? ((C[R.slot] = l), t(), r()) : LI(o, l) && (a(), r()));
   }
+  let cosmeticFilter = "all";
+  document.querySelectorAll("[data-cosmetics-filter]").forEach((button) => {
+    button.onclick = () => {
+      cosmeticFilter = button.dataset.cosmeticsFilter;
+      r();
+    };
+  });
   function r() {
     L("#shop-context").textContent = I
       ? "Atelier solo : tout essayer librement. Tes achats et ton solde restent inchangés."
       : "Les miniatures et les équipements en jeu utilisent exactement les mêmes images.";
     const l = L("#shop-items");
+    document
+      .querySelectorAll("[data-cosmetics-filter]")
+      .forEach((button) =>
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.cosmeticsFilter === cosmeticFilter),
+        ),
+      );
     l.replaceChildren();
     for (const R of KA) {
       const h = o.owned.includes(R.id),
         c = B()[R.slot] === R.id,
         m = document.createElement("article");
       m.className = "shop-card";
+      m.dataset.slot = R.slot;
+      m.dataset.cosmetic = R.id;
+      m.hidden = cosmeticFilter !== "all" && R.slot !== cosmeticFilter;
       const Y = document.createElement("canvas");
       ((Y.width = 140),
         (Y.height = 126),
@@ -1955,7 +1988,7 @@ function Qt({ start: e, appearance: g }) {
         TI(Y, R.id),
         m.append(Y));
       const J = document.createElement("div");
-      ((J.innerHTML = `<small>${R.slot === "hat" ? "CHAPEAU" : "TENUE"}</small><h3>${R.name}</h3><p>${I ? "ESSAI LIBRE" : h ? "Dans ton vestiaire" : R.price + " points de graisse"}</p>`),
+      ((J.innerHTML = `<small>${R.slot === "hat" ? "CHAPEAU" : "TENUE"}</small><h3>${R.name}</h3>${R.isNew ? '<small class="new-cosmetic">NOUVEAU</small>' : ""}<p>${I ? "ESSAI LIBRE" : h ? "Dans ton vestiaire" : R.price + " points de graisse"}</p>`),
         m.append(J));
       const Z = document.createElement("button");
       ((Z.textContent = c
@@ -1983,7 +2016,7 @@ function Qt({ start: e, appearance: g }) {
       card.className = "map-card";
       card.dataset.map = id;
       card.setAttribute("aria-pressed", String(id === u));
-      card.innerHTML = `<span>${map.icon || "🍽️"}</span><strong>${map.name}</strong>${category.id === "in-progress" ? "<small>EN TRAVAUX · TEST</small>" : ""}`;
+      card.innerHTML = `${mapArtURL(id) ? `<img class="map-preview" src="${mapArtURL(id)}" alt="" loading="lazy" width="240" height="100">` : ""}<span>${map.icon || "🍽️"}</span><strong>${map.name}</strong>${category.id === "in-progress" ? "<small>EN TRAVAUX · TEST</small>" : ""}`;
       card.onclick = () => {
         u = id;
         M();
@@ -2521,7 +2554,7 @@ function dt(e, g, o, u = 0) {
         (i / 72 + I / 72) % 2 === 0 &&
           ((e.fillStyle = n === "cuisine" ? "#94a99a12" : "#ab8d5910"),
           e.fillRect(i, I, 72, 72));
-  if (o.experimental) {
+  if (o.experimental && !mapArtURL(n)) {
     e.save();
     for (let i = 0; i < 220; i++) {
       const I = (i * 173.31) % E,
@@ -2571,7 +2604,57 @@ function dt(e, g, o, u = 0) {
       e.restore();
     }
   }
-  HI(e, g, o, u);
+  if (!drawMapArt(e, g)) HI(e, g, o, u);
+  if (mapArtURL(n)) {
+    for (const obstacle of g.obstacles) {
+      e.save();
+      e.translate(obstacle.x, obstacle.y);
+      e.rotate(obstacle.angle);
+      const palette =
+        n === "works"
+          ? ["#b69254", "#f3cb57"]
+          : n === "mirror"
+            ? ["#736aa8", "#dbe9ff"]
+            : ["#b64c42", "#e9d3a5"];
+      IA(
+        e,
+        -obstacle.w / 2 + 3,
+        -obstacle.h / 2 + 5,
+        obstacle.w,
+        obstacle.h,
+        "#172b3055",
+        4,
+      );
+      IA(
+        e,
+        -obstacle.w / 2,
+        -obstacle.h / 2,
+        obstacle.w,
+        obstacle.h,
+        palette[0],
+        4,
+      );
+      IA(
+        e,
+        -obstacle.w / 2 + 3,
+        -obstacle.h / 2 + 3,
+        Math.max(1, obstacle.w - 6),
+        Math.max(1, obstacle.h - 6),
+        palette[1],
+        2,
+      );
+      if (n === "works")
+        for (let x = -obstacle.w / 2 + 4; x < obstacle.w / 2 - 6; x += 20)
+          IA(e, x, -obstacle.h / 2 + 2, 9, obstacle.h - 4, "#3f4644", 0);
+      if (n === "station") {
+        e.fillStyle = "#573730";
+        e.font = "bold 11px sans-serif";
+        e.textAlign = "center";
+        e.fillText("BURGER", 0, 3);
+      }
+      e.restore();
+    }
+  }
   for (const i of g.zones) {
     if ((e.save(), e.translate(i.x, i.y), i.inactive)) {
       ((e.strokeStyle = "#ffe495"),

@@ -28,13 +28,14 @@ test("music is opt-in, loops once enabled, and volume is independent and persist
   const f = fixture();
   const music = createAmbientMusic(f.options);
   assert.equal(music.state.enabled, false);
+  assert.equal(music.state.trackId, "bistrot");
   assert.equal(f.voices[0].calls, 0);
-  assert.equal(f.voices[0].volume, 0.09);
+  assert.equal(f.voices[0].volume, 0.0045);
   assert.equal(f.voices[0].loop, true);
   music.setEnabled(true); await settle();
   assert(music.state.playing);
   music.setVolume(0.4);
-  assert.equal(f.voices[0].volume, 0.24);
+  assert.equal(Number(f.voices[0].volume.toFixed(6)), 0.032);
   assert.deepEqual(f.saved, { enabled: true, volume: 0.4, trackId: "bistrot" });
   f.target.dispatchEvent(new Event("pointerdown"));
   assert.equal(f.voices[0].calls, 1, "gestures do not restart a running loop");
@@ -55,7 +56,7 @@ test("saved music retries blocked autoplay after a gesture and restores its volu
   f.blocked = true;
   const music = createAmbientMusic(f.options);
   await settle(); assert(music.state.blocked);
-  assert.equal(f.voices[0].volume, 0.36);
+  assert.equal(Number(f.voices[0].volume.toFixed(6)), 0.072);
   f.blocked = false; f.target.dispatchEvent(new Event("keydown"));
   await settle(); assert(music.state.playing);
   assert.equal(music.state.blocked, false);
@@ -82,7 +83,7 @@ test("track switching reuses one voice, preserves volume and mute, and saves the
     music.setTrack(track.id); await settle();
     assert.equal(music.state.trackId, track.id);
     assert(voice.src.endsWith(track.file));
-    assert.equal(voice.volume, 0.18);
+    assert.equal(Number(voice.volume.toFixed(6)), 0.018);
     assert.equal(f.voices.length, 1);
   }
   assert.equal(f.saved.trackId, "nuage");
@@ -94,4 +95,13 @@ test("track switching reuses one voice, preserves volume and mute, and saves the
   music.setTrack("missing"); assert.equal(music.state.trackId, "balade");
   const restored = createAmbientMusic(f.options);
   assert.equal(restored.state.trackId, "balade");
+});
+
+
+test("the first volume steps are genuinely quiet and the level rises smoothly", () => {
+  const f=fixture();const music=createAmbientMusic(f.options);
+  music.setVolume(.01);assert(f.voices[0].volume<.00003);
+  const low=f.voices[0].volume;
+  music.setVolume(.1);assert(f.voices[0].volume>low && f.voices[0].volume<.003);
+  music.setVolume(1);assert.equal(f.voices[0].volume,.2);
 });
