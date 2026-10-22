@@ -168,6 +168,25 @@ try {
   assert(previews.fair.pink > 20);
   checks++;
 
+  const artwork = await page.evaluate(async () => {
+    const { ILLUSTRATED_MAPS, mapArtURL } =
+      await import("/map-art.js?v=wild-arenas-13");
+    return Promise.all(
+      ILLUSTRATED_MAPS.map(async (id) => {
+        const image = new Image();
+        image.src = mapArtURL(id);
+        await image.decode();
+        return { id, width: image.naturalWidth, height: image.naturalHeight };
+      }),
+    );
+  });
+  for (const art of artwork)
+    assert(
+      art.width >= 1000 && art.height >= 700,
+      `${art.id}: missing or undersized background`,
+    );
+  checks++;
+
   // Every preview must retain its full image ratio, including narrow screens.
   for (const viewport of [
     { width: 1280, height: 900 },
@@ -179,6 +198,7 @@ try {
       const original = img.src;
       const ids = [
         "cantine",
+        "hunger",
         "savanna",
         "volcan",
         "market",

@@ -64,12 +64,14 @@ try {
   await page.goto(url);
   await page.waitForFunction(() => window.__gameTest);
   await mkdir(path.join(root, "assets/previews"), { recursive: true });
-  const ids = await page.evaluate(async () => {
-    const { REMOVED_MAPS } = await import("/map-catalog.js?v=arena-bounds-11");
+  const allIds = await page.evaluate(async () => {
+    const { REMOVED_MAPS } = await import("/map-catalog.js?v=wild-arenas-13");
     return Object.keys(window.__gameTest.catalog).filter(
       (id) => !REMOVED_MAPS.has(id),
     );
   });
+  const requested = new Set(process.argv.slice(2));
+  const ids = allIds.filter((id) => !requested.size || requested.has(id));
   for (const id of ids) {
     const data = await page.evaluate(async (id) => {
       const { Game, renderFloor, catalog } = window.__gameTest;

@@ -28,33 +28,49 @@ export function arenaOutline(id, w, h) {
             [0.89, 0.82],
             [0.11, 0.82],
           ]
-        : ["market", "nightmarket"].includes(id)
-          ? [
-              [0.09, 0.1],
-              [0.91, 0.1],
-              [0.91, 0.88],
-              [0.09, 0.88],
-            ]
-          : id === "fair"
+        : ["garden", "underwater", "wok"].includes(id)
+          ? Array.from({ length: 16 }, (_, i) => {
+              const angle = -Math.PI / 2 + (i * Math.PI) / 8;
+              return [
+                0.5 + Math.cos(angle) * (id === "garden" ? 0.37 : 0.42),
+                (id === "garden" ? 0.52 : 0.5) +
+                  Math.sin(angle) * (id === "garden" ? 0.35 : 0.4),
+              ];
+            })
+          : id === "beach"
             ? [
-                [0.11, 0.12],
-                [0.89, 0.12],
-                [0.89, 0.88],
-                [0.11, 0.88],
+                [0.03, 0.03],
+                [0.97, 0.03],
+                [0.97, 0.67],
+                [0.03, 0.67],
               ]
-            : id === "cold"
+            : ["market", "nightmarket"].includes(id)
               ? [
-                  [0.1, 0.13],
-                  [0.9, 0.13],
-                  [0.9, 0.87],
-                  [0.1, 0.87],
+                  [0.09, 0.1],
+                  [0.91, 0.1],
+                  [0.91, 0.88],
+                  [0.09, 0.88],
                 ]
-              : [
-                  [0.03, 0.03],
-                  [0.97, 0.03],
-                  [0.97, 0.97],
-                  [0.03, 0.97],
-                ];
+              : id === "fair"
+                ? [
+                    [0.11, 0.12],
+                    [0.89, 0.12],
+                    [0.89, 0.88],
+                    [0.11, 0.88],
+                  ]
+                : id === "cold"
+                  ? [
+                      [0.1, 0.13],
+                      [0.9, 0.13],
+                      [0.9, 0.87],
+                      [0.1, 0.87],
+                    ]
+                  : [
+                      [0.03, 0.03],
+                      [0.97, 0.03],
+                      [0.97, 0.97],
+                      [0.03, 0.97],
+                    ];
   return points.map(([x, y]) => ({ x: x * w, y: y * h }));
 }
 export function arenaBorderBodies(id, w, h) {
@@ -99,7 +115,8 @@ export function traceOutline(ctx, id, w, h) {
   ctx.closePath();
 }
 export function drawArenaBorders(ctx, g) {
-  if (["savanna", "volcan"].includes(g.mapId)) return;
+  // Solid edges are integrated into the scenery. Keep the requested ship rail.
+  if (g.mapId !== "pirate") return;
   const id = g.mapId,
     points = arenaOutline(id, g.w, g.h),
     width = Math.max(18, Math.min(g.w, g.h) * 0.012);

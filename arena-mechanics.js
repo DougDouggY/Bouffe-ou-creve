@@ -1,4 +1,8 @@
 // Physics-only rules. All impulses run inside Matter substeps, never by moving a gourmand directly.
+import {
+  hungerZone,
+  insideHungerZone,
+} from "./hunger-games.js?v=wild-arenas-13";
 export const GLOBAL_SPECIAL_CHANCE = 0.01;
 export const GLOBAL_SPECIALS = ["armored", "inferno"];
 export function rollGlobalSpecial(random) {
@@ -92,6 +96,11 @@ export class ArenaMechanics {
         y: radius + 25 + g.random() * (g.h - 2 * radius - 50),
       };
       if (g.mapId === "royal" && p.y < g.h * 0.23) continue;
+      if (
+        g.mapId === "hunger" &&
+        !insideHungerZone(p, radius + 8, hungerZone(g.w, g.h, g.round))
+      )
+        continue;
       if (
         !g.obstacles.some((o) => this.api.intersects(p, radius + 8, o)) &&
         !g.people.some(
@@ -254,7 +263,9 @@ export class ArenaMechanics {
           ? "GRILLÉ !"
           : reason === "security"
             ? "ATTRAPÉ !"
-            : "AU MENU DU ROI !",
+            : reason === "zone"
+              ? "HORS ZONE !"
+              : "AU MENU DU ROI !",
       life: 1.3,
       color: "#b94522",
     });
@@ -308,8 +319,8 @@ export class ArenaMechanics {
         dy = p.body.position.y - obstacle.y,
         d = Math.hypot(dx, dy) || 1;
       const speed = Math.min(
-        20,
-        Math.max(6, length(this.api.Body.getVelocity(p.body)) * 1.28),
+        48,
+        Math.max(23, length(this.api.Body.getVelocity(p.body)) * 2.8),
       );
       this.bumperImpulses.push({
         person: p,
@@ -566,6 +577,21 @@ export class ArenaMechanics {
   }
   finishReady() {
     const g = this.game;
+    if (
+      g.mapId === "hunger" &&
+      g.round >= 4 &&
+      this.zoneResolvedRound !== g.round
+    ) {
+      this.zoneResolvedRound = g.round;
+      const zone = hungerZone(g.w, g.h, g.round);
+      for (const p of g.people)
+        if (
+          p.alive &&
+          !insideHungerZone(p.body.position, p.body.circleRadius, zone)
+        )
+          this.kill(p, "zone");
+      g.food = g.food.filter((food) => insideHungerZone(food, 15, zone));
+    }
     if (g.mapId === "royal" && !this.environment && !this.environmentDone) {
       const kind = g.round % 2 ? "suction" : "burp";
       this.environment = {
@@ -589,7 +615,7 @@ export class ArenaMechanics {
   }
   blocksTruce() {
     return (
-      ["nightmarket", "royal"].includes(this.game.mapId) ||
+      ["nightmarket", "royal", "hunger"].includes(this.game.mapId) ||
       this.game.people.some((p) => p.alive && (p.fireActive || p.infernoReady))
     );
   }

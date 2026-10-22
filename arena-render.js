@@ -1,4 +1,5 @@
-import { isVisible } from "./visibility.js?v=arena-bounds-11";
+import { isVisible } from "./visibility.js?v=wild-arenas-13";
+import { hungerZone } from "./hunger-games.js?v=wild-arenas-13";
 const images = new Map();
 function asset(id) {
   if (!images.has(id)) {
@@ -43,6 +44,21 @@ export function drawArenaFloor(ctx, g, time) {
   const rules = g.mechanics;
   if (!rules) return;
   ctx.save();
+  if (g.mapId === "hunger") {
+    const zone = hungerZone(g.w, g.h, g.round);
+    ctx.beginPath();
+    ctx.rect(0, 0, g.w, g.h);
+    ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2, true);
+    ctx.fillStyle = "#3e182585";
+    ctx.fill("evenodd");
+    ctx.beginPath();
+    ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2);
+    ctx.strokeStyle = g.round >= 4 ? "#fa7358" : "#e6d9a0";
+    ctx.lineWidth = 9;
+    ctx.stroke();
+    if (g.round >= 4)
+      label(ctx, "ZONE SÛRE · FIN DU TOUR", zone.x, zone.y - zone.r + 35);
+  }
   if (["market", "nightmarket"].includes(g.mapId)) {
     for (const shelf of g.obstacles) {
       if (shelf.boundary) continue;

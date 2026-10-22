@@ -1,39 +1,44 @@
 import {
+  hungerStart,
+  hungerZone,
+  insideHungerZone,
+} from "./hunger-games.js?v=wild-arenas-13";
+import {
   arenaSize,
   arenaBorderBodies,
   drawArenaBorders,
-} from "./arena-bounds.js?v=arena-bounds-11";
+} from "./arena-bounds.js?v=wild-arenas-13";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=arena-bounds-11";
-import { ArenaMechanics } from "./arena-mechanics.js?v=arena-bounds-11";
+} from "./restaurant-menu.js?v=wild-arenas-13";
+import { ArenaMechanics } from "./arena-mechanics.js?v=wild-arenas-13";
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=arena-bounds-11";
+} from "./arena-render.js?v=wild-arenas-13";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=arena-bounds-11";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-bounds-11";
+} from "./cosmetics.js?v=wild-arenas-13";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=wild-arenas-13";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js?v=arena-bounds-11";
+} from "./map-catalog.js?v=wild-arenas-13";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=arena-bounds-11";
+} from "./visibility.js?v=wild-arenas-13";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=arena-bounds-11";
-import { setupMusicControls } from "./music.js?v=arena-bounds-11";
+import { createGameAudio } from "./audio.js?v=wild-arenas-13";
+import { setupMusicControls } from "./music.js?v=wild-arenas-13";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -1067,6 +1072,16 @@ for (const [e, g, o, u, E] of PI) {
     experimental: !0,
   };
 }
+CA.hunger = {
+  name: "Hunger Games",
+  icon: "🌲",
+  floor: "#67764b",
+  experimental: true,
+  meal: "burger",
+  mealName: "Burgers",
+  description:
+    "Tous les gourmands démarrent en cercle autour d’un festin de burgers de Douggy. Dès la manche 4, la zone sûre rétrécit à chaque tour. À la fin du mouvement, toucher la bordure ou rester dehors élimine le gourmand. Le cercle rouge annonce la limite à rejoindre avant la fin du tour.",
+};
 CA.royal = {
   name: "Le Buffet du Roi",
   icon: "♛",
@@ -1079,7 +1094,7 @@ CA.royal = {
 };
 CA.fair.description =
   "Flipper gourmand : trois bumpers fixes amplifient les rebonds selon l’angle du choc. Compression, ressort et trajectoires en chaîne !";
-CA.beach.name = "La Plage des Affamés";
+CA.beach.name = "La Plage des Gourmands";
 CA.beach.description =
   "Une vague annoncée traverse la plage de bas en haut toutes les trois manches. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
 function _e(e, g, o, u = 1) {
@@ -2842,10 +2857,7 @@ function dt(e, g, o, u = 0) {
     e.restore();
   }
   drawArenaBorders(e, g);
-  ((e.strokeStyle = n === "cuisine" ? "#7b8f80" : "#9b805e"),
-    (e.lineWidth = 4),
-    e.strokeRect(2, 2, E - 4, A - 4),
-    e.restore());
+  e.restore();
 }
 function SI(e, g, o, u, E, A, n, i = !1) {
   if (g.mode === "somalia" && !i) {
@@ -9414,6 +9426,7 @@ class zt {
             }
           }
         }
+      if (this.mapId === "hunger") I = hungerStart(g, o, i, this.count);
       if (!I) throw new Error("Aucun point de départ libre");
       n.push(I);
     }
@@ -9464,6 +9477,18 @@ class zt {
           : "burger",
         i % 4 === 0 ? "xl" : "normal",
       );
+    if (this.mapId === "hunger") {
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI) / 6;
+        const radius = Math.min(g, o) * 0.085;
+        this.food.push({
+          x: g / 2 + Math.cos(angle) * radius,
+          y: o / 2 + Math.sin(angle) * radius,
+          type: "burger",
+          size: "chef",
+        });
+      }
+    }
     (this.mapId === "foodcourt" && this.spawnCheese(1),
       BI.on(this.engine, "collisionStart", (i) => {
         for (const I of i.pairs) {
@@ -9532,6 +9557,12 @@ class zt {
           ((n.x = this.w * (0.32 + this.random() * 0.36)),
           (n.y = this.h * (0.2 + this.random() * 0.6))),
         !(
+          (this.mapId === "hunger" &&
+            !insideHungerZone(
+              n,
+              zA(n) + 6,
+              hungerZone(this.w, this.h, this.round),
+            )) ||
           this.obstacles.some((i) => RA(n, zA(n) + 6, i)) ||
           this.people.some(
             (i) =>
@@ -9573,7 +9604,7 @@ class zt {
     }
   }
   spawnCheese(g = 2) {
-    if (this.savanna) return 0;
+    if (this.savanna || this.mapId === "hunger") return 0;
     let o = 0;
     for (let u = 0; u < g; u++)
       for (let E = 0; E < 50; E++) {
@@ -9698,6 +9729,19 @@ class zt {
       this.checkTruce());
   }
   plan(g, o = CI(this)) {
+    if (this.mapId === "hunger" && this.round >= 4) {
+      const zone = hungerZone(this.w, this.h, this.round),
+        pos = g.body.position;
+      const dx = zone.x - pos.x,
+        dy = zone.y - pos.y,
+        distance = Math.hypot(dx, dy);
+      if (distance + g.body.circleRadius > zone.r * 0.72) {
+        g.intent = "reposition";
+        return distance > 1e-7
+          ? { x: (dx / distance) * 14, y: (dy / distance) * 14 }
+          : { x: 0, y: 0 };
+      }
+    }
     const u = Zt(o, g.id, this.random);
     return ((g.intent = u.intent), (g.target = u.target), { x: u.x, y: u.y });
   }
@@ -9903,6 +9947,17 @@ class zt {
             ) {
               if (!this.mechanics.finishReady()) return;
               this.mechanics.finishRound();
+              if (
+                (!this.chef || !this.people[0].alive) &&
+                ((!this.people[0].alive && !this.spectate) ||
+                  this.people.filter((p) => p.alive).length <= 1)
+              ) {
+                this.recordMotion();
+                this.outcome = this.people[0].alive ? "win" : "loss";
+                this.phase = "ended";
+                this.emit("end");
+                return;
+              }
               this.recordMotion();
               for (const o of this.people.filter((u) => u.alive))
                 (eA.setVelocity(o.body, { x: 0, y: 0 }),

@@ -1,4 +1,6 @@
 export const ILLUSTRATED_MAPS = [
+  "hunger",
+  "cantine",
   "cold",
   "pirate",
   "market",
@@ -18,13 +20,12 @@ export const ILLUSTRATED_MAPS = [
 ];
 const images = new Map();
 export function mapArtURL(id) {
-  return ILLUSTRATED_MAPS.includes(id)
-    ? new URL(
-        `./assets/maps/${id === "nightmarket" ? "market" : id}${["cold", "pirate"].includes(id) ? "-bounds" : ["market", "nightmarket", "fair", "royal", "beach"].includes(id) ? "-real" : ""}.webp`,
-        import.meta.url,
-      ).href
-    : null;
+  if (!ILLUSTRATED_MAPS.includes(id)) return null;
+  const source = id === "nightmarket" ? "market" : id;
+  const suffix = id === "royal" ? "-real" : "-overhead";
+  return new URL(`./assets/maps/${source}${suffix}.webp`, import.meta.url).href;
 }
+
 export function drawMapArt(context, game) {
   const url = mapArtURL(game.mapId);
   if (!url) return false;

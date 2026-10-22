@@ -227,7 +227,7 @@ try {
         ticks(g, 1);
         if (p.body.velocity.x < 0) rebound = Math.max(rebound, p.body.speed);
       }
-      check("fixed bumper reverses and amplifies impact", rebound > 8, {
+      check("fixed bumper reverses and amplifies impact", rebound > 20, {
         v: p.body.velocity,
         rebound,
         hit: b.hitUntil,
@@ -502,7 +502,7 @@ try {
       g.destroy();
     }
     const { arenaOutline, containsArenaPoint, arenaSize } =
-      await import("/arena-bounds.js?v=arena-bounds-11");
+      await import("/arena-bounds.js?v=wild-arenas-13");
     for (const id of [
       "market",
       "nightmarket",
@@ -512,6 +512,9 @@ try {
       "cold",
       "pirate",
       "volcan",
+      "garden",
+      "underwater",
+      "wok",
     ]) {
       const { w, h } = arenaSize("classic"),
         g = new Game(w, h, seeded(), { mapId: id, count: 50, chef: true });
@@ -571,11 +574,92 @@ try {
       }
       g.destroy();
     }
+    {
+      const { hungerZone } = await import("/hunger-games.js?v=wild-arenas-13");
+      const g = new Game(3600, 2700, seeded(), { mapId: "hunger", count: 50 });
+      check(
+        "Hunger Games starts 50 evenly spaced gourmands around the central feast",
+        g.people.length === 50 &&
+          g.people.every(
+            (p) =>
+              Math.abs(
+                Math.hypot(p.body.position.x - 1800, p.body.position.y - 1350) -
+                  432,
+              ) < 0.01,
+          ) &&
+          g.food.filter(
+            (f) =>
+              f.size === "chef" && Math.hypot(f.x - 1800, f.y - 1350) < 240,
+          ).length >= 12,
+        g.food.length,
+      );
+      const p = g.people[0],
+        q = g.people[1];
+      move(p, 1800, 1350);
+      g.round = 40;
+      const centeredPlan = g.plan(p);
+      check(
+        "late Hunger Games center aiming stays finite even when zone is smaller than the body",
+        Number.isFinite(centeredPlan.x) && Number.isFinite(centeredPlan.y),
+        centeredPlan,
+      );
+      g.round = 1;
+      move(q, 300, 300);
+      g.round = 3;
+      g.mechanics.finishReady();
+      check("zone does not kill before fourth round", q.alive);
+      g.round = 4;
+      check(
+        "zone does not kill while players are still aiming or moving",
+        q.alive,
+      );
+      g.mechanics.finishReady();
+      check(
+        "end of fourth round kills outside and keeps center survivor",
+        !q.alive && q.deathReason === "zone" && p.alive,
+      );
+      const n = g.people.filter((p) => p.alive).length;
+      g.mechanics.finishReady();
+      check(
+        "zone resolves only once per round",
+        g.people.filter((p) => p.alive).length === n,
+      );
+      g.destroy();
+      for (const playerSurvives of [true, false]) {
+        const end = new Game(3600, 2700, seeded(), { mapId: "hunger" });
+        for (const person of end.people.slice(2)) {
+          person.alive = false;
+          World.remove(end.engine.world, person.body);
+        }
+        move(
+          end.people[0],
+          playerSurvives ? 1800 : 300,
+          playerSurvives ? 1350 : 300,
+        );
+        move(
+          end.people[1],
+          playerSurvives ? 300 : 1800,
+          playerSurvives ? 300 : 1350,
+        );
+        end.round = 4;
+        end.phase = "moving";
+        end.elapsed = 12000;
+        end.step();
+        check(
+          "zone elimination immediately ends game with correct " +
+            (playerSurvives ? "win" : "loss"),
+          end.phase === "ended" &&
+            end.outcome === (playerSurvives ? "win" : "loss"),
+          { phase: end.phase, outcome: end.outcome },
+        );
+        end.destroy();
+      }
+    }
     return out;
   });
   await mkdir(path.join(root, "test-results"), { recursive: true });
   const kingFrames = await page.evaluate(async () => {
-    const { drawMapArt } = await import("/map-art.js?v=arena-bounds-11");
+    const { drawMapArt } = await import("/map-art.js?v=wild-arenas-13");
     const g = new window.__arenaTest.Game(1000, 600, Math.random, {
       mapId: "royal",
       chef: true,
@@ -625,11 +709,22 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  for (const id of ["market", "nightmarket", "fair", "royal", "beach"]) {
+  for (const id of [
+    "market",
+    "nightmarket",
+    "fair",
+    "royal",
+    "beach",
+    "hunger",
+  ]) {
     await page.locator('[data-menu-mode="classic"]').focus();
     await page.keyboard.press("Enter");
     await page.locator("#map-screen").waitFor({ state: "visible" });
-    await page.locator('[data-group="available"] .book-cover').click();
+    await page
+      .locator(
+        `[data-group="${id === "hunger" ? "in-progress" : "available"}"] .book-cover`,
+      )
+      .click();
     await page.locator(`[data-map="${id}"]`).click();
     await page.locator("#start-game").click();
     await page.locator("#close-briefing").click();

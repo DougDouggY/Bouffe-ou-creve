@@ -8,7 +8,7 @@ Aucune carte accessible avant cette mise à jour n'est retirée. Fête foraine e
 
 Les cinq arènes modifiées utilisent quatre sous-pas physiques par image logique. Le même découpage s'active sur les autres cartes lorsqu'un piment brûle. Les trajectoires de feu sont vérifiées par distances entre segments réellement parcourus, et non par une trajectoire théorique. Les collisions secondaires des chariots sont résolues par Matter, avec une masse de 3,5, une faible friction et un plafond de vitesse 18. Les gourmands ne sont jamais déplacés directement par ces nouvelles mécaniques.
 
-Les bumpers restent fixes. Leur impulsion normale dépend de l'angle du contact, amplifie la vitesse incidente de 28 %, a un minimum de 6 et un plafond de 20. Un délai de 220 ms empêche les rebonds répétés sur un même contact.
+Les bumpers restent fixes. Leur impulsion normale dépend de l'angle du contact, multiplie la vitesse incidente par 2,8, a un minimum de 23 et un plafond de 48. Un délai de 220 ms empêche les rebonds répétés sur un même contact.
 
 Le roi aspire pendant 2,4 secondes après la résolution des déplacements des manches impaires. La force varie avec la distance et la racine inverse du poids, avec des bornes. Les manches paires se terminent par un rot de 1,1 seconde, animé et sonorisé doucement. Le rot ne pousse personne dans cette première version. La bouche tue indépendamment du poids. La fin du tour attend la fin de ces animations physiques.
 
@@ -38,7 +38,7 @@ Les quatre nouveaux décors et les huit sprites ont été générés pour ce jeu
 
 `npm run test:arenas` : véritables collisions Matter, transmission et collisions secondaires des chariots, murs et rayons, agents mortels / repoussés, durées des objets, bumpers, aspiration, poids, bouche, rot, vague, blindage, feu adverse et propre feu, nettoyage et fin des tours simultanés. Captures des cinq cartes et des animations dans `test-results/`.
 
-`npm run test:browser` : vérifications du jeu complet, des anciennes mécaniques, des menus clavier / tactile, des achats et sauvegardes, de la musique et des 14 aperçus de cartes.
+`npm run test:browser` : vérifications du jeu complet, des anciennes mécaniques, des menus clavier / tactile, des achats et sauvegardes, de la musique et des 20 aperçus de cartes.
 
 À évaluer avec le joueur : pression des deux agents, force et fréquence des vagues, ampleur du cône et force du roi. Le rot demeure volontairement sans poussée et les bumpers demeurent fixes. Les clients sont des personnages décoratifs animés associés à de vrais chariots physiques ; les clients eux-mêmes n'ont pas un second corps bloquant.
 
@@ -61,3 +61,11 @@ Cuisine en zigzag et Food court sont retirés du catalogue et des choix de parti
 `arena-bounds.js` fournit le contour visible et les solides Matter du pourtour. Les mêmes obstacles servent au placement des personnages, de la nourriture et des objets, au calcul des déplacements et à la croissance des personnages. Les bordures ne sont pas comestibles. Le bateau est un polygone de pont fermé, avec mer inaccessible ; le roi conserve une ouverture dans la bordure supérieure vers sa bouche. Les coins et bords sont testés avec 50 départs puis avec de vraies propulsions contre chaque côté. La chambre froide garde son sol glissant et ses deux obstacles centraux.
 
 Les bumpers de fête foraine passent d’un rayon de 5,5 % à 8,5 % de la petite dimension du terrain. La densité de nourriture du Classique agrandi est maintenue avec une cible de 64 aliments et un plafond de 96.
+
+## Décors verticaux et Hunger Games
+
+Les seize nouveaux fonds sont générés individuellement en vue strictement verticale, puis encodés en WebP. Les étals du supermarché occupent la périphérie : aucun rail dessiné en surimpression. Les murs physiques restent présents. Le pont pirate se prolonge hors champ en haut et en bas ; sa limite physique et son rail sont conservés. Sur la plage, la zone physique s’arrête à 67 % de la hauteur, avant la mer décorative. Les apparitions et la nourriture utilisent les mêmes murs. Le jardin utilise une limite arrondie intégrée à la lisière de la forêt ; le wok et la salle sous-marine suivent aussi leurs parois arrondies.
+
+Hunger Games se trouve dans « En travaux ». Les 8, 24 ou 50 gourmands commencent à distance égale autour du centre, sur un cercle de rayon 16 % du petit côté. Douze burgers de Douggy garnissent un petit cercle central. Le rayon de la zone sûre est de 44 % du petit côté pendant les trois premières manches ; dès la quatrième, il est multiplié par 0,86 à chaque manche. La limite rouge est affichée dès la visée : il faut être entièrement dedans à la fin du mouvement, sans toucher la bordure. L’élimination se résout une seule fois par manche et déclenche immédiatement la victoire ou la défaite. Les IA menacées visent le centre. Les nouveaux aliments et objets apparaissent dans la zone sûre.
+
+Contrôles ajoutés : placement circulaire de 50 participants, festin central, absence d’élimination aux manches 1–3, élimination extérieure à la manche 4, résolution unique, victoire/défaite immédiates et rebonds renforcés.
