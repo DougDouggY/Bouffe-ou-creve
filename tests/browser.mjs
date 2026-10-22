@@ -168,6 +168,75 @@ try {
   assert(previews.fair.pink > 20);
   checks++;
 
+  // Every preview must retain its full image ratio, including narrow screens.
+  for (const viewport of [
+    { width: 1280, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const fits = await page.evaluate(async () => {
+      const img = document.querySelector(".restaurant-page .map-preview");
+      const original = img.src;
+      const ids = [
+        "cantine",
+        "savanna",
+        "volcan",
+        "market",
+        "nightmarket",
+        "cold",
+        "pirate",
+        "beach",
+        "station",
+        "rooftop",
+        "underwater",
+        "wok",
+        "fair",
+        "picnic",
+        "garden",
+        "palace",
+        "works",
+        "mirror",
+        "royal",
+      ];
+      const results = [];
+      for (const id of ids) {
+        img.src = `./assets/previews/${id}.webp`;
+        await img.decode();
+        const style = getComputedStyle(img);
+        const width =
+          img.clientWidth -
+          parseFloat(style.paddingLeft) -
+          parseFloat(style.paddingRight);
+        const height =
+          img.clientHeight -
+          parseFloat(style.paddingTop) -
+          parseFloat(style.paddingBottom);
+        results.push({
+          id,
+          error: Math.abs(
+            height - (width * img.naturalHeight) / img.naturalWidth,
+          ),
+          fits: img.getBoundingClientRect().right <= innerWidth,
+        });
+      }
+      img.src = original;
+      await img.decode();
+      return results;
+    });
+    for (const fit of fits)
+      assert(
+        fit.error <= 1 && fit.fits,
+        `${fit.id}: preview bands or overflow at ${viewport.width}px`,
+      );
+    checks++;
+    await page.locator('[data-map="cold"]').click();
+    await page.screenshot({
+      path: path.join(output, `apercu-sans-bandes-${viewport.width}.png`),
+      fullPage: true,
+    });
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+
   assert(await page.locator("#menu-map-description").isHidden());
   assert.equal(
     await page.locator(".restaurant-page:visible .map-preview").count(),

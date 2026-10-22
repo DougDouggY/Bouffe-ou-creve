@@ -2759,12 +2759,12 @@ svg.burger-menu {
   place-items: center;
 }
 .restaurant-page .map-preview {
-  width: 100%;
-  max-height: 330px;
-  object-fit: contain;
+  display: block;
+  width: min(100%, 440px);
+  height: auto;
+  max-height: none;
   border: 1px solid #baaa8c;
-  padding: 5px;
-  background: #fff9ed;
+  padding: 0;
 }
 .page-turner {
   display: flex;
@@ -3007,7 +3007,7 @@ body.playing #map-briefing > div {
     font-size: 26px;
   }
   .restaurant-page .map-preview {
-    max-height: 260px;
+    width: min(100%, 346px);
   }
   body.playing .toolbar {
     gap: 10px !important;
