@@ -1,4 +1,4 @@
-import { isVisible } from "./visibility.js?v=arena-strategy-8";
+import { isVisible } from "./visibility.js?v=restaurant-10";
 const images = new Map();
 function asset(id) {
   if (!images.has(id)) {
@@ -87,33 +87,6 @@ export function drawArenaFloor(ctx, g, time) {
       ctx.setLineDash([]);
     }
     if (env?.kind === "suction") {
-      const opening =
-        Math.min(1, 0.35 + env.elapsed / 350) *
-        (1 + Math.sin(time * 0.012) * 0.035);
-      ellipse(
-        ctx,
-        mouth.x,
-        mouth.y,
-        mouth.r * 1.25,
-        mouth.r * 0.85 * opening,
-        "#401620",
-      );
-      ellipse(
-        ctx,
-        mouth.x,
-        mouth.y + mouth.r * 0.35 * opening,
-        mouth.r * 0.7,
-        mouth.r * 0.22,
-        "#df6171",
-      );
-      ctx.fillStyle = "#fff0d3";
-      for (let tooth = -2; tooth <= 2; tooth++)
-        ctx.fillRect(
-          mouth.x + tooth * mouth.r * 0.35 - 4,
-          mouth.y - mouth.r * 0.65 * opening,
-          8,
-          7,
-        );
       for (let i = 0; i < 28; i++) {
         const t = 1 - ((time * 0.0007 + i * 0.073) % 1),
           spread = Math.sin(i * 21.2) * g.h * 0.48;
@@ -154,36 +127,37 @@ export function drawArenaFloor(ctx, g, time) {
   if (g.mapId === "beach") {
     const wave = rules.environment;
     if (wave?.kind === "wave") {
-      const x = -40 + (g.w + 100) * Math.min(1, wave.elapsed / wave.duration);
-      const gradient = ctx.createLinearGradient(x - 95, 0, x + 20, 0);
-      gradient.addColorStop(0, "#45c2d200");
-      gradient.addColorStop(0.7, "#46c6db88");
-      gradient.addColorStop(1, "#e6ffffdd");
+      const y =
+        g.h + 40 - (g.h + 100) * Math.min(1, wave.elapsed / wave.duration);
+      const gradient = ctx.createLinearGradient(0, y + 100, 0, y - 15);
+      gradient.addColorStop(0, "#43b9cb00");
+      gradient.addColorStop(0.65, "#54c1d399");
+      gradient.addColorStop(1, "#effffff2");
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.moveTo(x - 100, 0);
-      ctx.lineTo(x, 0);
-      for (let y = 0; y <= g.h; y += 12)
-        ctx.lineTo(x + Math.sin(y * 0.04 + time * 0.012) * 10, y);
-      ctx.lineTo(x - 100, g.h);
+      ctx.moveTo(0, y + 100);
+      ctx.lineTo(0, y);
+      for (let x = 0; x <= g.w; x += 10)
+        ctx.lineTo(x, y + Math.sin(x * 0.025 + time * 0.009) * 9);
+      ctx.lineTo(g.w, y + 100);
       ctx.closePath();
       ctx.fill();
-      for (let y = 0; y < g.h; y += 18)
+      for (let x = 0; x < g.w; x += 15)
         ellipse(
           ctx,
-          x + Math.sin(y * 0.04 + time * 0.012) * 10,
-          y,
-          8,
+          x,
+          y + Math.sin(x * 0.025 + time * 0.009) * 9,
+          7,
           3,
-          "#f1ffffdd",
+          "#fffef5ee",
         );
     }
     if (g.phase === "aim")
       label(
         ctx,
         g.round % 3 === 0
-          ? "GROSSE VAGUE CE TOUR  →"
-          : `VAGUE DANS ${3 - (g.round % 3)} TOUR${3 - (g.round % 3) > 1 ? "S" : ""}  →`,
+          ? "GROSSE VAGUE CE TOUR  ↑"
+          : `VAGUE DANS ${3 - (g.round % 3)} TOUR${3 - (g.round % 3) > 1 ? "S" : ""}  ↑`,
         g.w * 0.5,
         28,
         "#e4ffff",
@@ -328,6 +302,15 @@ export function drawArenaPowers(ctx, g, time) {
   const player = g.people[0],
     powers = [];
   if (player.alive) {
+    if (g.phase === "aim" && g.mapId === "beach" && g.round % 3 === 0)
+      powers.push("VAGUE CE TOUR ↑");
+    if (
+      g.phase === "aim" &&
+      g.mapId === "royal" &&
+      g.round % 2 === 1 &&
+      rules.inCone(player.body.position)
+    )
+      powers.push("ZONE D’ASPIRATION");
     if (player.armored) powers.push("BLINDAGE · 1 CHOC");
     if (player.infernoReady) powers.push("FEU · PROCHAIN TIR");
     if (player.fireActive) powers.push("FEU ACTIF · ATTENTION AU RETOUR");

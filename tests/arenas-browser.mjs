@@ -122,6 +122,10 @@ try {
         c.body.position.x < 990 && Number.isFinite(c.body.position.x),
         c.body.position,
       );
+      World.add(
+        g.engine.world,
+        Bodies.rectangle(250, 180, 55, 162, { isStatic: true }),
+      );
       move(c, 190, 180, 12, 0);
       ticks(g, 40);
       check(
@@ -188,6 +192,10 @@ try {
         "lamp returns to normal after two turns",
         p.lightBoost === 1,
         p.lightBoost,
+      );
+      World.add(
+        g.engine.world,
+        Bodies.rectangle(250, 180, 55, 162, { isStatic: true }),
       );
       move(agent, 200, 180, 5, 0);
       ticks(g, 30);
@@ -286,7 +294,7 @@ try {
       }
       check(
         "third-turn wave physically pushes and groups gourmands",
-        p.body.position.x > 300 && q.body.position.x > 300,
+        p.body.position.y < 180 && q.body.position.y < 180,
         { a: p.body.position, b: q.body.position, hit: [...m.waveHit] },
       );
       check("wave movement is gradual, without teleport", jumps < 20, jumps);
@@ -415,6 +423,24 @@ try {
       );
       g.destroy();
     }
+    {
+      const g = new Game(3600, 2600, seeded(), {
+        mapId: "market",
+        count: 50,
+        mode: "usa",
+      });
+      g.spectate = true;
+      g.launch({ x: 8, y: -3 });
+      for (let i = 0; i < 1100 && g.phase === "moving"; i++) g.step();
+      check(
+        "United States resolves 50 simultaneous physical bodies",
+        g.people.length === 50 &&
+          g.phase !== "moving" &&
+          g.people.every((p) => Number.isFinite(p.body.position.x)),
+        { phase: g.phase, count: g.people.length },
+      );
+      g.destroy();
+    }
     // Exercise the actual simultaneous launch and finish lifecycle on every changed arena.
     {
       const g = game("fair"),
@@ -467,6 +493,54 @@ try {
     return out;
   });
   await mkdir(path.join(root, "test-results"), { recursive: true });
+  const kingFrames = await page.evaluate(async () => {
+    const { drawMapArt } = await import("/map-art.js?v=restaurant-10");
+    const g = new window.__arenaTest.Game(1000, 600, Math.random, {
+      mapId: "royal",
+      chef: true,
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = 1000;
+    canvas.height = 600;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    for (let i = 0; i < 4; i++) {
+      drawMapArt(ctx, g);
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    drawMapArt(ctx, g);
+    const rest = ctx.getImageData(440, 35, 120, 90).data,
+      closed = canvas.toDataURL();
+    g.mechanics.environment = { kind: "suction", elapsed: 600, duration: 2400 };
+    drawMapArt(ctx, g);
+    const open = ctx.getImageData(440, 35, 120, 90).data;
+    let difference = 0;
+    for (let i = 0; i < open.length; i += 4)
+      difference +=
+        Math.abs(open[i] - rest[i]) +
+        Math.abs(open[i + 1] - rest[i + 1]) +
+        Math.abs(open[i + 2] - rest[i + 2]);
+    const active = canvas.toDataURL();
+    g.destroy();
+    return { difference: difference / ((open.length / 4) * 3), closed, active };
+  });
+  assert(
+    kingFrames.difference > 8,
+    "King mouth really changes between aligned illustration frames",
+  );
+  const { writeFile } = await import("node:fs/promises");
+  for (const [name, data] of [
+    ["roi-repos", kingFrames.closed],
+    ["roi-aspiration", kingFrames.active],
+  ])
+    await writeFile(
+      path.join(root, "test-results", name + ".png"),
+      Buffer.from(data.split(",")[1], "base64"),
+    );
+  results.push({
+    name: "royal animation uses distinct realistic mouth frames",
+    data: kingFrames.difference,
+  });
+
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
@@ -474,6 +548,7 @@ try {
     await page.locator('[data-menu-mode="classic"]').focus();
     await page.keyboard.press("Enter");
     await page.locator("#map-screen").waitFor({ state: "visible" });
+    await page.locator('[data-group="available"] .book-cover').click();
     await page.locator(`[data-map="${id}"]`).click();
     await page.locator("#start-game").click();
     await page.locator("#close-briefing").click();
@@ -530,6 +605,7 @@ try {
   await mobile.locator("#close-options").click();
   await mobile.locator('[data-menu-mode="classic"]').focus();
   await mobile.keyboard.press("Enter");
+  await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="nightmarket"]').click();
   await mobile.locator("#start-game").click();
   await mobile.locator("#close-briefing").click();

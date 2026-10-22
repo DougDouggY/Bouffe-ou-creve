@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js?v=arena-strategy-8"></script>
+    <script type="module" src="./game.js?v=restaurant-10"></script>
 
-    <link rel="stylesheet" href="./style.css?v=arena-strategy-8" />
+    <link rel="stylesheet" href="./style.css?v=restaurant-10" />
   </head>
   <body>
     <div id="app">
@@ -207,6 +207,30 @@
             ><button type="button" id="close-chef">Retour</button>
           </form>
         </dialog>
+        <dialog id="shadow-dialog">
+          <button id="close-shadow" aria-label="Fermer">Fermer ×</button>
+          <form id="shadow-form">
+            <h2>La face cachée du burger</h2>
+            <label
+              >Mot de passe
+              <input
+                id="shadow-password"
+                type="password"
+                autocomplete="off"
+                required
+            /></label>
+            <p id="shadow-error" role="status"></p>
+            <button type="submit">Ouvrir</button>
+          </form>
+          <div id="shadow-message" hidden>
+            <h2>Ça reste entre nous…</h2>
+            <p>
+              Tu viens de découvrir la face cachée du burger. Gardons ce petit
+              secret entre toi et nous.
+            </p>
+            <button id="enter-shadow">Entrer dans le secret</button>
+          </div>
+        </dialog>
         <dialog id="options-dialog">
           <p class="menu-kicker">Les petits soins de la maison</p>
           <h2>À TA SAUCE</h2>
@@ -232,8 +256,7 @@
               </li>
               <li>
                 <strong>Prends du poids.</strong> Les burgers donnent +15 kg,
-                les XL +40 kg. Les salades enlèvent 18 kg, les XL 45 kg. En
-                Somalie, les steaks de moustiques donnent +2 kg.
+                les XL +40 kg. Les salades enlèvent 18 kg, les XL 45 kg.
               </li>
               <li>
                 <strong>Dévore les plus petits.</strong> Fonce avec de l’élan
@@ -243,8 +266,7 @@
               </li>
               <li>
                 <strong>Reste le dernier.</strong> Utilise les rebonds et les
-                effets de la carte pour survivre. Dans les supermarchés, tu peux
-                dévorer les rayons dès 350 kg.
+                effets de la carte pour survivre.
               </li>
             </ol>
           </details>
@@ -277,11 +299,13 @@
             <p>
               <strong>Anticiper :</strong> les flèches des agents annoncent leur
               propulsion ; le cône du roi annonce l’aspiration des manches
-              impaires. La vague vient de gauche toutes les trois manches. À la
-              fête foraine, les bumpers restent fixes.
+              impaires. La vague monte depuis le bas toutes les trois manches. À
+              la fête foraine, les bumpers restent fixes.
             </p>
           </details>
 
+          <button id="shadow-entry">La face cachée du burger</button>
+          <button id="return-classic" hidden>Retour au burger classique</button>
           <fieldset class="music-options">
             <legend>♫ Musique d’ambiance</legend>
             <label class="music-toggle"
@@ -501,8 +525,8 @@
                 <span>BIENVENUE SUR</span>
                 <h2 id="briefing-title"></h2>
                 <p id="briefing-text"></p>
+                <button id="close-briefing">À table ! →</button>
               </div>
-              <button id="close-briefing">Compris ✓</button>
             </section>
             <div id="discovery" hidden role="status">
               <b>Miam, je me régale…</b>

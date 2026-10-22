@@ -43,7 +43,7 @@ Les joueurs sont appelés **gourmands** dans les modes, le menu burger et les me
 
 - Le supermarché nocturne utilise un petit halo à **360°** : rayon de 160 unités à 60 kg (au lieu de 470), lumineux autour du personnage puis progressivement sombre. Sa taille suit le corps des très gros personnages pour continuer à les entourer. La direction du dernier tir ne change plus la lumière ni la visibilité des IA. Les rayons restent solides et masquent les personnages et la nourriture placés derrière eux. Les étiquettes des personnages suivent le même fondu.
 - Sushi-bar, Cinéma du goûter, Gymnase des gourmands, Cantine spatiale, Usine à bonbons, Train-restaurant, Cantine hantée, Crêperie cosmique et Parking des food trucks sont retirés des choix, dans le menu et le sélecteur de partie.
-- Chambre froide et Banquet pirate restent disponibles. Les neuf cartes précédentes de Station-service à Arène miroir, la Fête foraine et la Plage réintroduites, ainsi que le nouveau Buffet du Roi sont regroupés sous **En travaux** : elles sont jouables mais pas encore validées. Ce statut est distinct du drapeau historique `experimental`, qui contrôle leur dessin.
+- Chambre froide et Banquet pirate restent disponibles. Les neuf cartes de Station-service à Arène miroir sont regroupées sous **En travaux**. Fête foraine, Plage et Buffet du Roi sont dans les **cartes validées** : elles sont jouables mais pas encore validées. Ce statut est distinct du drapeau historique `experimental`, qui contrôle leur dessin.
 - Les neuf cartes en travaux disposent de décors illustrés et de vignettes : station, terrasse, restaurant sous-marin, wok, pique-nique, jardin, palais, chantier et miroir. Les obstacles physiques restent visibles et les règles de jeu sont conservées.
 - La recherche et le mode Somalie conservent leurs filtres dans les deux catégories.
 - Pistes pour la suite : une Chambre froide XL et une très grande arène qui rétrécit progressivement. Ces deux variantes ne sont pas encore ajoutées.
@@ -72,3 +72,13 @@ Les annonces de manche et le statut du tour conservent une hauteur fixe, même �
 ## Boutique
 
 Trente nouveaux cosmétiques illustrés : quinze chapeaux et quinze tenues, soit 46 articles au total. Les filtres Chapeaux / Tenues facilitent la navigation. Les images transparentes sont partagées entre les miniatures, les aperçus et les personnages en jeu, avec adaptation au gabarit. Les achats et équipements restent sauvegardés et ne modifient aucune statistique.
+
+## Restaurant et progression
+
+Classique (8 gourmands) est le mode initial. Une victoire ouvre **Grand Banquet (24)**, puis une victoire dans ce mode ouvre **États-Unis (50)**. Les victoires déjà enregistrées sont reconnues. L’achat des cartes en points de graisse est prévu pour plus tard.
+
+**Options → La face cachée du burger**, mot de passe **Pologne**, ouvre le menu secret : Somalie et deux modes en travaux. Le retour au menu classique est dans les options.
+
+Le choix des cartes propose deux livres de restaurant, validées et essais, avec pages de noms et aperçus sans description. Les explications s’ouvrent à l’arrivée en jeu. L’arène occupe tout l’écran avec seulement Menu, poids et survivants en transparence ; les terrains sont agrandis sans changer de taille lors d’une rotation du téléphone. Les nouveaux fonds réalistes et les deux visages du roi remplacent les anciens décors des cinq arènes retouchées.
+
+`node tools/generate-previews.mjs` régénère les cinq aperçus des cartes historiques à partir du véritable rendu du jeu.

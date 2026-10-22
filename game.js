@@ -1,29 +1,34 @@
-import { ArenaMechanics } from "./arena-mechanics.js?v=arena-strategy-8";
+import {
+  createRestaurantMenu,
+  setupSecretBurger,
+  modeUnlocked,
+} from "./restaurant-menu.js?v=restaurant-10";
+import { ArenaMechanics } from "./arena-mechanics.js?v=restaurant-10";
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=arena-strategy-8";
+} from "./arena-render.js?v=restaurant-10";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=arena-strategy-8";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-strategy-8";
+} from "./cosmetics.js?v=restaurant-10";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=restaurant-10";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js?v=arena-strategy-8";
+} from "./map-catalog.js?v=restaurant-10";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=arena-strategy-8";
+} from "./visibility.js?v=restaurant-10";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=arena-strategy-8";
-import { setupMusicControls } from "./music.js?v=arena-strategy-8";
+import { createGameAudio } from "./audio.js?v=restaurant-10";
+import { setupMusicControls } from "./music.js?v=restaurant-10";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -85,21 +90,20 @@ async function fI(e) {
 }
 const me = {
   classic: { name: "Classique", count: 8 },
-  gros: { name: "États-Unis", count: 24 },
+  gros: { name: "Grand Banquet", count: 24 },
+  usa: { name: "États-Unis", count: 50 },
   somalia: { name: "Somalie", count: 50, onlyMap: "savanna" },
   chef: { name: "Chef", count: 1 },
 };
-function GI(e, g, o, u) {
-  return e === "somalia"
-    ? { w: 2800, h: 1900 }
-    : g === "cold"
-      ? e === "gros"
-        ? { w: 3600, h: 2400 }
-        : { w: 2800, h: 1900 }
-      : e === "gros"
-        ? { w: 2200, h: 1600 }
-        : { w: o, h: u };
+function GI(mode, map, width, height) {
+  if (mode === "somalia") return { w: 3200, h: 2200 };
+  if (map === "cold")
+    return { w: mode === "usa" ? 4400 : 3600, h: mode === "usa" ? 3000 : 2400 };
+  if (mode === "usa") return { w: 3600, h: 2600 };
+  if (mode === "gros") return { w: 2800, h: 2000 };
+  return { w: Math.max(1900, width * 1.5), h: Math.max(1400, height * 1.5) };
 }
+
 const We = (e, g, o) => Math.max(g, Math.min(o, e));
 function Ze(e = 60) {
   const g = We(Math.log2(Math.max(60, e) / 60) / 5, 0, 1),
@@ -323,11 +327,17 @@ function UI(e, g, o, u, E) {
   const I = g === "end" && ["win", "truce"].includes(E.outcome);
   (I &&
     e.modeWins[
-      E.mode === "somalia" ? "somalia" : E.count > 8 ? "gros" : "classic"
+      E.mode === "usa"
+        ? "usa"
+        : E.mode === "somalia"
+          ? "somalia"
+          : E.count > 8
+            ? "gros"
+            : "classic"
     ]++,
     (i["somalia-win"] = e.modeWins.somalia > 0),
     (i["classic-win"] = e.modeWins.classic > 0),
-    (i["us-win"] = e.modeWins.gros > 0),
+    (i["us-win"] = e.modeWins.usa > 0),
     (i["all-modes"] = Object.values(e.modeWins).every((Q) => Q > 0)),
     (i.wins50 = e.wins >= 50));
   for (const Q of [10, 7, 5]) i["express" + Q] = I && E.round <= Q;
@@ -453,7 +463,7 @@ function Te() {
   return {
     trophies: {},
     trophyTotals: Object.fromEntries(MI.map((e) => [e, 0])),
-    modeWins: { classic: 0, gros: 0, somalia: 0 },
+    modeWins: { classic: 0, gros: 0, usa: 0, somalia: 0 },
     points: 0,
     earned: 0,
     wins: 0,
@@ -476,7 +486,7 @@ function Xe(e) {
       Number.isSafeInteger(g.trophyTotals?.[u]) &&
         g.trophyTotals[u] >= 0 &&
         (o.trophyTotals[u] = g.trophyTotals[u]);
-    for (const u of ["classic", "gros", "somalia"])
+    for (const u of ["classic", "gros", "usa", "somalia"])
       Number.isSafeInteger(g.modeWins?.[u]) &&
         g.modeWins[u] >= 0 &&
         (o.modeWins[u] = g.modeWins[u]);
@@ -881,14 +891,14 @@ const PI = [
     "Supermarché en Folie",
     "🛒",
     "#dbd5bb",
-    "Clients et chariots physiques : bouscule-les pour transmettre ton élan ! Dès 350 kg, dévore les rayons (+15 kg).",
+    "Grand supermarché ouvert : les rayons restent au bord. Bouscule les chariots pour transmettre ton élan et provoquer des collisions en chaîne.",
   ],
   [
     "nightmarket",
     "Supermarché nocturne",
     "🔦",
     "#aaa992",
-    "Même supermarché, dans le noir. Deux agents annoncent leur prochaine petite propulsion : leur contact est mortel. Lampe : deux tours. Protection anti-sécurité : un tour. Rayons comestibles dès 350 kg.",
+    "Même supermarché, dans le noir. Deux agents annoncent leur prochaine petite propulsion : leur contact est mortel. Lampe : deux tours. Protection anti-sécurité : un tour.",
   ],
   [
     "sushi",
@@ -1065,13 +1075,13 @@ CA.royal = {
   meal: "burger",
   mealName: "Burgers",
   description:
-    "Un roi glouton indépendant de Douggy : manches impaires, aspiration physique dans le cône annoncé ; manches paires, rot royal. Sa bouche élimine tous les poids.",
+    "Gargantouille, roi des secondes portions : manches impaires, aspiration physique dans le cône annoncé ; manches paires, rot royal. Sa bouche élimine tous les poids.",
 };
 CA.fair.description =
   "Flipper gourmand : trois bumpers fixes amplifient les rebonds selon l’angle du choc. Compression, ressort et trajectoires en chaîne !";
 CA.beach.name = "La Plage des Affamés";
 CA.beach.description =
-  "Une vague annoncée traverse la plage de gauche à droite toutes les trois manches. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
+  "Une vague annoncée traverse la plage de bas en haut toutes les trois manches. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
 function _e(e, g, o, u = 1) {
   const E = (A, n, i, I, C = 0, Q = {}) => ({
     x: A * g,
@@ -1086,11 +1096,7 @@ function _e(e, g, o, u = 1) {
       E(0.3, 0.44, 0.25, 24 / o, 0.58),
       E(0.7, 0.56, 0.25, 24 / o, -0.58),
     ];
-  if (["market", "nightmarket"].includes(e))
-    return [0.25, 0.5, 0.75].flatMap((A) => [
-      E(A, 0.3, 0.055, 0.27, 0, { shelf: !0 }),
-      E(A, 0.7, 0.055, 0.27, 0, { shelf: !0 }),
-    ]);
+  if (["market", "nightmarket"].includes(e)) return [];
   if (e === "train")
     return [0.33, 0.67].flatMap((A) => [
       E(A, 0.18, 0.025, 0.36),
@@ -1883,7 +1889,7 @@ const ZA = (e) =>
   Fe = (e) => e.type !== "salad",
   L = (e) => document.querySelector(e);
 function Qt({ start: e, appearance: g }) {
-  let o;
+  let o, journey;
   try {
     o = Xe(localStorage.getItem(Oe));
   } catch {
@@ -1948,6 +1954,7 @@ function Qt({ start: e, appearance: g }) {
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
   document.addEventListener("extra-cosmetics-loaded", k);
   function t() {
+    journey?.refresh();
     (document
       .querySelectorAll("[data-wallet]")
       .forEach((l) => (l.textContent = o.points.toLocaleString("fr-FR"))),
@@ -2029,50 +2036,19 @@ function Qt({ start: e, appearance: g }) {
   }
   ((L("#remove-hat").onclick = () => s("none")),
     (L("#remove-outfit").onclick = () => s("plain")));
-  const d = L("#map-gallery");
-  for (const category of mapGroups(CA)) {
-    const grid = d.querySelector(`[data-map-group="${category.id}"]`);
-    for (const [id, map] of category.maps) {
-      const card = document.createElement("button");
-      card.className = "map-card";
-      card.dataset.map = id;
-      card.setAttribute("aria-pressed", String(id === u));
-      card.innerHTML = `${mapArtURL(id) ? `<img class="map-preview" src="${mapArtURL(id)}" alt="" loading="lazy" width="240" height="100">` : ""}<span>${map.icon || "🍽️"}</span><strong>${map.name}</strong>${category.id === "in-progress" ? "<small>EN TRAVAUX · TEST</small>" : ""}`;
-      card.onclick = () => {
-        u = id;
-        M();
-      };
-      grid.append(card);
-    }
-  }
+  const restaurant = createRestaurantMenu(CA, (id) => {
+    u = id;
+  });
   function M() {
-    const query = L("#map-search").value.toLocaleLowerCase("fr");
-    for (const card of d.querySelectorAll(".map-card")) {
-      const id = card.dataset.map;
-      card.hidden =
-        (E === "somalia"
-          ? id !== "savanna"
-          : E !== "chef" && id === "savanna") ||
-        !card.textContent.toLocaleLowerCase("fr").includes(query);
-      card.setAttribute("aria-pressed", String(id === u));
-    }
-    for (const category of d.querySelectorAll(".map-category")) {
-      category.hidden = !category.querySelector(".map-card:not([hidden])");
-    }
-    const description = L("#menu-map-description");
-    description.hidden = false;
-    description.textContent =
-      (WORK_IN_PROGRESS_MAPS.has(u)
-        ? "🚧 En travaux · Carte de test, pas encore validée. "
-        : "") + CA[u].description;
+    restaurant.refresh();
   }
-  L("#map-search").oninput = M;
   function S(l) {
+    if (!modeUnlocked(l, o)) return;
     ((E = l),
       (u = E === "somalia" ? "savanna" : u === "savanna" ? "cantine" : u),
       (L("#map-search").value = ""),
       (L("#map-search").disabled = E === "somalia"),
-      M(),
+      restaurant.show(E, u),
       (L("#title-screen").hidden = !0),
       (L("#map-screen").hidden = !1),
       (L("#map-mode-title").textContent =
@@ -2129,6 +2105,7 @@ function Qt({ start: e, appearance: g }) {
             : "Passer en plein écran"));
     }),
     (L("#start-game").onclick = () => {
+      if (!modeUnlocked(E, o)) return;
       ((I = E === "chef"),
         (C = { ...o.equipped }),
         (A = 0),
@@ -2170,6 +2147,7 @@ function Qt({ start: e, appearance: g }) {
             L("#close-shop").focus());
         }),
     ));
+  journey = setupSecretBurger({ profile: o, choose: S, backToMenu: v });
   const f = () => {
     ((i = L("#play-area").hidden), L("#shop-dialog").close());
   };
@@ -10135,34 +10113,12 @@ function OA() {
     (w("#discovery").hidden = !0),
     WA?.newRun(),
     K?.destroy(),
-    (gA =
-      nA === "somalia"
-        ? MA
-          ? 420
-          : 540
-        : $ === "cantine"
-          ? MA
-            ? 760
-            : 1100
-          : MA
-            ? 680
-            : 1e3),
-    (sA =
-      nA === "somalia"
-        ? MA
-          ? 520
-          : 360
-        : $ === "cantine"
-          ? MA
-            ? 780
-            : 600
-          : MA
-            ? 740
-            : 560),
-    (aA = nA === "somalia" ? 55 : 100),
-    (uA = $ === "cuisine" ? (MA ? 65 : 90) : MA ? 18 : 26),
-    (hA = gA + uA * 2),
-    (SA = sA + aA + ($ === "cuisine" ? aA : 36)),
+    (gA = Math.max(320, innerWidth)),
+    (sA = Math.max(320, innerHeight)),
+    (uA = 0),
+    (aA = 0),
+    (hA = gA),
+    (SA = sA),
     (w(".arena-wrap").style.aspectRatio = `${hA}/${SA}`));
   const e = GI(nA, $, gA, sA);
   ((K = new zt(e.w, e.h, Math.random, {
@@ -10583,9 +10539,7 @@ function bt(e) {
     st(x, K, gA, sA, uA, aA, kI, uI, e);
     return;
   }
-  (CA[$].experimental
-    ? VI(x, CA[$], gA, sA, uA, aA)
-    : Mt(x, gA, sA, uA, aA, CA[$].name.toUpperCase(), $ !== "cuisine"),
+  (x.clearRect(0, 0, hA, SA),
     x.save(),
     x.beginPath(),
     x.rect(uA, aA, gA, sA),
@@ -10645,7 +10599,6 @@ function bt(e) {
   ((x.globalAlpha = 1),
     nt(x, K),
     x.restore(),
-    (K.w > gA || K.h > sA) && SI(x, K, QA, gA, sA, hA, SA),
     x.save(),
     x.setTransform(oA.width / o.width, 0, 0, oA.height / o.height, 0, 0));
   for (const u of oe) {
@@ -10708,17 +10661,22 @@ function ae() {
   );
 }
 function be() {
-  if (!ae()) return;
-  const e = w(".arena-wrap"),
-    g = [...JA.children]
-      .filter((E) => E !== e && getComputedStyle(E).position !== "absolute")
-      .reduce((E, A) => E + A.getBoundingClientRect().height, 0),
-    o = Math.max(100, JA.clientHeight - g - 26),
-    u = Math.min(JA.clientWidth - 24, (o * hA) / SA);
-  ((e.style.flex = "none"),
-    (e.style.width = u + "px"),
-    (e.style.height = (u * SA) / hA + "px"));
+  if (w("#play-area").hidden) return;
+  const width = Math.max(320, innerWidth),
+    height = Math.max(320, innerHeight);
+  if (gA !== width || sA !== height) {
+    gA = width;
+    sA = height;
+    uA = 0;
+    aA = 0;
+    hA = width;
+    SA = height;
+  }
+  const arena = w(".arena-wrap");
+  arena.style.width = "100%";
+  arena.style.height = "100%";
 }
+
 function re() {
   if (!ae()) {
     const e = w(".arena-wrap");

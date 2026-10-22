@@ -12,9 +12,6 @@ export const REMOVED_MAPS = new Set([
 ]);
 
 export const WORK_IN_PROGRESS_MAPS = new Set([
-  "fair",
-  "beach",
-  "royal",
   "station",
   "rooftop",
   "underwater",

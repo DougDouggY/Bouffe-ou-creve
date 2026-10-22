@@ -235,7 +235,11 @@ export class ArenaMechanics {
       if (actor.kind === "security")
         this.api.Body.setVelocity(actor.body, actor.plan);
     if (this.game.mapId === "beach" && this.game.round % 3 === 0)
-      this.environment = { kind: "wave", elapsed: 0, duration: 2600 };
+      this.environment = {
+        kind: "wave",
+        elapsed: 0,
+        duration: Math.min(6000, Math.max(2600, this.game.h * 4)),
+      };
   }
   kill(person, reason) {
     if (!person.alive) return;
@@ -446,16 +450,23 @@ export class ArenaMechanics {
       g.food = g.food.filter((f) => distance(f, mouth) > mouth.r);
     }
     if (env.kind === "wave") {
-      const front = -40 + (g.w + 100) * Math.min(1, env.elapsed / env.duration);
+      const front =
+        g.h + 40 - (g.h + 100) * Math.min(1, env.elapsed / env.duration);
       for (const p of g.people.filter((p) => p.alive))
-        if (Math.abs(p.body.position.x - front) < 60 + p.body.circleRadius) {
+        if (Math.abs(p.body.position.y - front) < 60 + p.body.circleRadius) {
           const resistance = Math.max(
             0.45,
             Math.min(1, Math.sqrt(60 / p.mass)),
           );
           this.api.Body.setVelocity(p.body, {
-            x: Math.min(5.8, p.body.velocity.x + 0.7 * resistance * scale),
-            y: p.body.velocity.y * 0.99,
+            x: p.body.velocity.x * 0.99,
+            y: Math.max(
+              -Math.max(
+                5.8,
+                ((g.h + 100) / (env.duration / (1000 / 60))) * 1.15,
+              ),
+              p.body.velocity.y - 0.7 * resistance * scale,
+            ),
           });
           this.waveHit.add(p.id);
         }
@@ -540,7 +551,7 @@ export class ArenaMechanics {
   mouth() {
     return {
       x: this.game.w * 0.5,
-      y: this.game.h * 0.16,
+      y: this.game.h * 0.14,
       r: Math.min(this.game.w, this.game.h) * 0.052,
     };
   }
