@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js"></script>
+    <script type="module" src="./game.js?v=night-halo-2"></script>
 
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./style.css?v=night-halo-2" />
   </head>
   <body>
     <div id="app">
@@ -165,7 +165,25 @@
                   placeholder="Volcan, supermarché…"
               /></label>
             </div>
-            <div id="map-gallery" class="map-gallery"></div>
+            <div id="map-gallery" class="map-categories">
+              <section
+                id="maps-available"
+                class="map-category"
+                aria-labelledby="maps-available-title"
+              >
+                <h3 id="maps-available-title">Cartes disponibles</h3>
+                <div class="map-gallery" data-map-group="available"></div>
+              </section>
+              <section
+                id="maps-in-progress"
+                class="map-category map-category-testing"
+                aria-labelledby="maps-in-progress-title"
+              >
+                <h3 id="maps-in-progress-title">🚧 En travaux</h3>
+                <p>Cartes de test : jouables, mais pas encore validées.</p>
+                <div class="map-gallery" data-map-group="in-progress"></div>
+              </section>
+            </div>
             <p id="menu-map-description" hidden></p>
             <button id="start-game" class="primary">À TABLE ! →</button>
           </section>

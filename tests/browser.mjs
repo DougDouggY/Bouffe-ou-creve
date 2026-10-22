@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -105,6 +105,77 @@ try {
   assert.equal(await page.evaluate(() => window.__audioCalls.filter(src => src.endsWith('jingle.m4a')).length),2);
   checks++;
 
+  // Map curation must apply to both the gallery and the in-game selector.
+  const classicMenuPoint = await point(768,478);
+  await page.mouse.click(classicMenuPoint.x,classicMenuPoint.y);
+  for (const id of ['sushi','cinema','gym','space','candy','train']) {
+    assert.equal(await page.locator(`[data-map="${id}"], #map-select option[value="${id}"]`).count(),0);
+  }
+  const catalog = await page.evaluate(async()=>{
+    const {WORK_IN_PROGRESS_MAPS}=await import('/map-catalog.js');
+    return [...WORK_IN_PROGRESS_MAPS];
+  });
+  assert.equal(catalog.length,14);
+  assert.deepEqual((await page.locator('#maps-in-progress .map-card').evaluateAll(cards=>cards.map(card=>card.dataset.map))).sort(),catalog.sort());
+  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),14);
+  for(const id of ['cold','pirate'])assert(await page.locator(`#maps-available [data-map="${id}"]`).isVisible());
+  checks++;
+  await page.locator('#maps-in-progress').scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(output,'cartes-en-travaux.png')});
+  await page.locator('#map-search').fill('miroir');
+  assert(await page.locator('#maps-available').isHidden());
+  assert(await page.locator('#maps-in-progress').isVisible());
+  assert.equal(await page.locator('#map-gallery .map-card:visible').count(),1);
+  await page.locator('[data-map="mirror"]').click();
+  assert((await page.locator('#menu-map-description').textContent()).includes('pas encore validée'));
+  await page.locator('#start-game').click();
+  assert.equal(await page.evaluate(()=>window.__gameTest.active.mapId),'mirror');
+  assert((await page.locator('#briefing-title').textContent()).includes('En travaux'));
+  checks++;
+  await page.locator('#back-menu').click();
+  const nightMenuPoint=await point(768,478);
+  await page.mouse.click(nightMenuPoint.x,nightMenuPoint.y);
+  await page.locator('[data-map="nightmarket"]').click();
+  await page.locator('#start-game').click();
+  assert.equal(await page.evaluate(()=>window.__gameTest.active.mapId),'nightmarket');
+  await page.locator('#close-briefing').click();
+  await page.screenshot({path:path.join(output,'supermarche-nocturne.png')});
+  await page.locator('#back-menu').click();
+  await page.mouse.click((await point(768,355)).x,(await point(768,355)).y);
+  assert(await page.locator('#maps-in-progress').isHidden());
+  assert.equal(await page.locator('#map-gallery .map-card:visible').count(),1);
+  assert(await page.locator('[data-map="savanna"]').isVisible());
+  await page.locator('#back-title').click();
+  checks++;
+
+  // Sample real raster output to catch cone regressions, abrupt edges and a misplaced halo.
+  const halo = await page.evaluate(async()=>{
+    const {drawMarketFog}=await import('/visibility.js');
+    const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=1200;
+    const context=canvas.getContext('2d',{willReadFrequently:true});
+    const player={body:{position:{x:600,y:600},circleRadius:19},heading:0};
+    const game={mapId:'nightmarket',w:1200,h:1200,people:[player],obstacles:[]};
+    function draw(){context.fillStyle='white';context.fillRect(0,0,1200,1200);drawMarketFog(context,game);}
+    draw();
+    const pixel=(x,y)=>context.getImageData(x,y,1,1).data[0];
+    const radial=[0,60,150,250,350,450,469,471,500].map(distance=>pixel(600+distance,600));
+    const directions=[[800,600],[400,600],[600,800],[600,400]].map(([x,y])=>pixel(x,y));
+    const before=canvas.toDataURL();player.heading=Math.PI;draw();
+    const stable=before===canvas.toDataURL();
+    player.body.position={x:300,y:300};draw();
+    const follows= pixel(300,300)>250 && pixel(900,900)<30;
+    drawMarketFog(context,{...game,people:[{...player,body:{...player.body,position:{x:900,y:900}}}]});
+    return {radial,directions,stable,follows,png:before.split(',')[1]};
+  });
+  assert(halo.radial[0]>250);
+  for(let i=1;i<halo.radial.length;i++)assert(halo.radial[i]<=halo.radial[i-1]);
+  assert(halo.radial.at(-1)<30);
+  assert(Math.max(...halo.directions)-Math.min(...halo.directions)<=2);
+  assert(Math.abs(halo.radial[6]-halo.radial[7])<=2,'No hard rim at the halo edge');
+  assert(halo.stable && halo.follows);
+  await writeFile(path.join(output,'halo-nocturne.png'),Buffer.from(halo.png,'base64'));
+  checks++;
+
   // Real Chromium decoding validates both uploaded AAC/M4A files independently of the audio spy.
   const decoded = await page.evaluate(async () => {
     const context = new AudioContext();
@@ -161,6 +232,7 @@ try {
 
   // Actual UI-started game uses the player-only sound predicate, including death.
   const classic=await point(768,478);await page.mouse.click(classic.x,classic.y);
+  await page.locator('[data-map="cantine"]').click();
   await page.locator('#start-game').click();
   await page.waitForFunction(()=>!!window.__gameTest.active);
   const audio = await page.evaluate(()=>{

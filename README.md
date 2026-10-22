@@ -18,7 +18,7 @@ npm run test:browser
 
 Les tests navigateur utilisent `/usr/bin/chromium` s’il existe. Sinon, installer Chromium avec `npx playwright install chromium`, ou fournir son chemin dans `CHROMIUM_EXECUTABLE`. Les captures sont générées dans `test-results/`.
 
-Les vérifications couvrent les six ingrédients, les clics et le clavier, le toucher sur mobile, la réduction des animations, la lecture des deux fichiers M4A, le filtrage des événements audio et les collisions des rayons à 349, 350, 400, 500 et 2 000 kg sur les deux supermarchés.
+Les vérifications couvrent les six ingrédients, les clics et le clavier, le toucher sur mobile, la réduction des animations, la lecture des deux fichiers M4A, le filtrage des événements audio et les collisions des rayons à 349, 350, 400, 500 et 2 000 kg sur les deux supermarchés. Elles vérifient aussi le tri des cartes, le lancement d’une carte en travaux, la visibilité à 360° et le fondu du halo dans le rendu réel du navigateur.
 
 ## Menu et sons
 
@@ -29,8 +29,16 @@ Les vérifications couvrent les six ingrédients, les clics et le clavier, le to
 - `audio.js` joue le jingle une seule fois par chargement. Si la lecture automatique est bloquée, il attend le premier geste sur le menu. Le bruitage gourmand joue pour les repas du joueur et lorsqu’il est dévoré, jamais pour les repas entre IA. Le bouton son coupe aussi les lectures en cours.
 - Dès **350 kg**, un personnage peut manger les rayons au contact dans les deux supermarchés : **+15 kg par rayon**, suppression du dessin et de sa collision. La même règle s’applique aux IA.
 
+## Cartes et essais
+
+- Le supermarché nocturne utilise un halo à **360°**, lumineux autour du personnage puis progressivement sombre. La direction du dernier tir ne change plus la lumière ni la visibilité des IA. Les rayons restent solides et masquent les personnages et la nourriture placés derrière eux. Les étiquettes des personnages suivent le même fondu.
+- Sushi-bar, Cinéma du goûter, Gymnase des gourmands, Cantine spatiale, Usine à bonbons et Train-restaurant sont retirés des choix, dans le menu et le sélecteur de partie.
+- Chambre froide et Banquet pirate restent disponibles. Les quatorze cartes suivantes, de Plage des frites à Arène miroir, sont regroupées sous **En travaux** : elles sont jouables mais pas encore validées. Ce statut est distinct du drapeau historique `experimental`, qui contrôle leur dessin.
+- La recherche et le mode Somalie conservent leurs filtres dans les deux catégories.
+- Pistes pour la suite : une Chambre froide XL et une très grande arène qui rétrécit progressivement. Ces deux variantes ne sont pas encore ajoutées.
+
 ## Origine et publication
 
 La branche `main` ne contenait qu’un README. Cette version de travail a donc été récupérée depuis le jeu publié, commit `c27f69b5aa98c9f4e886ef995e68e9066aa2039d` de `gh-pages` (V16). Le document autonome a été séparé en HTML, CSS, JavaScript et ressources, sans remplacer les illustrations. `game.js` reste issu de ce code compilé, avec ses noms de variables historiques ; les nouveaux comportements sont isolés dans des modules lisibles.
 
-Les modifications locales ne mettent pas le site public à jour. Pour publier, livrer ensemble `index.html`, `style.css`, les quatre fichiers JavaScript et le dossier `assets/` à la racine de la branche utilisée par GitHub Pages (actuellement `gh-pages`). Aucun build n’est nécessaire. Ne pas publier `node_modules/` ni `test-results/`. Ne pas écraser les autres fichiers déjà présents sur la branche publiée.
+Les modifications locales ne mettent pas le site public à jour. Pour publier, livrer ensemble `index.html`, `style.css`, tous les modules `*.js` à la racine et le dossier `assets/` à la racine de la branche utilisée par GitHub Pages (actuellement `gh-pages`). Aucun build n’est nécessaire. Ne pas publier `node_modules/` ni `test-results/`. Ne pas écraser les autres fichiers déjà présents sur la branche publiée.

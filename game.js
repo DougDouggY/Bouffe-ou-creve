@@ -1,3 +1,13 @@
+import {
+  REMOVED_MAPS,
+  WORK_IN_PROGRESS_MAPS,
+  mapGroups,
+} from "./map-catalog.js";
+import {
+  isVisible as xA,
+  drawMarketFog as nt,
+  lightOpacity,
+} from "./visibility.js";
 import { setupBurgerMenu } from "./burger-menu.js";
 import { createGameAudio } from "./audio.js";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
@@ -857,7 +867,7 @@ const PI = [
     "Supermarché nocturne",
     "🔦",
     "#aaa992",
-    "Les rayons cachent les passages. Dès 350 kg, dévore-les au contact (+15 kg). Ta lampe éclaire devant toi, dans la direction de ton dernier tir.",
+    "Les rayons cachent les passages. Dès 350 kg, dévore-les au contact (+15 kg). Un halo éclaire tout autour de toi à 360°, puis se fond progressivement dans le noir.",
   ],
   [
     "sushi",
@@ -1014,7 +1024,8 @@ const PI = [
     "Une arène et un buffet symétriques : mêmes chances, chacun sa trajectoire.",
   ],
 ];
-for (const [e, g, o, u, E] of PI)
+for (const [e, g, o, u, E] of PI) {
+  if (REMOVED_MAPS.has(e)) continue;
   CA[e] = {
     name: g,
     icon: o,
@@ -1024,6 +1035,7 @@ for (const [e, g, o, u, E] of PI)
     mealName: "Burgers",
     experimental: !0,
   };
+}
 function _e(e, g, o, u = 1) {
   const E = (A, n, i, I, C = 0, Q = {}) => ({
     x: A * g,
@@ -1963,32 +1975,41 @@ function Qt({ start: e, appearance: g }) {
   ((L("#remove-hat").onclick = () => s("none")),
     (L("#remove-outfit").onclick = () => s("plain")));
   const d = L("#map-gallery");
-  for (const [l, R] of Object.entries(CA)) {
-    const h = document.createElement("button");
-    ((h.className = "map-card"),
-      (h.dataset.map = l),
-      h.setAttribute("aria-pressed", String(l === u)),
-      (h.innerHTML = `<span>${R.icon || "🍽️"}</span><strong>${R.name}</strong>`),
-      (h.onclick = () => {
-        ((u = l),
-          d
-            .querySelectorAll("button")
-            .forEach((c) => c.setAttribute("aria-pressed", String(c === h))));
-      }),
-      d.append(h));
+  for (const category of mapGroups(CA)) {
+    const grid = d.querySelector(`[data-map-group="${category.id}"]`);
+    for (const [id, map] of category.maps) {
+      const card = document.createElement("button");
+      card.className = "map-card";
+      card.dataset.map = id;
+      card.setAttribute("aria-pressed", String(id === u));
+      card.innerHTML = `<span>${map.icon || "🍽️"}</span><strong>${map.name}</strong>${category.id === "in-progress" ? "<small>EN TRAVAUX · TEST</small>" : ""}`;
+      card.onclick = () => {
+        u = id;
+        M();
+      };
+      grid.append(card);
+    }
   }
   function M() {
-    for (const l of d.children)
-      ((l.hidden =
+    const query = L("#map-search").value.toLocaleLowerCase("fr");
+    for (const card of d.querySelectorAll(".map-card")) {
+      const id = card.dataset.map;
+      card.hidden =
         (E === "somalia"
-          ? l.dataset.map !== "savanna"
-          : E === "chef"
-            ? !1
-            : l.dataset.map === "savanna") ||
-        !l.textContent
-          .toLocaleLowerCase("fr")
-          .includes(L("#map-search").value.toLocaleLowerCase("fr"))),
-        l.setAttribute("aria-pressed", String(l.dataset.map === u)));
+          ? id !== "savanna"
+          : E !== "chef" && id === "savanna") ||
+        !card.textContent.toLocaleLowerCase("fr").includes(query);
+      card.setAttribute("aria-pressed", String(id === u));
+    }
+    for (const category of d.querySelectorAll(".map-category")) {
+      category.hidden = !category.querySelector(".map-card:not([hidden])");
+    }
+    const description = L("#menu-map-description");
+    description.hidden = false;
+    description.textContent =
+      (WORK_IN_PROGRESS_MAPS.has(u)
+        ? "🚧 En travaux · Carte de test, pas encore validée. "
+        : "") + CA[u].description;
   }
   L("#map-search").oninput = M;
   function S(l) {
@@ -2185,48 +2206,6 @@ function Qt({ start: e, appearance: g }) {
     }
   );
 }
-function xA(e, g, o, u = []) {
-  if (!["market", "nightmarket"].includes(e)) return !0;
-  const E = o.x - g.x,
-    A = o.y - g.y,
-    n = Math.hypot(E, A);
-  if (n < 55 + (g.r || 0)) return !0;
-  if (e === "market") {
-    if (n > 300) return !1;
-  } else {
-    if (n > 470) return !1;
-    const i = g.heading ?? 0;
-    let I = Math.atan2(A, E) - i;
-    if (((I = Math.atan2(Math.sin(I), Math.cos(I))), Math.abs(I) > 0.62))
-      return !1;
-  }
-  for (const i of u) {
-    const I = Math.cos(i.angle),
-      C = Math.sin(i.angle),
-      Q = (g.x - i.x) * I + (g.y - i.y) * C,
-      B = -(g.x - i.x) * C + (g.y - i.y) * I,
-      k = E * I + A * C,
-      t = -E * C + A * I;
-    let a = 0,
-      s = 1;
-    for (const [r, d, M] of [
-      [Q, k, i.w / 2],
-      [B, t, i.h / 2],
-    ])
-      if (Math.abs(d) < 1e-8) {
-        if (Math.abs(r) > M) {
-          a = 2;
-          break;
-        }
-      } else {
-        const S = (-M - r) / d,
-          v = (M - r) / d;
-        ((a = Math.max(a, Math.min(S, v))), (s = Math.min(s, Math.max(S, v))));
-      }
-    if (a <= s && s > 0 && a < 1) return !1;
-  }
-  return !0;
-}
 function NA(e) {
   return {
     x: e.body.position.x,
@@ -2234,43 +2213,6 @@ function NA(e) {
     r: e.body.circleRadius,
     heading: e.heading ?? 0,
   };
-}
-function nt(e, g) {
-  if (!["market", "nightmarket"].includes(g.mapId)) return;
-  const o = NA(g.people[0]);
-  (e.save(), e.beginPath(), e.rect(0, 0, g.w, g.h));
-  const u = [];
-  for (let E = 0; E < 360; E++) {
-    const A = (E * Math.PI) / 180;
-    let n =
-        g.mapId === "market"
-          ? 300
-          : Math.abs(
-                Math.atan2(Math.sin(A - o.heading), Math.cos(A - o.heading)),
-              ) < 0.62
-            ? 470
-            : 55 + o.r,
-      i = 0,
-      I = n;
-    for (let C = 0; C < 10; C++) {
-      const Q = (i + I) / 2;
-      xA(
-        g.mapId,
-        o,
-        { x: o.x + Math.cos(A) * Q, y: o.y + Math.sin(A) * Q },
-        g.obstacles,
-      )
-        ? (i = Q)
-        : (I = Q);
-    }
-    u.push({ x: o.x + Math.cos(A) * i, y: o.y + Math.sin(A) * i });
-  }
-  e.moveTo(u[0].x, u[0].y);
-  for (const E of u) e.lineTo(E.x, E.y);
-  (e.closePath(),
-    (e.fillStyle = g.mapId === "nightmarket" ? "#080b16f2" : "#202d27e8"),
-    e.fill("evenodd"),
-    e.restore());
 }
 function gt(e) {
   return e < 2400
@@ -10099,7 +10041,8 @@ function OA() {
     (K.floorSkin = ve),
     (w("#chef-weight").value = String(K.people[0].mass)),
     (w("#chef-tools").hidden = nA !== "chef"),
-    (w("#briefing-title").textContent = CA[$].name),
+    (w("#briefing-title").textContent =
+      (WORK_IN_PROGRESS_MAPS.has($) ? "🚧 En travaux · " : "") + CA[$].name),
     (w("#briefing-text").textContent = CA[$].description),
     (w("#map-briefing").hidden = !1),
     (w("#floor-picker").hidden = $ !== "foodcourt"),
@@ -10272,6 +10215,11 @@ function Dt() {
       (Q.querySelector(".badge-name").textContent = C.name),
       (Q.querySelector(".badge-weight").textContent = RI(C.mass)),
       (Q.style.transform = `translate(${I.x}px,${I.y}px)`),
+      (Q.style.opacity = lightOpacity(
+        K.mapId,
+        NA(K.people[0]),
+        C.body.position,
+      )),
       (Q.style.width = `${I.w}px`));
   }
 }
@@ -10315,7 +10263,9 @@ document.querySelectorAll("[data-floor]").forEach(
         (K.floorSkin = ve),
         (w("#chef-weight").value = String(K.people[0].mass)),
         (w("#chef-tools").hidden = nA !== "chef"),
-        (w("#briefing-title").textContent = CA[$].name),
+        (w("#briefing-title").textContent =
+          (WORK_IN_PROGRESS_MAPS.has($) ? "🚧 En travaux · " : "") +
+          CA[$].name),
         (w("#briefing-text").textContent = CA[$].description),
         (w("#map-briefing").hidden = !1),
         document
@@ -10587,9 +10537,16 @@ function Ge(e) {
 }
 const De = w("#map-select");
 De.replaceChildren();
-for (const [e, g] of Object.entries(CA)) {
-  const o = document.createElement("option");
-  ((o.value = e), (o.textContent = g.name), De.append(o));
+for (const category of mapGroups(CA)) {
+  const group = document.createElement("optgroup");
+  group.label = category.label;
+  for (const [id, map] of category.maps) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = map.name;
+    group.append(option);
+  }
+  De.append(group);
 }
 WA = Qt({
   appearance: () => {},
