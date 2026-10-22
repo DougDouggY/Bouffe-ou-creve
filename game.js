@@ -10,6 +10,7 @@ import {
 } from "./visibility.js?v=small-halo-menu-3";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
 import { createGameAudio } from "./audio.js";
+import { setupMusicControls } from "./music.js?v=ambient-music-4";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -2063,14 +2064,7 @@ function Qt({ start: e, appearance: g }) {
     }),
     (L("#options-entry").onclick = () => L("#options-dialog").showModal()),
     (L("#close-options").onclick = () => L("#options-dialog").close()),
-    (L("#option-sound").onclick = () => {
-      (L("#sound").click(),
-        (L("#option-sound").textContent = L("#sound").textContent.includes(
-          "OFF",
-        )
-          ? "Activer le son"
-          : "Couper le son"));
-    }),
+    (L("#option-sound").onclick = () => L("#sound").click()),
     (L("#option-fullscreen").onclick = async () => {
       (L("#options-entry").focus(),
         await fI(L("#app")),
@@ -9979,6 +9973,7 @@ w(".arena-wrap").style.aspectRatio = `${hA}/${SA}`;
 const gameAudio = createGameAudio({
   isMenuVisible: () => !w("#main-menu").hidden && !w("#title-screen").hidden,
 });
+const ambientMusic = setupMusicControls();
 function ye(e) {
   if (!Ce)
     try {
@@ -10300,6 +10295,10 @@ w("#again").onclick = OA;
 w("#sound").onclick = () => {
   ((Ce = !Ce),
     gameAudio.setMuted(Ce),
+    ambientMusic.setMuted(Ce),
+    (w("#option-sound").textContent = Ce
+      ? "Activer tous les sons"
+      : "Couper tous les sons"),
     (w("#sound").textContent = Ce ? "SON OFF ♫" : "SON ON ♫"));
 };
 function BA(e, g, o, u, E) {

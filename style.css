@@ -1305,6 +1305,54 @@ footer span {
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
+.music-options {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #c8b78e;
+  border-radius: 10px;
+}
+.music-options legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.music-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.music-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #718348;
+}
+.music-volume-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  font-size: 13px;
+}
+#music-volume {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin: 5px 0;
+  accent-color: #718348;
+  cursor: pointer;
+}
+#music-volume-value {
+  min-width: 45px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+#music-status {
+  min-height: 2.5em;
+  margin: 6px 0 0;
+  color: #6f664f;
+  font-size: 12px;
+  line-height: 1.4;
+}
 #chef-dialog input {
   display: block;
   width: 100%;

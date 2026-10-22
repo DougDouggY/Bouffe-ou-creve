@@ -9,7 +9,7 @@ import path from 'node:path';
 const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const output = path.join(root, 'test-results');
 await mkdir(output, { recursive: true });
-const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.png': 'image/png', '.webp': 'image/webp', '.m4a': 'audio/mp4' };
+const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.png': 'image/png', '.webp': 'image/webp', '.m4a': 'audio/mp4', '.mp3': 'audio/mpeg' };
 const server = createServer(async (request, response) => {
   try {
     const relative = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -198,7 +198,7 @@ try {
   const decoded = await page.evaluate(async () => {
     const context = new AudioContext();
     const result = [];
-    for (const file of ['jingle.m4a','bruitage-gourmand.m4a']) {
+    for (const file of ['jingle.m4a','bruitage-gourmand.m4a','ambiance-douce.mp3']) {
       const data = await (await fetch('/assets/'+file)).arrayBuffer();
       const buffer = await context.decodeAudioData(data);
       result.push(buffer.duration);
@@ -206,7 +206,7 @@ try {
     await context.close();
     return result;
   });
-  assert(decoded[0] > 1 && decoded[1] > .2);
+  assert(decoded[0] > 1 && decoded[1] > .2 && decoded[2] > 20);
   checks++;
 
   const shelves = await page.evaluate(() => {
@@ -304,6 +304,58 @@ try {
   assert.equal(textureMotion.animation,'none');assert.equal(textureMotion.transform,'none');checks++;
   assert.deepEqual(errors,[]);
   await mobile.close();
+  const musicContext=await browser.newContext({viewport:{width:390,height:844}});
+  const musicPage=await musicContext.newPage();
+  musicPage.on('pageerror',error=>errors.push(error.message));
+  await musicPage.addInitScript(()=>{
+    const OriginalAudio=window.Audio;
+    window.__musicVoices=[];
+    window.Audio=class extends OriginalAudio {
+      constructor(src){super(src);if(src.endsWith('ambiance-douce.mp3'))window.__musicVoices.push(this);}
+    };
+  });
+  async function openMusicOptions(){
+    await musicPage.waitForFunction(()=>document.querySelector('.burger-menu').dataset.masksReady==='true');
+    await musicPage.locator('#options-entry').focus();
+    await musicPage.keyboard.press('Enter');
+    await musicPage.locator('#options-dialog').waitFor({state:'visible'});
+  }
+  await musicPage.goto(url);
+  await openMusicOptions();
+  assert.equal(await musicPage.locator('#music-enabled').isChecked(),false);
+  await musicPage.locator('#music-enabled').check();
+  await musicPage.waitForFunction(()=>window.__musicVoices[0]?.currentTime>0.1);
+  const playing=await musicPage.evaluate(()=>{const a=window.__musicVoices[0];return {loop:a.loop,volume:a.volume,paused:a.paused};});
+  assert(playing.loop && !playing.paused);assert.equal(playing.volume,.25);
+  checks++;
+  await musicPage.locator('#music-volume').focus();
+  await musicPage.keyboard.press('End');
+  assert.equal(await musicPage.locator('#music-volume-value').textContent(),'100 %');
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),1);
+  await musicPage.keyboard.press('Home');
+  assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
+  for(let i=0;i<30;i++)await musicPage.keyboard.press('ArrowRight');
+  assert.equal(await musicPage.locator('#music-volume-value').textContent(),'30 %');
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.3);
+  await musicPage.locator('#option-sound').click();
+  assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
+  assert.equal(await musicPage.locator('#music-status').textContent(),'Le son général est coupé.');
+  await musicPage.locator('#option-sound').click();
+  await musicPage.waitForFunction(()=>!window.__musicVoices[0].paused);
+  await musicPage.screenshot({path:path.join(output,'options-musique-mobile.png')});
+  checks++;
+  await musicPage.reload();
+  await openMusicOptions();
+  assert(await musicPage.locator('#music-enabled').isChecked());
+  assert.equal(await musicPage.locator('#music-volume').inputValue(),'30');
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.3);
+  await musicPage.locator('#music-enabled').uncheck();
+  assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
+  await musicPage.reload();await openMusicOptions();
+  assert.equal(await musicPage.locator('#music-enabled').isChecked(),false);
+  checks++;
+  assert.deepEqual(errors,[]);
+  await musicContext.close();
   console.log(`${checks} browser checks passed. Screenshots: test-results/`);
 } finally {
   await browser.close();
