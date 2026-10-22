@@ -51,8 +51,11 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
   audio.event("food", player);
   audio.event("eat", ai, player);
   assert.equal(voices.length, 3);
+  assert(voices[1].volume + voices[2].volume <= 0.060001, "overlapping meals share one quiet volume budget");
+  voices[1].dispatchEvent(new Event("ended"));
+  assert.equal(voices[2].volume, 0.06);
   audio.setMuted(true);
-  assert(voices.every(voice => voice.paused));
+  assert(voices[0].paused && voices[2].paused);
   audio.event("food", player);
   assert.equal(voices.length, 3);
   audio.setMuted(false);

@@ -17,6 +17,11 @@ export function createGameAudio({
   const mealURL = new URL("./assets/bruitage-gourmand.m4a", import.meta.url)
     .href;
   const meals = new Set();
+  // A quiet shared budget prevents stacked mouthfuls from producing a loud burst.
+  const mealVolume = 0.06;
+  const balanceMeals = () => {
+    for (const sound of meals) sound.volume = mealVolume / meals.size;
+  };
   let muted = false;
   let played = false;
   let pending = false;
@@ -50,10 +55,13 @@ export function createGameAudio({
       if (muted || !isPlayerMeal(event, actor, victim)) return;
       // Separate voices preserve rapid, distinct mouthfuls without restarting a sound.
       const sound = new AudioClass(mealURL);
-      sound.volume = 0.35;
       sound.loop = false;
       meals.add(sound);
-      const release = () => meals.delete(sound);
+      balanceMeals();
+      const release = () => {
+        meals.delete(sound);
+        balanceMeals();
+      };
       sound.addEventListener("ended", release, { once: true });
       sound.addEventListener("error", release, { once: true });
       sound.play().catch(release);

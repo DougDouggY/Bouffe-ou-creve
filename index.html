@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js?v=bistro-menu-5"></script>
+    <script type="module" src="./game.js?v=music-choice-stable-view-6"></script>
 
-    <link rel="stylesheet" href="./style.css?v=bistro-menu-5" />
+    <link rel="stylesheet" href="./style.css?v=music-choice-stable-view-6" />
   </head>
   <body>
     <div id="app">
@@ -254,6 +254,10 @@
               ><input id="music-enabled" type="checkbox" /> Activer la
               musique</label
             >
+            <label class="music-track-label" for="music-track"
+              >Choisir une ambiance</label
+            >
+            <select id="music-track" aria-describedby="music-status"></select>
             <label class="music-volume-label" for="music-volume"
               >Volume de la musique
               <output id="music-volume-value" for="music-volume"

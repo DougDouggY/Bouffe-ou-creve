@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createAmbientMusic } from "../music.js";
+import { createAmbientMusic, MUSIC_TRACKS } from "../music.js";
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
 function fixture(initial) {
@@ -35,7 +35,7 @@ test("music is opt-in, loops once enabled, and volume is independent and persist
   assert(music.state.playing);
   music.setVolume(0.4);
   assert.equal(f.voices[0].volume, 0.24);
-  assert.deepEqual(f.saved, { enabled: true, volume: 0.4 });
+  assert.deepEqual(f.saved, { enabled: true, volume: 0.4, trackId: "bistrot" });
   f.target.dispatchEvent(new Event("pointerdown"));
   assert.equal(f.voices[0].calls, 1, "gestures do not restart a running loop");
   music.setVolume(0); assert(f.voices[0].paused);
@@ -69,4 +69,29 @@ test("invalid storage or volume cannot break audio setup", () => {
   music.setVolume(5); assert.equal(music.state.volume, 1);
   music.setVolume(-1); assert.equal(music.state.volume, 0);
   assert.doesNotThrow(() => createAmbientMusic({ ...f.options, storage: { getItem() { throw new Error("unavailable"); }, setItem() { throw new Error("unavailable"); } } }));
+});
+
+
+test("track switching reuses one voice, preserves volume and mute, and saves the choice", async () => {
+  const f = fixture({ enabled: true, volume: 0.3 });
+  const music = createAmbientMusic(f.options);
+  await settle();
+  const voice = f.voices[0];
+  assert(voice.src.endsWith("music-bistrot.mp3"));
+  for (const track of MUSIC_TRACKS) {
+    music.setTrack(track.id); await settle();
+    assert.equal(music.state.trackId, track.id);
+    assert(voice.src.endsWith(track.file));
+    assert.equal(voice.volume, 0.18);
+    assert.equal(f.voices.length, 1);
+  }
+  assert.equal(f.saved.trackId, "nuage");
+  music.setMuted(true);
+  const calls = voice.calls;
+  music.setTrack("balade"); await settle();
+  assert(voice.paused); assert.equal(voice.calls, calls);
+  music.setMuted(false); await settle(); assert(music.state.playing);
+  music.setTrack("missing"); assert.equal(music.state.trackId, "balade");
+  const restored = createAmbientMusic(f.options);
+  assert.equal(restored.state.trackId, "balade");
 });

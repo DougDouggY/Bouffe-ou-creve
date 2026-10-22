@@ -1,4 +1,17 @@
 const MUSIC_GAIN = 0.6;
+export const MUSIC_TRACKS = [
+  {
+    id: "bistrot",
+    name: "Bistrot tranquille · piano jazzy",
+    file: "music-bistrot.mp3",
+  },
+  {
+    id: "balade",
+    name: "Balade gourmande · cordes légères",
+    file: "music-balade.mp3",
+  },
+  { id: "nuage", name: "Nuage sucré · valse douce", file: "music-nuage.mp3" },
+];
 const STORAGE_KEY = "bouffe-ambient-music-v1";
 const clampVolume = (value) =>
   Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.15;
@@ -15,6 +28,14 @@ export function createAmbientMusic({
   } catch {}
   let enabled = saved?.enabled === true;
   let volume = clampVolume(saved?.volume);
+  let trackId = MUSIC_TRACKS.some((track) => track.id === saved?.trackId)
+    ? saved.trackId
+    : MUSIC_TRACKS[0].id;
+  const trackURL = (id) =>
+    new URL(
+      `./assets/${MUSIC_TRACKS.find((track) => track.id === id).file}`,
+      import.meta.url,
+    ).href;
   let muted = false,
     playing = false,
     starting = false,
@@ -22,9 +43,7 @@ export function createAmbientMusic({
     failed = false;
   let generation = 0;
   const listeners = new Set();
-  const sound = new AudioClass(
-    new URL("./assets/ambiance-douce.mp3", import.meta.url).href,
-  );
+  const sound = new AudioClass(trackURL(trackId));
   sound.loop = true;
   sound.preload = "none";
   sound.volume = volume * MUSIC_GAIN;
@@ -33,7 +52,10 @@ export function createAmbientMusic({
   };
   const persist = () => {
     try {
-      storage?.setItem(STORAGE_KEY, JSON.stringify({ enabled, volume }));
+      storage?.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ enabled, volume, trackId }),
+      );
     } catch {}
   };
   const wanted = () => enabled && !muted && volume > 0 && isPageVisible();
@@ -78,7 +100,7 @@ export function createAmbientMusic({
   resume();
   return {
     get state() {
-      return { enabled, volume, muted, playing, blocked, failed };
+      return { enabled, volume, trackId, muted, playing, blocked, failed };
     },
     subscribe(listener) {
       listeners.add(listener);
@@ -105,6 +127,19 @@ export function createAmbientMusic({
       else pause();
       notify();
     },
+    setTrack(id) {
+      if (id === trackId || !MUSIC_TRACKS.some((track) => track.id === id))
+        return;
+      pause();
+      trackId = id;
+      sound.src = trackURL(id);
+      sound.load?.();
+      failed = false;
+      blocked = false;
+      persist();
+      if (wanted()) resume();
+      notify();
+    },
   };
 }
 
@@ -115,12 +150,20 @@ export function setupMusicControls() {
   } catch {}
   const music = createAmbientMusic({ storage });
   const toggle = document.querySelector("#music-enabled");
+  const choice = document.querySelector("#music-track");
+  for (const track of MUSIC_TRACKS) {
+    const option = document.createElement("option");
+    option.value = track.id;
+    option.textContent = track.name;
+    choice.append(option);
+  }
   const volume = document.querySelector("#music-volume");
   const output = document.querySelector("#music-volume-value");
   const status = document.querySelector("#music-status");
   function render() {
     const state = music.state;
     toggle.checked = state.enabled;
+    choice.value = state.trackId;
     const percent = Math.round(state.volume * 100);
     volume.value = String(percent);
     volume.setAttribute("aria-valuetext", `${percent} %`);
@@ -139,6 +182,7 @@ export function setupMusicControls() {
   }
   music.subscribe(render);
   toggle.addEventListener("change", () => music.setEnabled(toggle.checked));
+  choice.addEventListener("change", () => music.setTrack(choice.value));
   volume.addEventListener("input", () =>
     music.setVolume(Number(volume.value) / 100),
   );

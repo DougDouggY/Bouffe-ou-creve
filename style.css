@@ -2519,3 +2519,58 @@ svg.burger-menu {
     letter-spacing: 1.4px;
   }
 }
+
+.music-track-label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  color: #713b35;
+  font-size: 13px;
+}
+#music-track {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid #b79779;
+  border-radius: 3px;
+  color: #633c32;
+  background: #fbf4e5;
+  font: inherit;
+  font-size: 14px;
+}
+
+/* Round announcements and status updates must never resize or move the arena. */
+.playing #event-notice {
+  display: block;
+  box-sizing: border-box;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  flex: 0 0 48px;
+  line-height: 15px;
+  overflow: auto;
+}
+.playing #event-notice:empty {
+  display: block;
+  visibility: hidden;
+}
+.playing #status {
+  display: block;
+  height: 2.8em;
+  line-height: 1.4;
+  overflow: hidden;
+  min-width: 0;
+}
+.expanded-game .arena-wrap {
+  min-height: 0;
+  margin: 0 auto;
+}
+@media (max-width: 650px) {
+  .playing #event-notice {
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    flex-basis: 46px;
+    line-height: 13.5px;
+  }
+}

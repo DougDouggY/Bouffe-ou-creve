@@ -9,8 +9,8 @@ import {
   lightOpacity,
 } from "./visibility.js?v=small-halo-menu-3";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=bistro-menu-5";
-import { setupMusicControls } from "./music.js?v=bistro-menu-5";
+import { createGameAudio } from "./audio.js?v=music-choice-stable-view-6";
+import { setupMusicControls } from "./music.js?v=music-choice-stable-view-6";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {

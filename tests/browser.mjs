@@ -39,9 +39,10 @@ try {
   await page.addInitScript(() => {
     window.__RealAudio = window.Audio;
     window.__audioCalls = [];
+    window.__mealVoices = [];
     let blocked = true;
     window.Audio = class extends EventTarget {
-      constructor(src) { super(); this.src = src; }
+      constructor(src) { super(); this.src = src; if(src.endsWith("bruitage-gourmand.m4a"))window.__mealVoices.push(this); }
       play() {
         window.__audioCalls.push(this.src);
         if (this.src.endsWith('jingle.m4a') && blocked) {
@@ -125,16 +126,16 @@ try {
   const classicMenuPoint = await point(768,478);
   await page.mouse.click(classicMenuPoint.x,classicMenuPoint.y);
   await page.locator("#map-screen").waitFor({state:"visible"});
-  for (const id of ['sushi','cinema','gym','space','candy','train']) {
+  for (const id of ['sushi','cinema','gym','space','candy','train','haunted','beach']) {
     assert.equal(await page.locator(`[data-map="${id}"], #map-select option[value="${id}"]`).count(),0);
   }
   const catalog = await page.evaluate(async()=>{
     const {WORK_IN_PROGRESS_MAPS}=await import('/map-catalog.js');
     return [...WORK_IN_PROGRESS_MAPS];
   });
-  assert.equal(catalog.length,14);
+  assert.equal(catalog.length,12);
   assert.deepEqual((await page.locator('#maps-in-progress .map-card').evaluateAll(cards=>cards.map(card=>card.dataset.map))).sort(),catalog.sort());
-  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),14);
+  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),12);
   for(const id of ['cold','pirate'])assert(await page.locator(`#maps-available [data-map="${id}"]`).isVisible());
   checks++;
   await page.locator('#maps-in-progress').scrollIntoViewIfNeeded();
@@ -199,7 +200,7 @@ try {
   const decoded = await page.evaluate(async () => {
     const context = new AudioContext();
     const result = [];
-    for (const file of ['jingle.m4a','bruitage-gourmand.m4a','ambiance-douce.mp3']) {
+    for (const file of ['jingle.m4a','bruitage-gourmand.m4a','music-bistrot.mp3','music-balade.mp3','music-nuage.mp3']) {
       const data = await (await fetch('/assets/'+file)).arrayBuffer();
       const buffer = await context.decodeAudioData(data);
       result.push(buffer.duration);
@@ -207,7 +208,7 @@ try {
     await context.close();
     return result;
   });
-  assert(decoded[0] > 1 && decoded[1] > .2 && decoded[2] > 20);
+  assert(decoded[0] > 1 && decoded[1] > .2 && decoded.slice(2).every(duration=>duration>15));
   checks++;
 
   const shelves = await page.evaluate(() => {
@@ -254,6 +255,27 @@ try {
   await page.locator('[data-map="cantine"]').click();
   await page.locator('#start-game').click();
   await page.waitForFunction(()=>!!window.__gameTest.active);
+  await page.locator('#close-briefing').click();
+  async function assertStableArena(view) {
+    const samples=[];
+    for (const [text,phase] of [['','aim'],['LE BURGER DE DOUGGY EST SERVI ! +120 kg','moving'],['ÉRUPTION IMMINENTE ! Raclette projetée au prochain tir. '.repeat(3),'aim'],['','moving']]) {
+      samples.push(await view.evaluate(async({text,phase})=>{
+        const game=window.__game;game.announcement=text?{text,kind:'chef'}:null;game.phase=phase;game.round++;
+        for(let i=0;i<4;i++)await new Promise(resolve=>requestAnimationFrame(resolve));
+        const box=document.querySelector('.arena-wrap').getBoundingClientRect();
+        return {x:box.x,y:box.y,width:box.width,height:box.height,worldWidth:window.__view.width,worldHeight:window.__view.height};
+      },{text,phase}));
+    }
+    for(const sample of samples)for(const key of Object.keys(sample))assert(Math.abs(sample[key]-samples[0][key])<1,JSON.stringify({key,samples}));
+    await view.evaluate(()=>{window.__game.phase='aim';window.__game.announcement=null;});
+  }
+  await assertStableArena(page);checks++;
+  await page.locator('#fullscreen').click();
+  await assertStableArena(page);checks++;
+  await page.locator('#fullscreen').click();
+  await page.evaluate(()=>{document.querySelector('#game-shell').classList.add('expanded-game');document.dispatchEvent(new Event('fullscreenchange'));});
+  await assertStableArena(page);checks++;
+  await page.evaluate(()=>{document.querySelector('#game-shell').classList.remove('expanded-game');document.dispatchEvent(new Event('fullscreenchange'));});
   const audio = await page.evaluate(()=>{
     const game=window.__gameTest.active;
     const before=window.__audioCalls.filter(src=>src.endsWith('bruitage-gourmand.m4a')).length;
@@ -266,10 +288,11 @@ try {
     game.emit('eat',game.people[0],game.people[2]);
     game.eat(game.people[1],game.people[0]);
     const afterPlayer=window.__audioCalls.filter(src=>src.endsWith('bruitage-gourmand.m4a')).length;
-    return {before,afterAI,afterPlayer};
+    return {before,afterAI,afterPlayer,totalVolume:window.__mealVoices.reduce((sum,voice)=>sum+voice.volume,0)};
   });
   assert.equal(audio.afterAI,audio.before);
   assert.equal(audio.afterPlayer-audio.afterAI,4);
+  assert(audio.totalVolume<=.060001);
   checks++;
   await page.locator('#sound').click();
   const muted = await page.evaluate(()=>{
@@ -305,6 +328,10 @@ try {
   const textureMotion=await mobile.locator('[data-menu-mode="classic"] .ingredient-texture').evaluate(node=>({animation:getComputedStyle(node).animationName,transform:getComputedStyle(node).transform}));
   assert.equal(textureMotion.animation,'none');assert.equal(textureMotion.transform,'none');checks++;
   assert.deepEqual(errors,[]);
+  await mobile.locator('[data-menu-mode="classic"]').focus();await mobile.keyboard.press('Enter');
+  await mobile.locator('[data-map="cantine"]').click();await mobile.locator('#start-game').click();await mobile.locator('#close-briefing').click();
+  await mobile.evaluate(()=>{document.querySelector('#game-shell').classList.add('expanded-game');document.dispatchEvent(new Event('fullscreenchange'));});
+  await assertStableArena(mobile);checks++;
   await mobile.close();
   const musicContext=await browser.newContext({viewport:{width:390,height:844}});
   const musicPage=await musicContext.newPage();
@@ -313,7 +340,7 @@ try {
     const OriginalAudio=window.Audio;
     window.__musicVoices=[];
     window.Audio=class extends OriginalAudio {
-      constructor(src){super(src);if(src.endsWith('ambiance-douce.mp3'))window.__musicVoices.push(this);}
+      constructor(src){super(src);if(/music-(bistrot|balade|nuage)\.mp3$/.test(src))window.__musicVoices.push(this);}
     };
   });
   async function openMusicOptions(){
@@ -339,6 +366,13 @@ try {
   await musicPage.waitForFunction(()=>window.__musicVoices[0]?.currentTime>0.1);
   const playing=await musicPage.evaluate(()=>{const a=window.__musicVoices[0];return {loop:a.loop,volume:a.volume,paused:a.paused};});
   assert(playing.loop && !playing.paused);assert.equal(playing.volume,.09);
+  assert.equal(await musicPage.locator('#music-track option').count(),3);
+  for (const track of ['balade','nuage','bistrot','nuage']) {
+    await musicPage.locator('#music-track').selectOption(track);
+    await musicPage.waitForFunction(id=>window.__musicVoices[0].src.endsWith('music-'+id+'.mp3') && !window.__musicVoices[0].paused && window.__musicVoices[0].currentTime>.1,track);
+    assert.equal(await musicPage.evaluate(()=>window.__musicVoices.length),1);
+  }
+  checks++;
   checks++;
   await musicPage.locator('#music-volume').focus();
   await musicPage.keyboard.press('End');
@@ -360,6 +394,7 @@ try {
   await openMusicOptions();
   assert(await musicPage.locator('#music-enabled').isChecked());
   assert.equal(await musicPage.locator('#music-volume').inputValue(),'30');
+  assert.equal(await musicPage.locator('#music-track').inputValue(),'nuage');
   assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.18);
   await musicPage.locator('#music-enabled').uncheck();
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
