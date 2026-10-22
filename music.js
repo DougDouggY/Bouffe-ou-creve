@@ -1,6 +1,7 @@
+const MUSIC_GAIN = 0.6;
 const STORAGE_KEY = "bouffe-ambient-music-v1";
 const clampVolume = (value) =>
-  Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.25;
+  Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.15;
 
 export function createAmbientMusic({
   AudioClass = Audio,
@@ -26,7 +27,7 @@ export function createAmbientMusic({
   );
   sound.loop = true;
   sound.preload = "none";
-  sound.volume = volume;
+  sound.volume = volume * MUSIC_GAIN;
   const notify = () => {
     for (const listener of listeners) listener();
   };
@@ -92,7 +93,7 @@ export function createAmbientMusic({
     },
     setVolume(value) {
       volume = clampVolume(value);
-      sound.volume = volume;
+      sound.volume = volume * MUSIC_GAIN;
       persist();
       if (wanted()) resume();
       else pause();

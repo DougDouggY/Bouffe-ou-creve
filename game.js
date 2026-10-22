@@ -9,8 +9,8 @@ import {
   lightOpacity,
 } from "./visibility.js?v=small-halo-menu-3";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js";
-import { setupMusicControls } from "./music.js?v=ambient-music-4";
+import { createGameAudio } from "./audio.js?v=bistro-menu-5";
+import { setupMusicControls } from "./music.js?v=bistro-menu-5";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -846,7 +846,7 @@ CA.savanna = {
   floor: "#d6b15e",
   experimental: !0,
   description:
-    "50 affamés se disputent la savane. Aucun burger ni salade : des steaks de moustiques pour grossir. La savane est la seule carte du mode Somalie.",
+    "50 gourmands se disputent la savane. Aucun burger ni salade : des steaks de moustiques pour grossir. La savane est la seule carte du mode Somalie.",
 };
 const PI = [
   [
@@ -2024,7 +2024,7 @@ function Qt({ start: e, appearance: g }) {
       (L("#map-mode-title").textContent =
         E === "chef"
           ? "MODE CHEF · ATELIER SOLO"
-          : `${me[E].name.toUpperCase()} · ${me[E].count} AFFAMÉS`),
+          : `${me[E].name.toUpperCase()} · ${me[E].count} GOURMANDS`),
       L("#map-screen").scrollIntoView({ block: "start" }));
   }
   (document.querySelectorAll(".ingredient-button").forEach((l) =>
@@ -9984,7 +9984,7 @@ function ye(e) {
       ((g.type = "sine"),
         g.frequency.setValueAtTime(220, dA.currentTime),
         g.frequency.exponentialRampToValueAtTime(60, dA.currentTime + 0.13),
-        o.gain.setValueAtTime(0.045, dA.currentTime),
+        o.gain.setValueAtTime(0.018, dA.currentTime),
         o.gain.exponentialRampToValueAtTime(0.001, dA.currentTime + 0.18),
         g.connect(o),
         o.connect(dA.destination),
@@ -10056,7 +10056,7 @@ function OA() {
         ? " • Grande carte 2 200 × 1 600 · 1 joueur + 23 IA · Caméra toujours centrée sur toi."
         : "")),
     (document.querySelector(".intro .eyebrow").textContent =
-      `${K.count} AFFAMÉS. UNE SEULE PLACE À TABLE.`),
+      `${K.count} GOURMANDS. UNE SEULE PLACE À TABLE.`),
     (w(".intro-note p").innerHTML =
       `Un lance-pierre. ${K.count - 1} rivaux.<br>Et absolument aucune dignité.`),
     (q = null),
@@ -10140,7 +10140,7 @@ function ze() {
       K.phase === "cinematic"
         ? "La partie est en pause. La diplomatie commence par le buffet."
         : K.phase === "moving"
-          ? `Les ${K.people.filter((o) => o.alive).length} affamés jouent en même temps. Attention aux gros !`
+          ? `Les ${K.people.filter((o) => o.alive).length} gourmands jouent en même temps. Attention aux gros !`
           : K.phase === "ended"
             ? "Une revanche ? La cuisine est encore ouverte."
             : q?.kind === "shot"

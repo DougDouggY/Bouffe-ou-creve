@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js?v=ambient-music-4"></script>
+    <script type="module" src="./game.js?v=bistro-menu-5"></script>
 
-    <link rel="stylesheet" href="./style.css?v=ambient-music-4" />
+    <link rel="stylesheet" href="./style.css?v=bistro-menu-5" />
   </head>
   <body>
     <div id="app">
@@ -82,7 +82,7 @@
                   y="611"
                   text-anchor="middle"
                 >
-                  24 affamés
+                  24 gourmands
                 </text>
               </g>
               <g
@@ -102,7 +102,7 @@
                   y="505"
                   text-anchor="middle"
                 >
-                  8 affamés
+                  8 gourmands
                 </text>
               </g>
               <g
@@ -122,7 +122,7 @@
                   y="392"
                   text-anchor="middle"
                 >
-                  50 affamés
+                  50 gourmands
                 </text>
               </g>
               <g
@@ -153,8 +153,9 @@
           </div>
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
+            <p class="menu-kicker">Bouffe ou Crève · La maison des gourmands</p>
             <h2 id="map-mode-title">CLASSIQUE</h2>
-            <p>Choisis où aura lieu le prochain festin.</p>
+            <p>Notre carte, vos envies. Choisissez le décor de votre festin.</p>
             <div class="gallery-heading">
               <h3>La carte du jour</h3>
               <label
@@ -207,10 +208,46 @@
           </form>
         </dialog>
         <dialog id="options-dialog">
+          <p class="menu-kicker">Les petits soins de la maison</p>
           <h2>À TA SAUCE</h2>
           <p>
             Le son et le plein écran sont aussi accessibles pendant la partie.
           </p>
+          <details id="how-to-play" class="restaurant-guide">
+            <summary>Comment jouer ?</summary>
+            <p class="guide-intro">
+              Le dernier gourmand à table remporte le festin.
+            </p>
+            <ol>
+              <li>
+                <strong>Choisis ton menu.</strong> Classique : 8 gourmands.
+                États-Unis : 24 gourmands. Somalie : 50 gourmands dans la
+                savane. Choisis ensuite une carte.
+              </li>
+              <li>
+                <strong>Vise et relâche.</strong> Avec la souris ou le doigt,
+                pars de ton personnage, tire vers l’arrière puis relâche. Tous
+                les gourmands partent en même temps ! Les plus légers vont plus
+                loin.
+              </li>
+              <li>
+                <strong>Prends du poids.</strong> Les burgers donnent +15 kg,
+                les XL +40 kg. Les salades enlèvent 18 kg, les XL 45 kg. En
+                Somalie, les steaks de moustiques donnent +2 kg.
+              </li>
+              <li>
+                <strong>Dévore les plus petits.</strong> Fonce avec de l’élan
+                sur un gourmand : tu dois être plus de 10 % plus lourd que lui.
+                Un simple contact à l’arrêt ne suffit pas. Méfie-toi des plus
+                gros !
+              </li>
+              <li>
+                <strong>Reste le dernier.</strong> Utilise les rebonds et les
+                effets de la carte pour survivre. Dans les supermarchés, tu peux
+                dévorer les rayons dès 350 kg.
+              </li>
+            </ol>
+          </details>
           <fieldset class="music-options">
             <legend>♫ Musique d’ambiance</legend>
             <label class="music-toggle"
@@ -220,7 +257,7 @@
             <label class="music-volume-label" for="music-volume"
               >Volume de la musique
               <output id="music-volume-value" for="music-volume"
-                >25 %</output
+                >15 %</output
               ></label
             >
             <input
@@ -229,7 +266,7 @@
               min="0"
               max="100"
               step="1"
-              value="25"
+              value="15"
               aria-describedby="music-status"
             />
             <p id="music-status" role="status">Musique désactivée.</p>
@@ -305,7 +342,7 @@
         <div id="play-area" hidden>
           <section class="intro">
             <div>
-              <div class="eyebrow">8 AFFAMÉS. UNE SEULE PLACE À TABLE.</div>
+              <div class="eyebrow">8 GOURMANDS. UNE SEULE PLACE À TABLE.</div>
               <h1>La faim justifie<br /><em>les moyens.</em></h1>
               <p>Grossis. Vise juste. Mange tes voisins.</p>
             </div>
@@ -339,9 +376,9 @@
               >
               <div class="mode-picker" role="group" aria-label="Mode de jeu">
                 <button data-mode="classic" aria-pressed="true">
-                  Classique <small>8 affamés</small></button
+                  Classique <small>8 gourmands</small></button
                 ><button data-mode="gros" aria-pressed="false">
-                  États-Unis <small>24 affamés</small>
+                  États-Unis <small>24 gourmands</small>
                 </button>
               </div>
             </div>

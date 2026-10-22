@@ -22,7 +22,7 @@ export function createGameAudio({
   let pending = false;
   jingle.loop = false;
   jingle.preload = "auto";
-  jingle.volume = 0.65;
+  jingle.volume = 0.35;
 
   async function startJingle() {
     if (muted || played || pending || !isMenuVisible()) return;
@@ -50,7 +50,7 @@ export function createGameAudio({
       if (muted || !isPlayerMeal(event, actor, victim)) return;
       // Separate voices preserve rapid, distinct mouthfuls without restarting a sound.
       const sound = new AudioClass(mealURL);
-      sound.volume = 0.8;
+      sound.volume = 0.35;
       sound.loop = false;
       meals.add(sound);
       const release = () => meals.delete(sound);

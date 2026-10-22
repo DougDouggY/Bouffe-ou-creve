@@ -56,6 +56,7 @@ try {
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('.burger-menu').dataset.masksReady === 'true');
   await page.evaluate(() => document.fonts.ready);
+  assert.equal(/affam/i.test(await page.locator('body').textContent()),false);
   const idle = await page.screenshot({ path: path.join(output, 'menu-repos.png') });
   await page.addStyleTag({ content: '.ingredient-light { display: none !important; }' });
   const noLights = await page.screenshot();
@@ -101,7 +102,7 @@ try {
     assert.equal(await page.locator(`[data-ingredient="${id}"]`).evaluate(group => getComputedStyle(group.querySelector('.ingredient-texture')).animationName),'ingredient-press');
     await page.locator(opened).waitFor({state:'visible'});
     assert(await page.locator(opened).isVisible(),id+' opens its destination');
-    if (opened === '#map-screen') assert.equal(await page.locator('#map-mode-title').textContent(), id === 'somalia' ? 'SOMALIE · 50 AFFAMÉS' : id === 'gros' ? 'ÉTATS-UNIS · 24 AFFAMÉS' : 'CLASSIQUE · 8 AFFAMÉS');
+    if (opened === '#map-screen') assert.equal(await page.locator('#map-mode-title').textContent(), id === 'somalia' ? 'SOMALIE · 50 GOURMANDS' : id === 'gros' ? 'ÉTATS-UNIS · 24 GOURMANDS' : 'CLASSIQUE · 8 GOURMANDS');
     await page.locator(close).click();
     checks++;
   }
@@ -291,6 +292,7 @@ try {
   await mobile.screenshot({path:path.join(output,'menu-mobile.png')});
   await mobile.touchscreen.tap(mobilePoint.x,mobilePoint.y);
   await mobile.locator('#map-screen').waitFor({state:'visible'});
+  await mobile.screenshot({path:path.join(output,'carte-restaurant-mobile.png')});
   assert(await mobile.locator('#map-screen').isVisible());
   checks++;
   await mobile.locator('#back-title').click();
@@ -322,21 +324,31 @@ try {
   }
   await musicPage.goto(url);
   await openMusicOptions();
+  const guide=musicPage.locator('#how-to-play');
+  await guide.locator('summary').focus();
+  await musicPage.keyboard.press('Enter');
+  assert(await guide.evaluate(node=>node.open));
+  assert.equal(await guide.locator('li').count(),5);
+  assert((await guide.textContent()).includes('350 kg'));
+  await musicPage.screenshot({path:path.join(output,'comment-jouer-mobile.png')});
+  await guide.locator('summary').click();
+  assert.equal(await guide.evaluate(node=>node.open),false);
+  checks++;
   assert.equal(await musicPage.locator('#music-enabled').isChecked(),false);
   await musicPage.locator('#music-enabled').check();
   await musicPage.waitForFunction(()=>window.__musicVoices[0]?.currentTime>0.1);
   const playing=await musicPage.evaluate(()=>{const a=window.__musicVoices[0];return {loop:a.loop,volume:a.volume,paused:a.paused};});
-  assert(playing.loop && !playing.paused);assert.equal(playing.volume,.25);
+  assert(playing.loop && !playing.paused);assert.equal(playing.volume,.09);
   checks++;
   await musicPage.locator('#music-volume').focus();
   await musicPage.keyboard.press('End');
   assert.equal(await musicPage.locator('#music-volume-value').textContent(),'100 %');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),1);
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.6);
   await musicPage.keyboard.press('Home');
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   for(let i=0;i<30;i++)await musicPage.keyboard.press('ArrowRight');
   assert.equal(await musicPage.locator('#music-volume-value').textContent(),'30 %');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.3);
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.18);
   await musicPage.locator('#option-sound').click();
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   assert.equal(await musicPage.locator('#music-status').textContent(),'Le son général est coupé.');
@@ -348,7 +360,7 @@ try {
   await openMusicOptions();
   assert(await musicPage.locator('#music-enabled').isChecked());
   assert.equal(await musicPage.locator('#music-volume').inputValue(),'30');
-  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.3);
+  assert.equal(await musicPage.evaluate(()=>window.__musicVoices[0].volume),.18);
   await musicPage.locator('#music-enabled').uncheck();
   assert(await musicPage.evaluate(()=>window.__musicVoices[0].paused));
   await musicPage.reload();await openMusicOptions();

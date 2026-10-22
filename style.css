@@ -2282,3 +2282,240 @@ svg.burger-menu {
     font-size: 9px;
   }
 }
+
+/* Printed bistro menus: warm paper, wine-red ink and a fine double frame. */
+#map-screen,
+#options-dialog,
+#chef-dialog,
+#shop-dialog,
+#trophies-dialog {
+  --menu-ink: #713b35;
+  --menu-paper: #fbf4e5;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #805b2e03 0px,
+      #805b2e03 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    var(--menu-paper);
+  color: #42392d;
+  border: 4px double #9b6252;
+  border-radius: 4px;
+  box-shadow:
+    0 18px 48px #372b202e,
+    inset 0 0 35px #a9793310;
+}
+#map-screen {
+  padding: 28px 30px;
+}
+.menu-kicker {
+  margin: 0 0 12px;
+  color: #885a48;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+}
+#map-screen #map-mode-title,
+#options-dialog h2,
+#chef-dialog h2,
+#shop-dialog h2,
+#trophies-dialog h2 {
+  color: #713b35;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+#map-screen #map-mode-title {
+  margin-top: 18px;
+  font-size: clamp(25px, 4vw, 40px);
+  text-align: center;
+}
+#map-screen #map-mode-title + p {
+  text-align: center;
+  font-style: italic;
+  color: #78634d;
+}
+#map-screen .gallery-heading {
+  padding-bottom: 15px;
+  border-bottom: 3px double #b59472;
+}
+#map-screen .gallery-heading h3,
+#map-screen .map-category h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #713b35;
+}
+#map-screen .map-category h3 {
+  padding: 14px 0 10px;
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 22px;
+  border-bottom: 1px solid #ccb49a;
+}
+#map-screen .map-category > p {
+  text-align: center;
+  font-style: italic;
+}
+#map-screen .map-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  padding: 0 4px;
+}
+#map-screen .map-card {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px 10px;
+  min-height: 82px;
+  padding: 14px 9px;
+  background: transparent;
+  color: #463b2d;
+  border: 0;
+  border-bottom: 1px dotted #ac8b6d;
+  border-radius: 0;
+  box-shadow: none;
+}
+#map-screen .map-card > span {
+  grid-row: span 2;
+  font-size: 25px;
+}
+#map-screen .map-card strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+#map-screen .map-card small {
+  grid-column: 2;
+  font-size: 9px;
+}
+#map-screen .map-card:hover {
+  background: #efe0c5;
+}
+#map-screen .map-card[aria-pressed="true"] {
+  background: #713b35;
+  color: #fff6df;
+  outline: 1px solid #713b35;
+  outline-offset: -1px;
+}
+#map-screen .map-card[aria-pressed="true"] small {
+  color: #f8d9a6;
+}
+#map-screen .map-card:focus-visible {
+  outline: 2px solid #925a39;
+  outline-offset: -2px;
+}
+#map-screen .map-category-testing {
+  border-top: 3px double #b59472;
+}
+#menu-map-description {
+  padding: 14px 0;
+  border-top: 1px solid #cbb397;
+  color: #715e49;
+  font-size: 13px;
+  line-height: 1.6;
+}
+#map-screen .primary {
+  display: block;
+  margin: 10px auto 0;
+  background: #713b35;
+  border-color: #713b35;
+  border-radius: 3px;
+}
+#options-dialog,
+#chef-dialog {
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+#options-dialog h2 {
+  margin: 12px 0 18px;
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 3px double #b59472;
+}
+#options-dialog button,
+#chef-dialog button {
+  border-color: #b79779;
+  border-radius: 3px;
+  background: #f5e8d0;
+  color: #633c32;
+}
+#options-dialog .music-options {
+  border-color: #c4a884;
+  border-radius: 3px;
+}
+#options-dialog .music-options legend {
+  color: #713b35;
+  font-family: Georgia, "Times New Roman", serif;
+}
+#music-enabled,
+#music-volume {
+  accent-color: #713b35;
+}
+#trophies-dialog header,
+#shop-dialog .shop-heading {
+  background: #f7ecd6f7;
+  border-bottom: 3px double #b59472;
+}
+.restaurant-guide {
+  margin: 18px 0;
+  padding: 12px 0;
+  border-top: 1px dotted #b59472;
+  border-bottom: 1px dotted #b59472;
+}
+.restaurant-guide summary {
+  cursor: pointer;
+  padding: 7px 0;
+  color: #713b35;
+  font:
+    700 19px Georgia,
+    "Times New Roman",
+    serif;
+}
+.restaurant-guide summary:focus-visible {
+  outline: 2px solid #925a39;
+  outline-offset: 4px;
+}
+.restaurant-guide .guide-intro {
+  font-style: italic;
+  color: #78634d;
+  font-size: 13px;
+}
+.restaurant-guide ol {
+  padding-left: 22px;
+  margin-bottom: 6px;
+}
+.restaurant-guide li {
+  padding: 5px 0 10px 4px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.restaurant-guide li::marker {
+  color: #925a39;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+.restaurant-guide li strong {
+  display: block;
+  color: #713b35;
+}
+@media (max-width: 650px) {
+  #map-screen {
+    padding: 22px 14px;
+  }
+  #map-screen .map-gallery {
+    grid-template-columns: 1fr;
+  }
+  #map-screen .map-categories {
+    max-height: 48vh;
+  }
+  #options-dialog {
+    padding: 22px 18px;
+  }
+  #options-dialog .menu-kicker {
+    font-size: 9px;
+    letter-spacing: 1.4px;
+  }
+}

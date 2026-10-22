@@ -29,12 +29,12 @@ test("music is opt-in, loops once enabled, and volume is independent and persist
   const music = createAmbientMusic(f.options);
   assert.equal(music.state.enabled, false);
   assert.equal(f.voices[0].calls, 0);
-  assert.equal(f.voices[0].volume, 0.25);
+  assert.equal(f.voices[0].volume, 0.09);
   assert.equal(f.voices[0].loop, true);
   music.setEnabled(true); await settle();
   assert(music.state.playing);
   music.setVolume(0.4);
-  assert.equal(f.voices[0].volume, 0.4);
+  assert.equal(f.voices[0].volume, 0.24);
   assert.deepEqual(f.saved, { enabled: true, volume: 0.4 });
   f.target.dispatchEvent(new Event("pointerdown"));
   assert.equal(f.voices[0].calls, 1, "gestures do not restart a running loop");
@@ -55,7 +55,7 @@ test("saved music retries blocked autoplay after a gesture and restores its volu
   f.blocked = true;
   const music = createAmbientMusic(f.options);
   await settle(); assert(music.state.blocked);
-  assert.equal(f.voices[0].volume, 0.6);
+  assert.equal(f.voices[0].volume, 0.36);
   f.blocked = false; f.target.dispatchEvent(new Event("keydown"));
   await settle(); assert(music.state.playing);
   assert.equal(music.state.blocked, false);
@@ -65,7 +65,7 @@ test("invalid storage or volume cannot break audio setup", () => {
   const f = fixture({ enabled: "yes", volume: "loud" });
   const music = createAmbientMusic(f.options);
   assert.equal(music.state.enabled, false);
-  assert.equal(music.state.volume, 0.25);
+  assert.equal(music.state.volume, 0.15);
   music.setVolume(5); assert.equal(music.state.volume, 1);
   music.setVolume(-1); assert.equal(music.state.volume, 0);
   assert.doesNotThrow(() => createAmbientMusic({ ...f.options, storage: { getItem() { throw new Error("unavailable"); }, setItem() { throw new Error("unavailable"); } } }));
