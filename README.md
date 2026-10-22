@@ -82,3 +82,9 @@ Classique (8 gourmands) est le mode initial. Une victoire ouvre **Grand Banquet 
 Le choix des cartes propose deux livres de restaurant, validées et essais, avec pages de noms et aperçus sans description. Les explications s’ouvrent à l’arrivée en jeu. L’arène occupe tout l’écran avec seulement Menu, poids et survivants en transparence ; les terrains sont agrandis sans changer de taille lors d’une rotation du téléphone. Les nouveaux fonds réalistes et les deux visages du roi remplacent les anciens décors des cinq arènes retouchées.
 
 `node tools/generate-previews.mjs` régénère les cinq aperçus des cartes historiques à partir du véritable rendu du jeu.
+
+## Taille des arènes et limites
+
+Les cartes normales partagent un terrain de **3 600 × 2 700**, tous modes confondus. Cuisine en zigzag et Food court ne sont plus proposés. Le bateau et la chambre froide ont de nouveaux fonds ; des bordures physiques empêchent l’accès à la mer, aux équipements périphériques et à la vaisselle autour de la table royale. L’ouverture vers la bouche reste libre. Les bumpers sont agrandis.
+
+Tous les aperçus sont générés depuis le rendu complet : volcan visible, bumpers et murs inclus, filtre sombre pour la version nocturne. `node tools/generate-previews.mjs` régénère les 19 images actuellement accessibles.

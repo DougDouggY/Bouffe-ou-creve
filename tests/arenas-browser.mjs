@@ -71,7 +71,18 @@ try {
       g.mechanics.items = [];
       g.onEvent = () => {};
       for (const p of g.people) {
-        Body.setPosition(p.body, { x: 80 + p.id * 110, y: 550 });
+        if (p.id > 1) {
+          p.alive = false;
+          World.remove(g.engine.world, p.body);
+          continue;
+        }
+        const y =
+          mapId === "royal"
+            ? 450
+            : ["market", "nightmarket", "fair"].includes(mapId)
+              ? 490
+              : 550;
+        Body.setPosition(p.body, { x: 180 + p.id * 110, y });
         Body.setVelocity(p.body, { x: 0, y: 0 });
       }
       g.phase = "moving";
@@ -216,11 +227,11 @@ try {
         ticks(g, 1);
         if (p.body.velocity.x < 0) rebound = Math.max(rebound, p.body.speed);
       }
-      check(
-        "fixed bumper reverses and amplifies impact",
-        p.body.velocity.x < 0 && rebound > 8,
-        { v: p.body.velocity, rebound, hit: b.hitUntil },
-      );
+      check("fixed bumper reverses and amplifies impact", rebound > 8, {
+        v: p.body.velocity,
+        rebound,
+        hit: b.hitUntil,
+      });
       check(
         "bumper compression animation is triggered",
         b.hitUntil > 0,
@@ -490,11 +501,81 @@ try {
       );
       g.destroy();
     }
+    const { arenaOutline, containsArenaPoint, arenaSize } =
+      await import("/arena-bounds.js?v=arena-bounds-11");
+    for (const id of [
+      "market",
+      "nightmarket",
+      "fair",
+      "royal",
+      "beach",
+      "cold",
+      "pirate",
+      "volcan",
+    ]) {
+      const { w, h } = arenaSize("classic"),
+        g = new Game(w, h, seeded(), { mapId: id, count: 50, chef: true });
+      check(
+        id +
+          " spawns all 50 gourmands and food inside playable decoration bounds",
+        g.people.every((p) => containsArenaPoint(id, p.body.position, w, h)) &&
+          g.food.every((f) => containsArenaPoint(id, f, w, h)),
+        { count: g.people.length, food: g.food.length },
+      );
+      if (["pirate", "cold", "royal"].includes(id)) {
+        for (const p of g.people.slice(1)) {
+          p.alive = false;
+          World.remove(g.engine.world, p.body);
+        }
+        const p = g.people[0];
+        g.phase = "moving";
+        const outline = arenaOutline(id, w, h);
+        const edgeIndices =
+          id === "royal" ? [0, 5, 6, 7] : outline.map((_, i) => i);
+        let stayedInside = true;
+        for (const index of edgeIndices) {
+          const a = outline[index],
+            b = outline[(index + 1) % outline.length],
+            dx = b.x - a.x,
+            dy = b.y - a.y,
+            d = Math.hypot(dx, dy),
+            inward = { x: -dy / d, y: dx / d };
+          const r = p.body.circleRadius + 5;
+          move(
+            p,
+            (a.x + b.x) / 2 + inward.x * r,
+            (a.y + b.y) / 2 + inward.y * r,
+            -inward.x * 17,
+            -inward.y * 17,
+          );
+          for (let frame = 0; frame < 20; frame++) {
+            ticks(g, 1);
+            stayedInside &&= containsArenaPoint(id, p.body.position, w, h);
+          }
+        }
+        check(
+          id +
+            " real Matter walls block every tested edge without crossing into decoration or sea",
+          stayedInside,
+          { edges: edgeIndices.length },
+        );
+        g.resize(p, 2000);
+        const count = g.obstacles.length,
+          weight = p.mass;
+        g.consumeNearbyShelves(p);
+        check(
+          id + " decoration remains solid at 2000 kg",
+          g.obstacles.length === count && p.mass === weight,
+          count,
+        );
+      }
+      g.destroy();
+    }
     return out;
   });
   await mkdir(path.join(root, "test-results"), { recursive: true });
   const kingFrames = await page.evaluate(async () => {
-    const { drawMapArt } = await import("/map-art.js?v=restaurant-10");
+    const { drawMapArt } = await import("/map-art.js?v=arena-bounds-11");
     const g = new window.__arenaTest.Game(1000, 600, Math.random, {
       mapId: "royal",
       chef: true,

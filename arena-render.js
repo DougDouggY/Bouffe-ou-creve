@@ -1,4 +1,4 @@
-import { isVisible } from "./visibility.js?v=restaurant-10";
+import { isVisible } from "./visibility.js?v=arena-bounds-11";
 const images = new Map();
 function asset(id) {
   if (!images.has(id)) {
@@ -45,6 +45,7 @@ export function drawArenaFloor(ctx, g, time) {
   ctx.save();
   if (["market", "nightmarket"].includes(g.mapId)) {
     for (const shelf of g.obstacles) {
+      if (shelf.boundary) continue;
       ctx.save();
       ctx.translate(shelf.x, shelf.y);
       ctx.rotate((shelf.angle || 0) + Math.PI / 2);
@@ -53,8 +54,45 @@ export function drawArenaFloor(ctx, g, time) {
       ctx.restore();
     }
   }
+  if (g.mapId === "cold")
+    for (const obstacle of g.obstacles) {
+      if (obstacle.boundary) continue;
+      ctx.save();
+      ctx.translate(obstacle.x, obstacle.y);
+      ctx.rotate(obstacle.angle);
+      const w = obstacle.w,
+        h = obstacle.h;
+      ctx.shadowColor = "#19394677";
+      ctx.shadowBlur = 16;
+      ctx.shadowOffsetY = 10;
+      const steel = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
+      steel.addColorStop(0, "#34596d");
+      steel.addColorStop(0.18, "#a7cbd8");
+      steel.addColorStop(0.75, "#d6e8eb");
+      steel.addColorStop(1, "#567b8c");
+      ctx.fillStyle = steel;
+      ctx.fillRect(-w / 2, -h / 2, w, h);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.strokeStyle = "#e6f7fc";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6);
+      ctx.strokeStyle = "#648699";
+      ctx.lineWidth = 2;
+      for (let y = -h / 2 + 20; y < h / 2 - 10; y += 13) {
+        ctx.beginPath();
+        ctx.moveTo(-w / 2 + 10, y);
+        ctx.lineTo(w / 2 - 10, y);
+        ctx.stroke();
+      }
+      for (const x of [-w / 2 + 9, w / 2 - 9])
+        for (const y of [-h / 2 + 10, h / 2 - 10])
+          ellipse(ctx, x, y, 3, 3, "#e0f4fa");
+      ctx.restore();
+    }
   if (g.mapId === "fair")
     for (const bumper of g.obstacles) {
+      if (!bumper.bumper) continue;
       const compressed = Math.max(
         0,
         ((bumper.hitUntil || 0) - rules.clock) / 360,

@@ -1,5 +1,5 @@
-import { mapGroups } from "./map-catalog.js?v=restaurant-10";
-import { mapArtURL } from "./map-art.js?v=restaurant-10";
+import { mapGroups } from "./map-catalog.js?v=arena-bounds-11";
+import { mapArtURL } from "./map-art.js?v=arena-bounds-11";
 export function modeUnlocked(mode, profile) {
   return (
     !["gros", "usa"].includes(mode) ||
@@ -126,12 +126,7 @@ export function createRestaurantMenu(catalog, onSelect) {
       item.page.querySelector("h3").textContent = map.name;
       const figure = item.page.querySelector("figure");
       figure.replaceChildren();
-      const url =
-        mapArtURL(selected) ||
-        { volcan: "./assets/volcano.webp", savanna: "./assets/savanna.webp" }[
-          selected
-        ] ||
-        `./assets/previews/${selected}.webp`;
+      const url = `./assets/previews/${selected}.webp?v=arena-bounds-11`;
       const img = new Image();
       img.className = "map-preview";
       img.alt = `Aperçu de ${map.name}`;

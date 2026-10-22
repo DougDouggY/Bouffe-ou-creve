@@ -113,6 +113,61 @@ try {
   });
   checks++;
   await select("market");
+  for (const id of ["cuisine", "foodcourt"])
+    assert.equal(
+      await page
+        .locator(`[data-map="${id}"],#map-select option[value="${id}"]`)
+        .count(),
+      0,
+    );
+  const previews = await page.evaluate(async () => {
+    const scan = async (id) => {
+      const img = new Image();
+      img.src = "./assets/previews/" + id + ".webp";
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = 120;
+      c.height = 90;
+      const x = c.getContext("2d");
+      x.drawImage(img, 0, 0, 120, 90);
+      const data = x.getImageData(0, 0, 120, 90).data;
+      let luminance = 0,
+        orange = 0,
+        pink = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i],
+          g = data[i + 1],
+          b = data[i + 2];
+        luminance += (r + g + b) / 3;
+        const pixel = i / 4,
+          px = pixel % 120,
+          py = Math.floor(pixel / 120);
+        if (
+          px > 43 &&
+          px < 77 &&
+          py > 30 &&
+          py < 60 &&
+          r > 160 &&
+          g > 65 &&
+          b < 100
+        )
+          orange++;
+        if (r > 180 && g < 130 && b > 90) pink++;
+      }
+      return { luminance: luminance / (120 * 90), orange, pink };
+    };
+    return {
+      day: await scan("market"),
+      night: await scan("nightmarket"),
+      volcano: await scan("volcan"),
+      fair: await scan("fair"),
+    };
+  });
+  assert(previews.night.luminance < previews.day.luminance * 0.6);
+  assert(previews.volcano.orange > 20);
+  assert(previews.fair.pink > 20);
+  checks++;
+
   assert(await page.locator("#menu-map-description").isHidden());
   assert.equal(
     await page.locator(".restaurant-page:visible .map-preview").count(),
@@ -140,7 +195,12 @@ try {
   );
   await page.locator("#close-briefing").click();
   assert.equal(await page.evaluate(() => window.__game.count), 8);
-  assert.equal(await page.evaluate(() => window.__game.obstacles.length), 0);
+  assert.equal(
+    await page.evaluate(
+      () => window.__game.obstacles.filter((o) => !o.boundary).length,
+    ),
+    0,
+  );
   assert(
     await page.evaluate(
       () => window.__game.w >= 1900 && window.__game.h >= 1400,

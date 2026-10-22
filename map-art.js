@@ -1,4 +1,6 @@
 export const ILLUSTRATED_MAPS = [
+  "cold",
+  "pirate",
   "market",
   "nightmarket",
   "fair",
@@ -18,7 +20,7 @@ const images = new Map();
 export function mapArtURL(id) {
   return ILLUSTRATED_MAPS.includes(id)
     ? new URL(
-        `./assets/maps/${id === "nightmarket" ? "market" : id}${["market", "nightmarket", "fair", "royal", "beach"].includes(id) ? "-real" : ""}.webp`,
+        `./assets/maps/${id === "nightmarket" ? "market" : id}${["cold", "pirate"].includes(id) ? "-bounds" : ["market", "nightmarket", "fair", "royal", "beach"].includes(id) ? "-real" : ""}.webp`,
         import.meta.url,
       ).href
     : null;

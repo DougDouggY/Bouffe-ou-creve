@@ -299,7 +299,7 @@ export class ArenaMechanics {
     }
     if (actor?.kind === "security") this.guardContact(p, actor);
     const bumper = g.obstacleBodies.indexOf(a.person ? b : a);
-    if (g.mapId === "fair" && bumper >= 0) {
+    if (g.mapId === "fair" && bumper >= 0 && g.obstacles[bumper].bumper) {
       const obstacle = g.obstacles[bumper],
         key = "bumper" + bumper;
       if ((p[key] || 0) > this.clock) return;

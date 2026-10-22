@@ -1,34 +1,39 @@
 import {
+  arenaSize,
+  arenaBorderBodies,
+  drawArenaBorders,
+} from "./arena-bounds.js?v=arena-bounds-11";
+import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=restaurant-10";
-import { ArenaMechanics } from "./arena-mechanics.js?v=restaurant-10";
+} from "./restaurant-menu.js?v=arena-bounds-11";
+import { ArenaMechanics } from "./arena-mechanics.js?v=arena-bounds-11";
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=restaurant-10";
+} from "./arena-render.js?v=arena-bounds-11";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=restaurant-10";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=restaurant-10";
+} from "./cosmetics.js?v=arena-bounds-11";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-bounds-11";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js?v=restaurant-10";
+} from "./map-catalog.js?v=arena-bounds-11";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=restaurant-10";
+} from "./visibility.js?v=arena-bounds-11";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=restaurant-10";
-import { setupMusicControls } from "./music.js?v=restaurant-10";
+import { createGameAudio } from "./audio.js?v=arena-bounds-11";
+import { setupMusicControls } from "./music.js?v=arena-bounds-11";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -95,13 +100,8 @@ const me = {
   somalia: { name: "Somalie", count: 50, onlyMap: "savanna" },
   chef: { name: "Chef", count: 1 },
 };
-function GI(mode, map, width, height) {
-  if (mode === "somalia") return { w: 3200, h: 2200 };
-  if (map === "cold")
-    return { w: mode === "usa" ? 4400 : 3600, h: mode === "usa" ? 3000 : 2400 };
-  if (mode === "usa") return { w: 3600, h: 2600 };
-  if (mode === "gros") return { w: 2800, h: 2000 };
-  return { w: Math.max(1900, width * 1.5), h: Math.max(1400, height * 1.5) };
+function GI(mode) {
+  return arenaSize(mode);
 }
 
 const We = (e, g, o) => Math.max(g, Math.min(o, e));
@@ -1108,7 +1108,7 @@ function _e(e, g, o, u = 1) {
       E(0.67, 0.6, 0.23, 0.035, u % 2 ? -0.55 : 0.55),
     ];
   if (["gym", "fair"].includes(e)) {
-    const A = Math.min(g, o) * 0.055;
+    const A = Math.min(g, o) * (e === "fair" ? 0.085 : 0.055);
     return [0.25, 0.5, 0.75].map((n, i) => ({
       x: n * g,
       y: (i % 2 ? 0.65 : 0.35) * o,
@@ -1590,7 +1590,7 @@ function HI(e, g, o, u) {
       de(e, i, C - I / 2, A * 0.1 - I / 2, I, I);
   }
   for (const I of g.obstacles) {
-    if (n === "volcan") continue;
+    if (n === "volcan" || I.boundary) continue;
     if (
       (e.save(),
       e.translate(I.x, I.y),
@@ -2607,6 +2607,7 @@ function dt(e, g, o, u = 0) {
   if (!drawMapArt(e, g)) HI(e, g, o, u);
   if (["station", "works", "mirror"].includes(n)) {
     for (const obstacle of g.obstacles) {
+      if (obstacle.boundary) continue;
       e.save();
       e.translate(obstacle.x, obstacle.y);
       e.rotate(obstacle.angle);
@@ -2840,6 +2841,7 @@ function dt(e, g, o, u = 0) {
     }
     e.restore();
   }
+  drawArenaBorders(e, g);
   ((e.strokeStyle = n === "cuisine" ? "#7b8f80" : "#9b805e"),
     (e.lineWidth = 4),
     e.strokeRect(2, 2, E - 4, A - 4),
@@ -9299,7 +9301,9 @@ class zt {
             : 64
           : this.count > 8
             ? 96
-            : 16),
+            : g * o > 6e6
+              ? 64
+              : 16),
       (this.foodCap = this.savanna
         ? 120
         : this.mapId === "cold" && g * o > 2e6
@@ -9308,9 +9312,14 @@ class zt {
             : 96
           : this.count > 8
             ? 140
-            : 22),
+            : g * o > 6e6
+              ? 96
+              : 22),
       (this.announcement = null),
-      (this.obstacles = _e(this.mapId, g, o)),
+      (this.obstacles = [
+        ..._e(this.mapId, g, o),
+        ...arenaBorderBodies(this.mapId, g, o),
+      ]),
       (this.zones = Ee(this.mapId, g, o)),
       (this.w = g),
       (this.h = o),
@@ -10016,7 +10025,10 @@ class zt {
       o && Object.assign(g, LA(o, 12, this.obstacles, this.w, this.h));
     }
     if (["candy", "haunted", "works"].includes(this.mapId)) {
-      ((this.obstacles = _e(this.mapId, this.w, this.h, this.round)),
+      ((this.obstacles = [
+        ..._e(this.mapId, this.w, this.h, this.round),
+        ...arenaBorderBodies(this.mapId, this.w, this.h),
+      ]),
         this.obstacles.forEach((g, o) => {
           (eA.setPosition(this.obstacleBodies[o], g),
             eA.setAngle(this.obstacleBodies[o], g.angle));

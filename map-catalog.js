@@ -1,5 +1,7 @@
 // Rendering's historical `experimental` flag is independent of playtest approval.
 export const REMOVED_MAPS = new Set([
+  "cuisine",
+  "foodcourt",
   "sushi",
   "cinema",
   "gym",

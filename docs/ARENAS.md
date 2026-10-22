@@ -50,6 +50,14 @@ Somalie passe derrière Options → La face cachée du burger → mot de passe P
 
 Deux cartes de restaurant séparent les cartes validées des essais ; l’autre couverture est écartée lors de l’ouverture. Une liste de noms et des pages avec un seul titre et aperçu remplacent les descriptions du sélecteur. Les règles apparaissent dans la fenêtre à l’entrée de l’arène.
 
-L’arène occupe le viewport, sans demander l’autorisation de masquer l’interface du navigateur. Seuls Menu, survivants et poids restent affichés en surimpression. La taille du monde ne dépend pas des redimensionnements de la fenêtre ; la caméra suit le joueur. Les terrains classiques commencent à 1 900 × 1 400, le mode 24 utilise 2 800 × 2 000 et le mode 50 3 600 × 2 600.
+L’arène occupe le viewport, sans demander l’autorisation de masquer l’interface du navigateur. Seuls Menu, survivants et poids restent affichés en surimpression. La taille du monde ne dépend pas des redimensionnements de la fenêtre ; la caméra suit le joueur. Tous les terrains normaux utilisent désormais 3 600 × 2 700, en Classique comme à 24 et à 50 gourmands. Le mode secret Somalie conserve son terrain spécifique.
 
 Nouveaux fonds réalistes pour le supermarché partagé jour / nuit, la plage, la fête foraine et le roi. Le roi utilise deux illustrations alignées, bouche fermée et ouverte, avec fondu pendant l’aspiration et le rot. Aucune bouche géométrique n’est dessinée par-dessus le visage. La mer borde tout le bas de la plage et la vague pousse vers le haut.
+
+## Périmètres et aperçus complets
+
+Cuisine en zigzag et Food court sont retirés du catalogue et des choix de partie. Les aperçus passent tous par le véritable rendu de l’arène : cratère du volcan, bumpers, obstacles et bordures sont inclus. Le supermarché nocturne reçoit un voile sombre dans son aperçu, tout en partageant toujours le fond du jour en jeu.
+
+`arena-bounds.js` fournit le contour visible et les solides Matter du pourtour. Les mêmes obstacles servent au placement des personnages, de la nourriture et des objets, au calcul des déplacements et à la croissance des personnages. Les bordures ne sont pas comestibles. Le bateau est un polygone de pont fermé, avec mer inaccessible ; le roi conserve une ouverture dans la bordure supérieure vers sa bouche. Les coins et bords sont testés avec 50 départs puis avec de vraies propulsions contre chaque côté. La chambre froide garde son sol glissant et ses deux obstacles centraux.
+
+Les bumpers de fête foraine passent d’un rayon de 5,5 % à 8,5 % de la petite dimension du terrain. La densité de nourriture du Classique agrandi est maintenue avec une cible de 64 aliments et un plafond de 96.
