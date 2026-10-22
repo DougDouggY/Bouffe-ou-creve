@@ -7,8 +7,8 @@ import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js";
-import { setupBurgerMenu } from "./burger-menu.js";
+} from "./visibility.js?v=small-halo-menu-3";
+import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
 import { createGameAudio } from "./audio.js";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 

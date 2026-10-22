@@ -27,6 +27,9 @@ async function loadImage(src) {
 export async function setupBurgerMenu() {
   const svg = document.querySelector("svg.burger-menu");
   const defs = element("defs");
+  const illustration = await loadImage(
+    new URL("./assets/burger-menu.webp", import.meta.url).href,
+  );
   const layers = await Promise.all(
     INGREDIENTS.map(async ([id, color]) => {
       const group = svg.querySelector(`#${id}, [data-menu-mode="${id}"]`);
@@ -53,6 +56,29 @@ export async function setupBurgerMenu() {
       mask.append(
         element("image", { href: url, width: WIDTH, height: HEIGHT }),
       );
+      // Move only this ingredient's original pixels inside its fixed silhouette.
+      // The untouched illustration below fills the tiny exposed strip: no holes,
+      // doubled outer contours or pixels borrowed from neighboring ingredients.
+      context.clearRect(0, 0, WIDTH, HEIGHT);
+      context.drawImage(illustration, 0, 0);
+      context.globalCompositeOperation = "destination-in";
+      context.drawImage(image, 0, 0);
+      context.globalCompositeOperation = "source-over";
+      const surface = element("g", {
+        class: "ingredient-surface",
+        mask: `url(#alpha-${id})`,
+        "aria-hidden": "true",
+      });
+      const texture = element("image", {
+        class: "ingredient-texture",
+        href: canvas.toDataURL(),
+        width: WIDTH,
+        height: HEIGHT,
+      });
+      const bounds = group.querySelector("path").getBBox();
+      texture.style.transformOrigin = `${bounds.x + bounds.width / 2}px ${bounds.y + bounds.height / 2}px`;
+      surface.append(texture);
+      group.insertBefore(surface, group.querySelector("text"));
       // A luminous rim is computed from the raster silhouette, never the old SVG path.
       const rim = context.createImageData(WIDTH, HEIGHT);
       const rgb = color.match(/\w\w/g).map((hex) => parseInt(hex, 16));
@@ -148,18 +174,38 @@ export async function setupBurgerMenu() {
     svg.style.cursor = group ? "pointer" : "";
   }
   svg.addEventListener("pointermove", (event) => hover(pick(event)));
+  svg.addEventListener("pointerdown", (event) => hover(pick(event)));
   svg.addEventListener("pointerleave", () => hover(null));
   svg.addEventListener("pointercancel", () => hover(null));
+  const forwarded = new WeakSet();
+  let selecting = false;
   svg.addEventListener(
     "click",
     (event) => {
-      // Keyboard handlers dispatch synthetic clicks on the semantic SVG buttons.
-      if (!event.isTrusted || event.detail === 0) return;
-      const group = pick(event);
+      if (forwarded.has(event)) return;
+      const group =
+        event.isTrusted && event.detail > 0
+          ? pick(event)
+          : event.target.closest(".ingredient-button");
       event.preventDefault();
       event.stopImmediatePropagation();
-      group?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      if (event.pointerType === "touch") hover(null);
+      if (!group || selecting) return;
+      selecting = true;
+      group.classList.add("is-selecting");
+      const reducedMotion = matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const activate = () => {
+        group.classList.remove("is-selecting");
+        hover(null);
+        selecting = false;
+        const click = new MouseEvent("click", { bubbles: true });
+        forwarded.add(click);
+        group.dispatchEvent(click);
+      };
+      // A short press/rebound remains visible before changing screens.
+      if (reducedMotion) activate();
+      else setTimeout(activate, 220);
     },
     true,
   );

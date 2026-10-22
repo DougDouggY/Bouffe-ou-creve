@@ -1,5 +1,5 @@
 export function lightRadius(mapId, observer) {
-  return mapId === "nightmarket" ? Math.max(470, 175 + (observer.r || 0)) : 300;
+  return mapId === "nightmarket" ? Math.max(160, 140 + (observer.r || 0)) : 300;
 }
 
 const NIGHT_STOPS = [
@@ -11,7 +11,7 @@ const NIGHT_STOPS = [
 
 export function lightOpacity(mapId, observer, target) {
   if (mapId !== "nightmarket") return 1;
-  const core = 55 + (observer.r || 0);
+  const core = 18 + (observer.r || 0);
   const distance = Math.hypot(target.x - observer.x, target.y - observer.y);
   const progress = Math.max(
     0,
@@ -37,7 +37,8 @@ export function isVisible(mapId, observer, target, obstacles = []) {
   const dx = target.x - observer.x;
   const dy = target.y - observer.y;
   const distance = Math.hypot(dx, dy);
-  if (distance < 55 + (observer.r || 0)) return true;
+  if (distance < (mapId === "nightmarket" ? 18 : 55) + (observer.r || 0))
+    return true;
   if (distance > lightRadius(mapId, observer)) return false;
   for (const obstacle of obstacles) {
     const cosine = Math.cos(obstacle.angle);
@@ -83,7 +84,7 @@ export function drawMarketFog(context, game) {
     const gradient = context.createRadialGradient(
       observer.x,
       observer.y,
-      55 + observer.r,
+      18 + observer.r,
       observer.x,
       observer.y,
       radius,

@@ -85,7 +85,21 @@ try {
     if (id === 'gros' || id === 'somalia' || id === 'trophies-entry') {
       await page.screenshot({ path: path.join(output, `menu-${id}.png`) });
     }
+    await page.waitForFunction(id=>{
+      const node=document.querySelector(`[data-ingredient="${id}"] .ingredient-surface`);
+      return Number(getComputedStyle(node).opacity)===1;
+    },id);
+    const animation = await page.locator(`[data-ingredient="${id}"]`).evaluate(group => ({
+      opacity: Number(getComputedStyle(group.querySelector('.ingredient-surface')).opacity),
+      transform: getComputedStyle(group.querySelector('.ingredient-texture')).transform,
+      masked: group.querySelector('.ingredient-surface').getAttribute('mask'),
+    }));
+    assert.equal(animation.opacity,1);
+    assert.notEqual(animation.transform,'matrix(1, 0, 0, 1, 0, 0)');
+    assert.equal(animation.masked,`url(#alpha-${id})`);
     await page.mouse.click(p.x,p.y);
+    assert.equal(await page.locator(`[data-ingredient="${id}"]`).evaluate(group => getComputedStyle(group.querySelector('.ingredient-texture')).animationName),'ingredient-press');
+    await page.locator(opened).waitFor({state:'visible'});
     assert(await page.locator(opened).isVisible(),id+' opens its destination');
     if (opened === '#map-screen') assert.equal(await page.locator('#map-mode-title').textContent(), id === 'somalia' ? 'SOMALIE · 50 AFFAMÉS' : id === 'gros' ? 'ÉTATS-UNIS · 24 AFFAMÉS' : 'CLASSIQUE · 8 AFFAMÉS');
     await page.locator(close).click();
@@ -100,6 +114,7 @@ try {
   // Keyboard activates semantic buttons even though mouse picking uses pixel alpha.
   await page.locator('#trophies-entry').focus();
   await page.keyboard.press('Enter');
+  await page.locator('#trophies-dialog').waitFor({state:'visible'});
   assert(await page.locator('#trophies-dialog').isVisible());
   await page.locator('#close-trophies').click();
   assert.equal(await page.evaluate(() => window.__audioCalls.filter(src => src.endsWith('jingle.m4a')).length),2);
@@ -108,6 +123,7 @@ try {
   // Map curation must apply to both the gallery and the in-game selector.
   const classicMenuPoint = await point(768,478);
   await page.mouse.click(classicMenuPoint.x,classicMenuPoint.y);
+  await page.locator("#map-screen").waitFor({state:"visible"});
   for (const id of ['sushi','cinema','gym','space','candy','train']) {
     assert.equal(await page.locator(`[data-map="${id}"], #map-select option[value="${id}"]`).count(),0);
   }
@@ -142,6 +158,7 @@ try {
   await page.screenshot({path:path.join(output,'supermarche-nocturne.png')});
   await page.locator('#back-menu').click();
   await page.mouse.click((await point(768,355)).x,(await point(768,355)).y);
+  await page.locator('#map-screen').waitFor({state:'visible'});
   assert(await page.locator('#maps-in-progress').isHidden());
   assert.equal(await page.locator('#map-gallery .map-card:visible').count(),1);
   assert(await page.locator('[data-map="savanna"]').isVisible());
@@ -158,8 +175,8 @@ try {
     function draw(){context.fillStyle='white';context.fillRect(0,0,1200,1200);drawMarketFog(context,game);}
     draw();
     const pixel=(x,y)=>context.getImageData(x,y,1,1).data[0];
-    const radial=[0,60,150,250,350,450,469,471,500].map(distance=>pixel(600+distance,600));
-    const directions=[[800,600],[400,600],[600,800],[600,400]].map(([x,y])=>pixel(x,y));
+    const radial=[0,25,60,90,120,150,159,161,210].map(distance=>pixel(600+distance,600));
+    const directions=[[700,600],[499,600],[600,700],[600,499]].map(([x,y])=>pixel(x,y));
     const before=canvas.toDataURL();player.heading=Math.PI;draw();
     const stable=before===canvas.toDataURL();
     player.body.position={x:300,y:300};draw();
@@ -170,6 +187,7 @@ try {
   assert(halo.radial[0]>250);
   for(let i=1;i<halo.radial.length;i++)assert(halo.radial[i]<=halo.radial[i-1]);
   assert(halo.radial.at(-1)<30);
+  assert(halo.directions[0]>60 && halo.directions[0]<250);
   assert(Math.max(...halo.directions)-Math.min(...halo.directions)<=2);
   assert(Math.abs(halo.radial[6]-halo.radial[7])<=2,'No hard rim at the halo edge');
   assert(halo.stable && halo.follows);
@@ -272,6 +290,7 @@ try {
   const mobilePoint=await mobile.evaluate(()=>{const p=new DOMPoint(768,478).matrixTransform(document.querySelector('.burger-menu').getScreenCTM());return {x:p.x,y:p.y};});
   await mobile.screenshot({path:path.join(output,'menu-mobile.png')});
   await mobile.touchscreen.tap(mobilePoint.x,mobilePoint.y);
+  await mobile.locator('#map-screen').waitFor({state:'visible'});
   assert(await mobile.locator('#map-screen').isVisible());
   checks++;
   await mobile.locator('#back-title').click();
@@ -280,7 +299,9 @@ try {
     const g=document.querySelector('[data-menu-mode="classic"]');g.classList.add('is-hovered');
     return getComputedStyle(g.querySelector('.ingredient-reflection')).animationName;
   });
-  assert.equal(motion,'none');checks++;
+  assert.equal(motion,'none');
+  const textureMotion=await mobile.locator('[data-menu-mode="classic"] .ingredient-texture').evaluate(node=>({animation:getComputedStyle(node).animationName,transform:getComputedStyle(node).transform}));
+  assert.equal(textureMotion.animation,'none');assert.equal(textureMotion.transform,'none');checks++;
   assert.deepEqual(errors,[]);
   await mobile.close();
   console.log(`${checks} browser checks passed. Screenshots: test-results/`);
