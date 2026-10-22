@@ -1,23 +1,29 @@
+import { ArenaMechanics } from "./arena-mechanics.js?v=arena-strategy-8";
+import {
+  drawArenaFloor,
+  drawArenaActors,
+  drawArenaPowers,
+} from "./arena-render.js?v=arena-strategy-8";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=illustrated-maps-7";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=illustrated-maps-7";
+} from "./cosmetics.js?v=arena-strategy-8";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-strategy-8";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js";
+} from "./map-catalog.js?v=arena-strategy-8";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=small-halo-menu-3";
+} from "./visibility.js?v=arena-strategy-8";
 import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=illustrated-maps-7";
-import { setupMusicControls } from "./music.js?v=illustrated-maps-7";
+import { createGameAudio } from "./audio.js?v=arena-strategy-8";
+import { setupMusicControls } from "./music.js?v=arena-strategy-8";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -872,17 +878,17 @@ const PI = [
   ],
   [
     "market",
-    "Supermarché sauvage",
+    "Supermarché en Folie",
     "🛒",
     "#dbd5bb",
-    "Rayons solides, passages étroits et vision limitée autour de toi. Dès 350 kg, dévore les rayons au contact (+15 kg) pour ouvrir un passage. Même règle pour les IA.",
+    "Clients et chariots physiques : bouscule-les pour transmettre ton élan ! Dès 350 kg, dévore les rayons (+15 kg).",
   ],
   [
     "nightmarket",
     "Supermarché nocturne",
     "🔦",
     "#aaa992",
-    "Les rayons cachent les passages. Dès 350 kg, dévore-les au contact (+15 kg). Un halo éclaire tout autour de toi à 360°, puis se fond progressivement dans le noir.",
+    "Même supermarché, dans le noir. Deux agents annoncent leur prochaine petite propulsion : leur contact est mortel. Lampe : deux tours. Protection anti-sécurité : un tour. Rayons comestibles dès 350 kg.",
   ],
   [
     "sushi",
@@ -1051,6 +1057,21 @@ for (const [e, g, o, u, E] of PI) {
     experimental: !0,
   };
 }
+CA.royal = {
+  name: "Le Buffet du Roi",
+  icon: "♛",
+  floor: "#6e2934",
+  experimental: true,
+  meal: "burger",
+  mealName: "Burgers",
+  description:
+    "Un roi glouton indépendant de Douggy : manches impaires, aspiration physique dans le cône annoncé ; manches paires, rot royal. Sa bouche élimine tous les poids.",
+};
+CA.fair.description =
+  "Flipper gourmand : trois bumpers fixes amplifient les rebonds selon l’angle du choc. Compression, ressort et trajectoires en chaîne !";
+CA.beach.name = "La Plage des Affamés";
+CA.beach.description =
+  "Une vague annoncée traverse la plage de gauche à droite toutes les trois manches. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
 function _e(e, g, o, u = 1) {
   const E = (A, n, i, I, C = 0, Q = {}) => ({
     x: A * g,
@@ -2239,6 +2260,7 @@ function NA(e) {
     y: e.body.position.y,
     r: e.body.circleRadius,
     heading: e.heading ?? 0,
+    lightBoost: e.lightBoost || 1,
   };
 }
 function gt(e) {
@@ -2605,7 +2627,7 @@ function dt(e, g, o, u = 0) {
     }
   }
   if (!drawMapArt(e, g)) HI(e, g, o, u);
-  if (mapArtURL(n)) {
+  if (["station", "works", "mirror"].includes(n)) {
     for (const obstacle of g.obstacles) {
       e.save();
       e.translate(obstacle.x, obstacle.y);
@@ -2655,6 +2677,7 @@ function dt(e, g, o, u = 0) {
       e.restore();
     }
   }
+  drawArenaFloor(e, g, u);
   for (const i of g.zones) {
     if ((e.save(), e.translate(i.x, i.y), i.inactive)) {
       ((e.strokeStyle = "#ffe495"),
@@ -8973,6 +8996,7 @@ function CI(e) {
       .map((g) => ({
         id: g.id,
         heading: g.heading ?? 0,
+        lightBoost: g.lightBoost || 1,
         mass: g.mass,
         strategy: g.strategy,
         x: g.body.position.x,
@@ -9245,16 +9269,19 @@ function xt(e, g, o, u, E) {
 const { Engine: he, Bodies: yA, Body: eA, Composite: XA, Events: BI } = YI;
 YI.Common.setDecomp(ct);
 function aI(e, g) {
-  const o = g.body.position.x - e.body.position.x,
-    u = g.body.position.y - e.body.position.y,
-    E = Math.hypot(o, u) || 1,
-    A = (e.body.velocity.x * o + e.body.velocity.y * u) / E,
-    n =
-      ((e.body.velocity.x - g.body.velocity.x) * o +
-        (e.body.velocity.y - g.body.velocity.y) * u) /
-      E;
-  return Bt(e.mass, g.mass) === "prey" && A > 1.05 && n > 0.65;
+  const dx = g.body.position.x - e.body.position.x,
+    dy = g.body.position.y - e.body.position.y,
+    distance = Math.hypot(dx, dy) || 1,
+    eaterVelocity = eA.getVelocity(e.body),
+    victimVelocity = eA.getVelocity(g.body),
+    forward = (eaterVelocity.x * dx + eaterVelocity.y * dy) / distance,
+    relative =
+      ((eaterVelocity.x - victimVelocity.x) * dx +
+        (eaterVelocity.y - victimVelocity.y) * dy) /
+      distance;
+  return Bt(e.mass, g.mass) === "prey" && forward > 1.05 && relative > 0.65;
 }
+
 const Ft = [
     "TOI",
     "Jean-Faim",
@@ -9361,6 +9388,7 @@ class zt {
           y: 55 + this.random() * (o - 110),
         };
         if (
+          !(this.mapId === "royal" && B.y < this.h * 0.28) &&
           !this.obstacles.some((k) => RA(B, 42, k)) &&
           !n.some((k) => Math.hypot(k.x - B.x, k.y - B.y) < C)
         ) {
@@ -9453,6 +9481,7 @@ class zt {
       BI.on(this.engine, "collisionStart", (i) => {
         for (const I of i.pairs) {
           if (this.phase === "cinematic") break;
+          this.mechanics?.collision(I);
           const C = I.bodyA.person,
             Q = I.bodyB.person,
             B = C || Q,
@@ -9484,6 +9513,12 @@ class zt {
             a ? this.eat(a, s) : this.emit("bounce", C));
         }
       }));
+    this.mechanics = new ArenaMechanics(this, {
+      Bodies: yA,
+      Body: eA,
+      World: XA,
+      intersects: RA,
+    });
   }
   emit(g, o, u) {
     (Rt(this.stats, g, o, u, this), this.onEvent(g, o, u));
@@ -9659,6 +9694,7 @@ class zt {
     });
   }
   eat(g, o) {
+    if (!g.alive || !o.alive || this.mechanics?.protect(o, g)) return;
     ((o.alive = !1),
       XA.remove(this.engine.world, o.body),
       this.resize(g, g.mass + o.mass * 0.55),
@@ -9680,6 +9716,7 @@ class zt {
   }
   checkTruce() {
     if (
+      this.mechanics?.blocksTruce() ||
       this.phase === "ended" ||
       this.phase === "cinematic" ||
       !this.people[0].alive
@@ -9770,6 +9807,7 @@ class zt {
       (this.phase = "moving"),
       (this.lastVending = -2e3),
       (this.elapsed = 0),
+      this.mechanics.launch(),
       this.emit("launch"),
       !0
     );
@@ -9809,7 +9847,10 @@ class zt {
                   y: o.body.velocity.y + (E.ay * g) / (1e3 / 60),
                 });
             }
-          if ((he.update(this.engine, g), this.phase === "cinematic")) {
+          if (
+            (this.mechanics.update(g, (dt) => he.update(this.engine, dt)),
+            this.phase === "cinematic")
+          ) {
             for (const o of this.people)
               o.alive &&
                 (eA.setVelocity(o.body, { x: 0, y: 0 }),
@@ -9855,11 +9896,12 @@ class zt {
                 this.addFood(this.random() < 0.22 ? "salad" : "burger");
             }
             if (
-              !this.chef &&
+              (!this.chef || !this.people[0].alive) &&
               ((!this.people[0].alive && !this.spectate) ||
                 this.people.filter((o) => o.alive).length === 1)
             ) {
               (this.recordMotion(),
+                this.mechanics.finishRound(),
                 (this.outcome = this.people[0].alive ? "win" : "loss"),
                 (this.phase = "ended"),
                 this.emit("end"));
@@ -9872,6 +9914,8 @@ class zt {
                   .every((o) => o.body.speed < 0.18)) ||
               this.elapsed > 11e3
             ) {
+              if (!this.mechanics.finishReady()) return;
+              this.mechanics.finishRound();
               this.recordMotion();
               for (const o of this.people.filter((u) => u.alive))
                 (eA.setVelocity(o.body, { x: 0, y: 0 }),
@@ -9914,6 +9958,7 @@ class zt {
                     round: this.round,
                   });
               }
+              this.mechanics.beginRound();
               this.emit("round");
             }
           }
@@ -9992,7 +10037,7 @@ class zt {
       const o = AI(g, this.zones);
       o && Object.assign(g, LA(o, 12, this.obstacles, this.w, this.h));
     }
-    if (["candy", "haunted", "fair", "works"].includes(this.mapId)) {
+    if (["candy", "haunted", "works"].includes(this.mapId)) {
       ((this.obstacles = _e(this.mapId, this.w, this.h, this.round)),
         this.obstacles.forEach((g, o) => {
           (eA.setPosition(this.obstacleBodies[o], g),
@@ -10064,15 +10109,25 @@ function ye(e) {
       dA.resume();
       const g = dA.createOscillator(),
         o = dA.createGain();
-      ((g.type = "sine"),
-        g.frequency.setValueAtTime(220, dA.currentTime),
-        g.frequency.exponentialRampToValueAtTime(60, dA.currentTime + 0.13),
+      ((g.type =
+        e === "burp" ? "sawtooth" : e === "burn" ? "triangle" : "sine"),
+        g.frequency.setValueAtTime(
+          e === "burp" ? 95 : e === "burn" ? 380 : 220,
+          dA.currentTime,
+        ),
+        g.frequency.exponentialRampToValueAtTime(
+          60,
+          dA.currentTime + (e === "burp" ? 0.65 : 0.13),
+        ),
         o.gain.setValueAtTime(0.018, dA.currentTime),
-        o.gain.exponentialRampToValueAtTime(0.001, dA.currentTime + 0.18),
+        o.gain.exponentialRampToValueAtTime(
+          0.001,
+          dA.currentTime + (e === "burp" ? 0.8 : 0.18),
+        ),
         g.connect(o),
         o.connect(dA.destination),
         g.start(),
-        g.stop(dA.currentTime + 0.18));
+        g.stop(dA.currentTime + (e === "burp" ? 0.8 : 0.18)));
     } catch {}
 }
 function OA() {
@@ -10154,7 +10209,7 @@ function OA() {
           clearTimeout(Re),
           (Re = setTimeout(() => (w("#discovery").hidden = !0), 8e3))),
         gameAudio.event(g, o, u),
-        ["launch", "truce"].includes(g) && ye(g),
+        ["launch", "truce", "burp", "burn"].includes(g) && ye(g),
         g === "truce" &&
           ((q = null),
           (w("#hint").style.display = "none"),
@@ -10539,6 +10594,7 @@ function bt(e) {
     x.fillRect(uA, aA, gA, sA),
     x.translate(uA - QA.x, aA - QA.y),
     dt(x, K, CA[$], e));
+  drawArenaActors(x, K, e);
   for (const u of K.food)
     xA(K.mapId, NA(K.people[0]), u, K.obstacles) &&
       u.x >= QA.x - 40 &&
@@ -10552,6 +10608,7 @@ function bt(e) {
     .filter((E) => E.alive && pe(E) && Je(E, QA, gA, sA))
     .sort((E, A) => E.body.position.y - A.body.position.y))
     kI(u, e);
+  drawArenaPowers(x, K, e);
   if (q?.kind === "shot") {
     const u = K.people[0].body.position,
       E = Math.hypot(q.dx, q.dy);

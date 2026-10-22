@@ -7,13 +7,14 @@ export const REMOVED_MAPS = new Set([
   "candy",
   "train",
   "haunted",
-  "beach",
-  "fair",
   "crepe",
   "parking",
 ]);
 
 export const WORK_IN_PROGRESS_MAPS = new Set([
+  "fair",
+  "beach",
+  "royal",
   "station",
   "rooftop",
   "underwater",

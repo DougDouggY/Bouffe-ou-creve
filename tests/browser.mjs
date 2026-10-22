@@ -35,7 +35,7 @@ let checks = 0;
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
   const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', error => {errors.push(error.message);console.error('Browser error:',error.message);});
   await page.addInitScript(() => {
     window.__RealAudio = window.Audio;
     window.__audioCalls = [];
@@ -57,7 +57,7 @@ try {
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('.burger-menu').dataset.masksReady === 'true');
   await page.evaluate(() => document.fonts.ready);
-  assert.equal(/affam/i.test(await page.locator('body').textContent()),false);
+  assert.equal(/affam/i.test((await page.locator('body').textContent()).replaceAll('La Plage des Affamés','')),false);
   const idle = await page.screenshot({ path: path.join(output, 'menu-repos.png') });
   await page.addStyleTag({ content: '.ingredient-light { display: none !important; }' });
   const noLights = await page.screenshot();
@@ -126,16 +126,16 @@ try {
   const classicMenuPoint = await point(768,478);
   await page.mouse.click(classicMenuPoint.x,classicMenuPoint.y);
   await page.locator("#map-screen").waitFor({state:"visible"});
-  for (const id of ['sushi','cinema','gym','space','candy','train','haunted','beach','fair','crepe','parking']) {
+  for (const id of ['sushi','cinema','gym','space','candy','train','haunted','crepe','parking']) {
     assert.equal(await page.locator(`[data-map="${id}"], #map-select option[value="${id}"]`).count(),0);
   }
   const catalog = await page.evaluate(async()=>{
     const {WORK_IN_PROGRESS_MAPS}=await import('/map-catalog.js');
     return [...WORK_IN_PROGRESS_MAPS];
   });
-  assert.equal(catalog.length,9);
+  assert.equal(catalog.length,12);
   assert.deepEqual((await page.locator('#maps-in-progress .map-card').evaluateAll(cards=>cards.map(card=>card.dataset.map))).sort(),catalog.sort());
-  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),9);
+  assert.equal(await page.locator('#map-select optgroup[label="En travaux · cartes de test"] option').count(),12);
   for(const id of ['cold','pirate'])assert(await page.locator(`#maps-available [data-map="${id}"]`).isVisible());
   checks++;
   await page.locator('#maps-in-progress').scrollIntoViewIfNeeded();
@@ -438,7 +438,7 @@ try {
   assert.equal(await artPage.evaluate(()=>JSON.parse(localStorage.getItem('bouffe-profile-v1')).equipped.hat),'hat_croissant');
   await artPage.locator('[data-menu-mode="classic"]').focus();await artPage.keyboard.press('Enter');
   await artPage.locator('#map-screen').waitFor({state:'visible'});
-  assert.equal(await artPage.locator('.map-preview').count(),9);
+  assert.equal(await artPage.locator('.map-preview').count(),14);
   await artPage.evaluate(()=>Promise.all([...document.querySelectorAll('.map-preview')].map(img=>img.decode())));
   const illustrated=await artPage.locator('.map-preview').evaluateAll(imgs=>imgs.map(img=>img.closest('[data-map]').dataset.map));
   for(const id of illustrated){

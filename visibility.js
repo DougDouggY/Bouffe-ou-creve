@@ -1,5 +1,7 @@
 export function lightRadius(mapId, observer) {
-  return mapId === "nightmarket" ? Math.max(160, 140 + (observer.r || 0)) : 300;
+  return mapId === "nightmarket"
+    ? Math.max(160, 140 + (observer.r || 0)) * (observer.lightBoost || 1)
+    : 300;
 }
 
 const NIGHT_STOPS = [
@@ -33,7 +35,7 @@ export function lightOpacity(mapId, observer, target) {
 
 // Shared by rendering, minimap, badges and AI: nighttime vision has no heading.
 export function isVisible(mapId, observer, target, obstacles = []) {
-  if (!["market", "nightmarket"].includes(mapId)) return true;
+  if (mapId !== "nightmarket") return true;
   const dx = target.x - observer.x;
   const dy = target.y - observer.y;
   const distance = Math.hypot(dx, dy);
@@ -73,62 +75,26 @@ export function isVisible(mapId, observer, target, obstacles = []) {
 }
 
 export function drawMarketFog(context, game) {
-  if (!["market", "nightmarket"].includes(game.mapId)) return;
+  if (game.mapId !== "nightmarket") return;
   const player = game.people[0];
-  const observer = { ...player.body.position, r: player.body.circleRadius };
-  const radius = lightRadius(game.mapId, observer);
-  if (game.mapId === "nightmarket") {
-    // Ambient halo: no angular ray-casting cuts or seams at the fade boundary.
-    // Obstacle occlusion for food, opponents and AI remains in isVisible().
-    context.save();
-    const gradient = context.createRadialGradient(
-      observer.x,
-      observer.y,
-      18 + observer.r,
-      observer.x,
-      observer.y,
-      radius,
-    );
-    for (const [offset, alpha] of NIGHT_STOPS) {
-      gradient.addColorStop(offset, `rgba(8, 11, 22, ${alpha})`);
-    }
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, game.w, game.h);
-    context.restore();
-    return;
-  }
-  const boundary = [];
-  for (let degrees = 0; degrees < 360; degrees++) {
-    const angle = (degrees * Math.PI) / 180;
-    const cosine = Math.cos(angle),
-      sine = Math.sin(angle);
-    let near = 0,
-      far = radius;
-    for (let step = 0; step < 10; step++) {
-      const distance = (near + far) / 2;
-      const target = {
-        x: observer.x + cosine * distance,
-        y: observer.y + sine * distance,
-      };
-      if (isVisible(game.mapId, observer, target, game.obstacles))
-        near = distance;
-      else far = distance;
-    }
-    boundary.push({
-      x: observer.x + cosine * near,
-      y: observer.y + sine * near,
-    });
-  }
-  const traceBoundary = () => {
-    context.moveTo(boundary[0].x, boundary[0].y);
-    for (const point of boundary) context.lineTo(point.x, point.y);
-    context.closePath();
+  const observer = {
+    ...player.body.position,
+    r: player.body.circleRadius,
+    lightBoost: player.lightBoost || 1,
   };
+  const radius = lightRadius(game.mapId, observer);
   context.save();
-  context.beginPath();
-  context.rect(0, 0, game.w, game.h);
-  traceBoundary();
-  context.fillStyle = game.mapId === "nightmarket" ? "#080b16f2" : "#202d27e8";
-  context.fill("evenodd");
+  const gradient = context.createRadialGradient(
+    observer.x,
+    observer.y,
+    18 + observer.r,
+    observer.x,
+    observer.y,
+    radius,
+  );
+  for (const [offset, alpha] of NIGHT_STOPS)
+    gradient.addColorStop(offset, `rgba(8, 11, 22, ${alpha})`);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, game.w, game.h);
   context.restore();
 }

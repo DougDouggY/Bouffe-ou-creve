@@ -2,7 +2,18 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameAudio, isPlayerMeal } from "../audio.js";
 
-const player = { id: 0 }, ai = { id: 1 }, otherAI = { id: 2 };
+const player = { id: 0 },
+  ai = { id: 1 },
+  otherAI = { id: 2 };
+test("rare edible powers use player meal audio; local utility objects do not", () => {
+  for (const kind of ["armored", "inferno"]) {
+    assert(isPlayerMeal("power", { id: 0 }, { kind }));
+    assert.equal(isPlayerMeal("power", { id: 1 }, { kind }), false);
+  }
+  for (const kind of ["lamp", "securityShield"])
+    assert.equal(isPlayerMeal("power", { id: 0 }, { kind }), false);
+});
+
 test("meals sound only when the player eats or is eaten", () => {
   for (const event of ["food", "fondue", "shelf"]) {
     assert.equal(isPlayerMeal(event, player), true);
@@ -20,21 +31,34 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
   const voices = [];
   let blocked = true;
   class FakeAudio extends EventTarget {
-    constructor(src) { super(); this.src = src; this.calls = 0; voices.push(this); }
+    constructor(src) {
+      super();
+      this.src = src;
+      this.calls = 0;
+      voices.push(this);
+    }
     play() {
       this.calls++;
       if (this.src.endsWith("jingle.m4a") && blocked) {
-        return Promise.reject(new DOMException("Gesture required", "NotAllowedError"));
+        return Promise.reject(
+          new DOMException("Gesture required", "NotAllowedError"),
+        );
       }
       this.paused = false;
       return Promise.resolve();
     }
-    pause() { this.paused = true; }
+    pause() {
+      this.paused = true;
+    }
   }
   const target = new EventTarget();
   let menuVisible = true;
-  const audio = createGameAudio({ isMenuVisible: () => menuVisible, AudioClass: FakeAudio, target });
-  await new Promise(resolve => setImmediate(resolve));
+  const audio = createGameAudio({
+    isMenuVisible: () => menuVisible,
+    AudioClass: FakeAudio,
+    target,
+  });
+  await new Promise((resolve) => setImmediate(resolve));
   assert.equal(voices[0].calls, 1);
   menuVisible = false;
   target.dispatchEvent(new Event("pointerdown"));
@@ -42,7 +66,7 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
   menuVisible = true;
   blocked = false;
   target.dispatchEvent(new Event("keydown"));
-  await new Promise(resolve => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
   target.dispatchEvent(new Event("pointerdown"));
   assert.equal(voices[0].calls, 2);
   assert.equal(voices[0].loop, false);
@@ -51,7 +75,10 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
   audio.event("food", player);
   audio.event("eat", ai, player);
   assert.equal(voices.length, 3);
-  assert(voices[1].volume + voices[2].volume <= 0.060001, "overlapping meals share one quiet volume budget");
+  assert(
+    voices[1].volume + voices[2].volume <= 0.060001,
+    "overlapping meals share one quiet volume budget",
+  );
   voices[1].dispatchEvent(new Event("ended"));
   assert.equal(voices[2].volume, 0.06);
   audio.setMuted(true);

@@ -14,6 +14,7 @@ Le serveur utilise le port 8000. Python 3 suffit pour jouer ; Node.js 20 ou sup�
 npm ci
 npm test
 npm run test:browser
+npm run test:arenas
 ```
 
 Les tests navigateur utilisent `/usr/bin/chromium` s’il existe. Sinon, installer Chromium avec `npx playwright install chromium`, ou fournir son chemin dans `CHROMIUM_EXECUTABLE`. Les captures sont générées dans `test-results/`.
@@ -41,11 +42,22 @@ Les joueurs sont appelés **gourmands** dans les modes, le menu burger et les me
 ## Cartes et essais
 
 - Le supermarché nocturne utilise un petit halo à **360°** : rayon de 160 unités à 60 kg (au lieu de 470), lumineux autour du personnage puis progressivement sombre. Sa taille suit le corps des très gros personnages pour continuer à les entourer. La direction du dernier tir ne change plus la lumière ni la visibilité des IA. Les rayons restent solides et masquent les personnages et la nourriture placés derrière eux. Les étiquettes des personnages suivent le même fondu.
-- Sushi-bar, Cinéma du goûter, Gymnase des gourmands, Cantine spatiale, Usine à bonbons, Train-restaurant, Cantine hantée, Plage des frites, Fête foraine, Crêperie cosmique et Parking des food trucks sont retirés des choix, dans le menu et le sélecteur de partie.
-- Chambre froide et Banquet pirate restent disponibles. Les neuf cartes restantes après Banquet pirate, de Station-service à Arène miroir, sont regroupées sous **En travaux** : elles sont jouables mais pas encore validées. Ce statut est distinct du drapeau historique `experimental`, qui contrôle leur dessin.
+- Sushi-bar, Cinéma du goûter, Gymnase des gourmands, Cantine spatiale, Usine à bonbons, Train-restaurant, Cantine hantée, Crêperie cosmique et Parking des food trucks sont retirés des choix, dans le menu et le sélecteur de partie.
+- Chambre froide et Banquet pirate restent disponibles. Les neuf cartes précédentes de Station-service à Arène miroir, la Fête foraine et la Plage réintroduites, ainsi que le nouveau Buffet du Roi sont regroupés sous **En travaux** : elles sont jouables mais pas encore validées. Ce statut est distinct du drapeau historique `experimental`, qui contrôle leur dessin.
 - Les neuf cartes en travaux disposent de décors illustrés et de vignettes : station, terrasse, restaurant sous-marin, wok, pique-nique, jardin, palais, chantier et miroir. Les obstacles physiques restent visibles et les règles de jeu sont conservées.
 - La recherche et le mode Somalie conservent leurs filtres dans les deux catégories.
 - Pistes pour la suite : une Chambre froide XL et une très grande arène qui rétrécit progressivement. Ces deux variantes ne sont pas encore ajoutées.
+
+## Nouvelles mécaniques d’arène
+
+- **Supermarché en Folie** : décor illustré éclairé, trois clients animés avec chariots physiques légers, transmission du mouvement et collisions secondaires.
+- **Supermarché nocturne** : exactement le même fond et les mêmes rayons, halo radial conservé, deux agents à petites propulsions annoncées et contact mortel. Lampe et gant anti-sécurité exclusifs, réapprovisionnés régulièrement.
+- **Fête foraine** : trois bumpers fixes avec compression et rebonds amplifiés mais plafonnés.
+- **Le Buffet du Roi** : nouvelle carte distincte du Palais de Douggy. Cône annoncé, aspiration physique en fin de manche impaire, bouche mortelle et rot animé / sonore en manche paire. Aucun souffle ajouté au rot.
+- **La Plage des Affamés** : vague progressive annoncée toutes les trois manches, poussée physique et regroupement vers le côté opposé.
+- **Burger Blindé / Piment de l’Enfer** : un seul tirage global de 1 % par manche, choix égal en cas de réussite, sans modifier les burgers de Douggy. Blindage à usage unique contre une dévoration ; prochain tir enflammé avec une traînée mortelle également pour son propriétaire. Les effets ne modifient pas les sauvegardes, points ou cosmétiques.
+
+Détails des durées, règles d’équilibre et tests : [docs/ARENAS.md](docs/ARENAS.md). Les cartes actuellement accessibles sont toutes conservées.
 
 ## Origine et publication
 

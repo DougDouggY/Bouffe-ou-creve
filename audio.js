@@ -2,6 +2,9 @@
 export function isPlayerMeal(event, actor, victim) {
   return (
     (["food", "fondue", "shelf"].includes(event) && actor?.id === 0) ||
+    (event === "power" &&
+      actor?.id === 0 &&
+      ["armored", "inferno"].includes(victim?.kind)) ||
     (event === "eat" && (actor?.id === 0 || victim?.id === 0))
   );
 }

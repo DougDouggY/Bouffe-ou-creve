@@ -13,14 +13,14 @@ test("night visibility covers all directions, independent of the last shot", () 
       assert(isVisible("nightmarket", observer, target));
     }
     assert.equal(isVisible("nightmarket", observer, { x: 761, y: 600 }), false);
-    assert.equal(isVisible("market", observer, { x: 901, y: 600 }), false);
+    assert.equal(isVisible("market", observer, { x: 901, y: 600 }), true);
   }
 });
 
 test("shelves still obstruct vision; removing a shelf opens its shadow", () => {
   const observer = { x: 0, y: 0, r: 19 };
   const shelf = { x: 80, y: 0, w: 20, h: 90, angle: 0 };
-  for (const map of ["market", "nightmarket"]) {
+  for (const map of ["nightmarket"]) {
     assert.equal(isVisible(map, observer, { x: 130, y: 0 }, [shelf]), false);
     assert.equal(isVisible(map, observer, { x: 130, y: 0 }, []), true);
     assert.equal(isVisible(map, observer, { x: 0, y: -130 }, [shelf]), true);

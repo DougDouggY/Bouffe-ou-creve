@@ -1,4 +1,9 @@
 export const ILLUSTRATED_MAPS = [
+  "market",
+  "nightmarket",
+  "fair",
+  "royal",
+  "beach",
   "station",
   "rooftop",
   "underwater",
@@ -12,7 +17,10 @@ export const ILLUSTRATED_MAPS = [
 const images = new Map();
 export function mapArtURL(id) {
   return ILLUSTRATED_MAPS.includes(id)
-    ? new URL(`./assets/maps/${id}.webp`, import.meta.url).href
+    ? new URL(
+        `./assets/maps/${id === "nightmarket" ? "market" : id}.webp`,
+        import.meta.url,
+      ).href
     : null;
 }
 export function drawMapArt(context, game) {
