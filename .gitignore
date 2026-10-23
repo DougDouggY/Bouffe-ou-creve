@@ -1,2 +1,8 @@
 node_modules/
 test-results/
+
+# Local Cloudflare state and credentials must never be published.
+.wrangler/
+.dev.vars
+.env
+.env.*

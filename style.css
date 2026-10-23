@@ -3278,3 +3278,121 @@ html[data-display="phone"] body.playing .game-nav button {
     background-size: 100% 100%;
   }
 }
+
+/* Private invitations use the same printed restaurant menu as solo. */
+.multiplayer-entry {
+  display: block;
+  margin: 18px auto;
+  padding: 14px 22px;
+  font:
+    bold 18px Georgia,
+    serif;
+  color: #713b35;
+  background: #f5e8d0;
+  border: 3px double #b59472;
+  border-radius: 3px;
+  min-height: 48px;
+}
+body.shadow-realm #multiplayer-entry,
+.main-menu:has(#title-screen[hidden]) #multiplayer-entry {
+  display: none;
+}
+#multiplayer-dialog {
+  box-sizing: border-box;
+  width: 500px;
+  max-width: calc(100vw - 24px);
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: 26px;
+  color: #633c32;
+  background: #fbf3df;
+  border: 3px double #b59472;
+  border-radius: 4px;
+}
+#multiplayer-dialog::backdrop {
+  background: #172018b8;
+  backdrop-filter: blur(4px);
+}
+#multiplayer-dialog h2 {
+  font:
+    bold 30px Georgia,
+    serif;
+  text-align: center;
+}
+#multiplayer-dialog label {
+  display: block;
+  margin: 14px 0 6px;
+}
+#multiplayer-dialog :is(input, select, button) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #b79779;
+  border-radius: 3px;
+  background: #fff9ed;
+  color: #633c32;
+}
+#multiplayer-dialog button {
+  margin-top: 10px;
+  background: #f0dfbd;
+  cursor: pointer;
+}
+#multiplayer-dialog button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+#multiplayer-status {
+  line-height: 1.5;
+  min-height: 42px;
+}
+#multiplayer-dialog .multiplayer-help {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.multiplayer-separator {
+  margin-top: 24px;
+  text-align: center;
+  font-style: italic;
+}
+#multiplayer-code {
+  display: block;
+  font: bold clamp(18px, 5vw, 26px) monospace;
+  text-align: center;
+  user-select: all;
+}
+#multiplayer-players {
+  padding-left: 22px;
+  line-height: 1.8;
+}
+#multiplayer-hud:not([hidden]) {
+  position: absolute;
+  z-index: 9;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  padding: 10px 14px;
+  background: #17251ed9;
+  color: #fff4da;
+  border: 1px solid #d1b78677;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
+body.online-playing
+  :is(
+    #again,
+    #run-summary,
+    #result-reward,
+    #run-trophies,
+    .result-trophies-title
+  ) {
+  display: none;
+}

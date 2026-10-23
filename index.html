@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=display-19"></script>
+    <script type="module" src="./game.js?v=multi-20"></script>
 
-    <link rel="stylesheet" href="./style.css?v=display-19" />
+    <link rel="stylesheet" href="./style.css?v=multi-20" />
   </head>
   <body>
     <div id="app">
@@ -152,6 +152,9 @@
               ><span id="menu-record"></span>
             </div>
           </div>
+          <button id="multiplayer-entry" class="multiplayer-entry">
+            Une table entre amis · Multijoueur
+          </button>
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
             <p class="menu-kicker">Bouffe ou Crève · La maison des gourmands</p>
@@ -231,6 +234,58 @@
             </p>
             <button id="enter-shadow">Entrer dans le secret</button>
           </div>
+        </dialog>
+        <dialog id="multiplayer-dialog" aria-labelledby="multiplayer-title">
+          <p class="menu-kicker">La table des invités</p>
+          <h2 id="multiplayer-title">ENTRE GOURMANDS</h2>
+          <p id="multiplayer-status" role="status">
+            Salons privés sur invitation.
+          </p>
+          <div id="multiplayer-connect">
+            <label for="multiplayer-name">Ton petit nom</label>
+            <input
+              id="multiplayer-name"
+              maxlength="24"
+              autocomplete="nickname"
+              placeholder="Gourmand"
+            />
+            <button id="multiplayer-create" disabled>
+              Créer un salon privé
+            </button>
+            <p class="multiplayer-separator">ou rejoindre la table d’un ami</p>
+            <label for="multiplayer-join-code">Code d’invitation</label>
+            <input
+              id="multiplayer-join-code"
+              maxlength="18"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              placeholder="XXXX-XXXX-XXXX"
+            />
+            <button id="multiplayer-join" disabled>Rejoindre le salon</button>
+          </div>
+          <div id="multiplayer-lobby" hidden>
+            <p>Code de ta table</p>
+            <strong id="multiplayer-code"></strong>
+            <button id="multiplayer-copy">Copier le code</button>
+            <ul id="multiplayer-players"></ul>
+            <label for="multiplayer-size">Nombre de gourmands</label>
+            <select id="multiplayer-size">
+              <option value="8">8 gourmands</option>
+              <option value="24" selected>24 gourmands</option>
+              <option value="50">50 gourmands</option>
+            </select>
+            <p id="multiplayer-fill"></p>
+            <button id="multiplayer-ready">Je suis prêt</button>
+            <button id="multiplayer-start">Servir le festin · Lancer</button>
+            <p class="multiplayer-help">
+              Les tirs restent secrets jusqu’à ce que tout le monde ait joué.
+              Après 45 secondes, l’IA prend le relais d’un gourmand absent. Une
+              reconnexion est possible pendant 90 secondes. Un joueur éliminé
+              reste spectateur.
+            </p>
+          </div>
+          <button id="multiplayer-close">Retour au burger</button>
         </dialog>
         <dialog id="options-dialog">
           <p class="menu-kicker">Les petits soins de la maison</p>
@@ -490,6 +545,7 @@
             </div>
           </section>
           <section class="game-shell" id="game-shell">
+            <p id="multiplayer-hud" hidden aria-live="polite"></p>
             <nav class="game-nav">
               <button id="tournament-open" hidden>Tableau du tournoi</button
               ><button id="back-menu">← Menu</button
