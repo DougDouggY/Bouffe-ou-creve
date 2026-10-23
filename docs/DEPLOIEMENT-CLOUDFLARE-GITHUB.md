@@ -122,3 +122,4 @@ Documentation consultée le **23 octobre 2026**. Les sources du dépôt officiel
 - [Durable Objects Free](https://developers.cloudflare.com/durable-objects/platform/pricing/) : stockage **SQLite** disponible ; quotas notamment de 100 000 requêtes/jour, 13 000 GB-s/jour et 5 Go de stockage au total. Les limites sont partagées avec les autres usages du compte. Sur Free, les opérations qui dépassent les quotas sont bloquées, sans passage automatique en payant.
 
 Aucun paramètre de facturation, abonnement ou moyen de paiement n’a été modifié. La configuration de ce dépôt n’active aucun service payant. La vérification de l’état **Workers Free** du compte reste à faire dans ton tableau de bord, auquel cet environnement n’est pas connecté.
+<!-- Premier build Cloudflare -->
