@@ -1,6 +1,16 @@
+import {
+  drawTailoredOutfit,
+  drawFittedHat,
+} from "./wardrobe-render.js?v=wardrobe-29";
 import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
-import { setupMultiplayer } from "./multiplayer-client.js?v=social-28";
+import {
+  sameTeam,
+  localTeamWon,
+  teamColor,
+  teamLabel,
+} from "./teams.js?v=teams-31";
+import { setupMultiplayer } from "./multiplayer-client.js?v=teams-31";
 import {
   CA,
   Ee,
@@ -13,7 +23,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=multi-20";
+} from "./simulation-core.js?v=teams-31";
 import { drawSurvivalFloor } from "./survival.js?v=hunger-18";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -36,23 +46,20 @@ import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=identity-22";
+} from "./restaurant-menu.js?v=teams-31";
 
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=filmovore-15";
+} from "./arena-render.js?v=teams-31";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=hat-mask-25";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=hunger-18";
-import {
-  WORK_IN_PROGRESS_MAPS,
-  mapGroups,
-} from "./map-catalog.js?v=filmovore-15";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=teams-31";
+import { WORK_IN_PROGRESS_MAPS, mapGroups } from "./map-catalog.js?v=teams-31";
 import {
   isVisible as xA,
   drawMarketFog as nt,
@@ -638,6 +645,7 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   };
   (Q(0.03, 0.85, 1.08, 0.27, "#172b3035"),
     g.id === 0 &&
+      !g.preview &&
       ((e.strokeStyle = g.human ? "#a6e4ff" : "#f0b75c"),
       (e.lineWidth = (g.human ? 2.8 : 2) / n),
       e.beginPath(),
@@ -657,8 +665,10 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
       0.23,
       "#303c3e",
     ),
-    Q(-I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i),
-    Q(I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i));
+    u.outfit === "plain" &&
+      Q(-I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i),
+    u.outfit === "plain" &&
+      Q(I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i));
   const B =
       (g.id === 0 || g.cosmetics
         ? KA.find((r) => r.id === u.outfit)?.color
@@ -684,13 +694,16 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
       Q(0, 0.2, I.bodyWidth, I.bodyHeight, t));
   const a = xI(1, g.mass ?? 60);
   ((g.id === 0 || g.cosmetics || u.outfit !== "plain") &&
-    Ie(e, u.outfit, a.x, a.y, a.w, a.h),
+    (u.outfit !== "plain"
+      ? drawTailoredOutfit(e, u.outfit, I, Ie) ||
+        Q(0, 0.2, I.bodyWidth, I.bodyHeight, t)
+      : Ie(e, u.outfit, a.x, a.y, a.w, a.h)),
     e.save(),
     e.translate(0, I.headY),
     e.scale(I.headScale, I.headScale));
   const s = dI(u.hat);
-  (s && !s.front && Ie(e, u.hat, s.x, s.y, s.w, s.h),
-    Q(0, -0.39, 0.52, 0.51, "#724831"),
+  (s && !s.front && drawFittedHat(e, u.hat, s, Ie),
+    !u.hat.startsWith("hat_") && Q(0, -0.39, 0.52, 0.51, "#724831"),
     Q(0, -0.38, 0.49, 0.49, i),
     Q(-0.42, -0.37, 0.13, 0.17, i),
     Q(0.42, -0.37, 0.13, 0.17, i),
@@ -699,7 +712,7 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
       e.beginPath(),
       e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2),
       e.fill()),
-    s?.front && Ie(e, u.hat, s.x, s.y, s.w, s.h),
+    s?.front && drawFittedHat(e, u.hat, s, Ie),
     Q(-0.17, -0.43, 0.055, 0.068, "#2c3028"),
     Q(0.17, -0.43, 0.055, 0.068, "#2c3028"),
     Q(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b"),
@@ -1380,6 +1393,7 @@ function Qt({ start: e, appearance: g }) {
         R,
         {
           id: 0,
+          preview: true,
           mass: (I && Number(L("#chef-weight").value)) || 60,
           color: "#ed9a41",
           pop: 0,
@@ -1397,6 +1411,7 @@ function Qt({ start: e, appearance: g }) {
         c,
         {
           id: 0,
+          preview: true,
           mass: Y,
           color: "#ed9a41",
           pop: 0,
@@ -1545,6 +1560,9 @@ function Qt({ start: e, appearance: g }) {
       (L("#map-search").value = ""),
       (L("#map-search").disabled = E === "somalia"),
       restaurant.show(E, u),
+      (L("#solo-team-controls").hidden = !["classic", "gros", "usa"].includes(
+        E,
+      )),
       (L("#title-screen").hidden = !0),
       (L("#map-screen").hidden = !1),
       (L("#map-mode-title").textContent =
@@ -1856,7 +1874,7 @@ function at(e, g, o) {
       Math.max(0, Math.min(A.x + A.w, n.x + n.w) - Math.max(A.x, n.x)) *
       Math.max(0, Math.min(A.y + A.h, n.y + n.h) - Math.max(A.y, n.y));
   for (const A of e) {
-    const n = g < 600 ? 82 : 100,
+    const n = (g < 600 ? 82 : 100) + (A.team ? 26 : 0),
       i = g < 600 ? 24 : 28,
       I = 8,
       C = [
@@ -1891,9 +1909,11 @@ function at(e, g, o) {
   return u;
 }
 function followedPerson(game) {
-  if (!online?.active || game.people[0].alive) return game.people[0];
+  if ((!online?.active && !(game.teamSize > 1)) || game.people[0].alive)
+    return game.people[0];
   const person =
     game.people.find((p) => p.alive && p.networkSeat === game.spectatorSeat) ||
+    game.people.find((p) => p.alive && sameTeam(p, game.people[0])) ||
     game.people.find((p) => p.alive) ||
     game.people[0];
   game.spectatorSeat = person.networkSeat;
@@ -1908,7 +1928,8 @@ function spectatorScene(game) {
 }
 function updateSpectator() {
   const panel = w("#spectator-panel");
-  panel.hidden = !online?.active || !K || K.people[0].alive;
+  panel.hidden =
+    (!online?.active && !(K?.teamSize > 1)) || !K || K.people[0].alive;
   if (panel.hidden) return;
   const meNow = K.people[0];
   if (!K.onlineDeathSeen) {
@@ -1926,9 +1947,14 @@ function updateSpectator() {
     followed = followedPerson(K),
     select = w("#spectator-target"),
     alive = K.people.filter((p) => p.alive);
-  w("#online-death").textContent = me.eliminatedBy
-    ? `Dévoré par ${me.eliminatedBy.name}`
-    : "Tu as été éliminé.";
+  w("#online-death").textContent =
+    !online?.active && K.teamSize > 1
+      ? "Ton équipe continue !"
+      : onlineSeat === null
+        ? "Tu regardes cette partie."
+        : me.eliminatedBy
+          ? `Dévoré par ${me.eliminatedBy.name}`
+          : "Tu as été éliminé.";
   const key = alive.map((p) => p.networkSeat + ":" + p.name).join("|");
   if (select.dataset.roster !== key) {
     select.replaceChildren(
@@ -2230,6 +2256,7 @@ function dt(e, g, o, u = 0) {
   }
   drawArenaFloor(e, g, u);
   for (const i of g.zones) {
+    if (i.kind === "trampoline") continue;
     if ((e.save(), e.translate(i.x, i.y), i.inactive)) {
       ((e.strokeStyle = "#ffe495"),
         (e.lineWidth = 2),
@@ -2702,17 +2729,31 @@ function OA() {
   const e = GI(nA, $, gA, sA);
   ((K = new zt(e.w, e.h, Math.random, {
     mapId: $,
-    count: me[nA].count,
+    count:
+      ["classic", "gros", "usa"].includes(nA) &&
+      Number(w("#solo-team-size").value) > 1 &&
+      me[nA].count % Number(w("#solo-team-size").value) !== 0
+        ? 24
+        : me[nA].count,
+    teamSize: ["classic", "gros", "usa"].includes(nA)
+      ? Number(w("#solo-team-size").value)
+      : 1,
     chef: nA === "chef",
     mode: nA,
   })),
     (K.floorSkin = ve),
+    (K.onlineDeathSeen = K.teamSize > 1),
+    (w("#spectator-panel").hidden = true),
     (w("#chef-weight").value = String(K.people[0].mass)),
     (w("#chef-tools").hidden = nA !== "chef"),
     (w("#tournament-open").hidden = nA !== "platform"),
     (w("#briefing-title").textContent =
       (WORK_IN_PROGRESS_MAPS.has($) ? "🚧 En travaux · " : "") + CA[$].name),
-    (w("#briefing-text").textContent = CA[$].description),
+    (w("#briefing-text").textContent =
+      CA[$].description +
+      (K.teamSize > 1
+        ? ` Formule ${teamLabel(K.teamSize)} · ${K.count} gourmands. Tu es dans l’équipe 1. Les alliés ne se mangent pas ; la dernière équipe en vie gagne.`
+        : "")),
     (w("#map-briefing").hidden = !1),
     (w("#floor-picker").hidden = $ !== "foodcourt"),
     (be(), (QA = mI(K, gA, sA))),
@@ -2760,7 +2801,7 @@ function OA() {
             (w("#overlay").hidden = !1));
           return;
         }
-        const E = K.people[0].alive;
+        const E = localTeamWon(K);
         ((w("#result-icon").textContent = E ? "👑" : "💀"),
           (w("#result-title").textContent = E
             ? "LE DERNIER REPAS, C’EST TOI."
@@ -2769,6 +2810,15 @@ function OA() {
             ? `Dernier survivant en ${K.round} manches. Le chef te félicite.`
             : `Éliminé à la manche ${K.round}. La prochaine fois, prends un supplément de vengeance.`),
           (w("#overlay").hidden = !1));
+        if (K.teamSize > 1) {
+          const survivor = K.people.find((p) => p.alive);
+          w("#result-title").textContent = survivor
+            ? `L’ÉQUIPE ${survivor.teamId + 1} REMPORTE LE FESTIN !`
+            : "AUCUNE ÉQUIPE SURVIVANTE";
+          w("#result-text").textContent = E
+            ? `Victoire en ${teamLabel(K.teamSize).toLowerCase()} ! Ton équipe a tenu ${K.round} tours.`
+            : `Votre équipe est éliminée. Un nouveau festin vous attend.`;
+        }
         if (K.mode === "survival") {
           w("#result-icon").textContent = E ? "🌲 👑" : "🌲";
           w("#result-title").textContent =
@@ -2880,6 +2930,7 @@ function Dt() {
     (oe = at(
       E.map((I) => ({
         id: I.id,
+        team: K.teamSize > 1,
         x: (I.body.position.x - QA.x + uA) * o,
         y: (I.body.position.y - QA.y + aA) * u,
         r: I.body.circleRadius * o,
@@ -2896,13 +2947,20 @@ function Dt() {
       (Q.className = "character-badge"),
       (Q.dataset.id = C.id),
       (Q.innerHTML =
-        '<span class="badge-name"></span><strong class="badge-weight"></strong>'),
+        '<span class="badge-team" hidden></span><span class="badge-name"></span><strong class="badge-weight"></strong>'),
       w("#character-labels").append(Q),
       PA.set(C.id, Q)),
       (Q.dataset.player = C.id === 0 ? "true" : "false"),
       (Q.dataset.human = C.human === true ? "true" : "false"),
       (Q.dataset.member = C.memberId || ""),
-      (Q.title = C.name),
+      (Q.title = C.name + (K.teamSize > 1 ? ` · Équipe ${C.teamId + 1}` : "")),
+      (Q.querySelector(".badge-team").hidden = !(K.teamSize > 1)),
+      (Q.querySelector(".badge-team").textContent =
+        K.teamSize > 1 ? `Éq.${C.teamId + 1}` : ""),
+      (Q.dataset.team = Number.isInteger(C.teamId) ? String(C.teamId) : ""),
+      (Q.style.borderBottomColor = Number.isInteger(C.teamId)
+        ? teamColor(C.teamId)
+        : ""),
       (Q.querySelector(".badge-name").textContent = C.name),
       (Q.querySelector(".badge-weight").textContent = RI(C.mass)),
       (Q.style.transform = `translate(${I.x}px,${I.y}px)`),
@@ -2957,12 +3015,18 @@ document.querySelectorAll("[data-floor]").forEach(
     (e.onclick = () => {
       ((ve = e.dataset.floor),
         (K.floorSkin = ve),
+        (K.onlineDeathSeen = K.teamSize > 1),
+        (w("#spectator-panel").hidden = true),
         (w("#chef-weight").value = String(K.people[0].mass)),
         (w("#chef-tools").hidden = nA !== "chef"),
         (w("#briefing-title").textContent =
           (WORK_IN_PROGRESS_MAPS.has($) ? "🚧 En travaux · " : "") +
           CA[$].name),
-        (w("#briefing-text").textContent = CA[$].description),
+        (w("#briefing-text").textContent =
+          CA[$].description +
+          (K.teamSize > 1
+            ? ` Formule ${teamLabel(K.teamSize)} · ${K.count} gourmands. Tu es dans l’équipe 1. Les alliés ne se mangent pas ; la dernière équipe en vie gagne.`
+            : "")),
         (w("#map-briefing").hidden = !1),
         document
           .querySelectorAll("[data-floor]")
@@ -3017,6 +3081,23 @@ function equippedFor(person) {
 }
 function kI(e, g) {
   if (drawSecretPerson(x, K, e, g)) return;
+  if (K.teamSize > 1) {
+    x.save();
+    x.strokeStyle = teamColor(e.teamId);
+    x.lineWidth = 2.5;
+    x.beginPath();
+    x.ellipse(
+      e.body.position.x,
+      e.body.position.y + e.body.circleRadius * 0.65,
+      e.body.circleRadius * 1.1,
+      e.body.circleRadius * 0.4,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    x.stroke();
+    x.restore();
+  }
   Se(x, e, g, equippedFor(e));
 }
 function uI(e) {
@@ -3248,6 +3329,16 @@ function Ge(e) {
   } else
     for (qA += Math.min(80, e - HA || 16), HA = e; qA >= 1e3 / 60;)
       (K.step(), (qA -= 1e3 / 60));
+  if (!online?.active && K.teamSize > 1) {
+    updateSpectator();
+    if (!K.people[0].alive && K.phase === "aim" && w("#map-briefing").hidden) {
+      K.teamAutoAt ??= e + 900;
+      if (e >= K.teamAutoAt) {
+        K.teamAutoAt = null;
+        K.launch({ x: 0, y: 0 });
+      }
+    } else K.teamAutoAt = null;
+  }
   ((QA = mI(K, gA, sA)), bt(e), ze(), requestAnimationFrame(Ge));
 }
 const De = w("#map-select");
@@ -3326,6 +3417,7 @@ online = setupMultiplayer({
     clearTimeout(Re);
     K?.destroy();
     document.body.classList.add("online-playing");
+    document.body.classList.toggle("online-spectator", seat === null);
     onlineSeat = seat;
     w("#kill-feed").replaceChildren();
     w("#spectator-panel").hidden = true;
@@ -3343,14 +3435,29 @@ online = setupMultiplayer({
       mode: state.mode,
       mapId: state.mapId,
       count: state.count,
+      teamSize: state.teamSize || 1,
     });
     K.spectate = true;
     K.floorSkin = ve;
     onlinePeople = [...K.people];
-    K.people = [
-      onlinePeople[seat],
-      ...onlinePeople.filter((_, i) => i !== seat),
-    ];
+    K.onlineDeathSeen = seat === null;
+    K.people =
+      seat === null
+        ? [
+            {
+              id: 0,
+              name: "Spectateur",
+              alive: false,
+              mass: 60,
+              body: {
+                position: { x: state.w / 2, y: state.h / 2 },
+                circleRadius: 1,
+                speed: 0,
+              },
+            },
+            ...onlinePeople,
+          ]
+        : [onlinePeople[seat], ...onlinePeople.filter((_, i) => i !== seat)];
     window.__game = K;
     q = null;
     PA.clear();
@@ -3375,7 +3482,14 @@ online = setupMultiplayer({
       person.networkSeat = id;
       person.human =
         attributes.human === true && onlineMembers.has(attributes.memberId);
-      person.id = id === onlineSeat ? 0 : id === 0 ? onlineSeat : id;
+      person.id =
+        onlineSeat === null
+          ? id + 1
+          : id === onlineSeat
+            ? 0
+            : id === 0
+              ? onlineSeat
+              : id;
       eA.setPosition(person.body, { x, y });
       eA.setVelocity(person.body, { x: vx, y: vy });
       eA.setAngle(person.body, angle);
@@ -3385,6 +3499,7 @@ online = setupMultiplayer({
     }
     for (const key of [
       "round",
+      "teamSize",
       "phase",
       "elapsed",
       "outcome",
@@ -3399,7 +3514,7 @@ online = setupMultiplayer({
     updateSpectator();
   },
   onLeave() {
-    document.body.classList.remove("online-playing");
+    document.body.classList.remove("online-playing", "online-spectator");
     w("#again").hidden = false;
     w("#spectator-panel").hidden = true;
     w("#continue-spectating").hidden = true;
@@ -3429,6 +3544,15 @@ online = setupMultiplayer({
       : state.phase === "ended"
         ? "Égalité entre les derniers gourmands."
         : "Les IA continuent. Votez tous pour rejouer ensemble.";
+    if (state.teamSize > 1 && winner) {
+      const mine = state.people.find((p) => p.id === onlineSeat);
+      const won = mine && sameTeam(mine, winner);
+      w("#result-icon").textContent = won ? "👑" : "🍽️";
+      w("#result-title").textContent =
+        `L’ÉQUIPE ${winner.teamId + 1} REMPORTE LE FESTIN !`;
+      w("#result-text").textContent =
+        `${teamLabel(state.teamSize)} · ${state.round} tours. ${won ? "Victoire de votre équipe !" : "Bravo aux gourmands !"}`;
+    }
     w("#overlay").hidden = false;
   },
   onEvent(event) {
@@ -3444,7 +3568,14 @@ online = setupMultiplayer({
       setTimeout(() => row.remove(), 8000);
       return;
     }
-    const mapId = (id) => (id === onlineSeat ? 0 : id === 0 ? onlineSeat : id);
+    const mapId = (id) =>
+      onlineSeat === null
+        ? id + 1
+        : id === onlineSeat
+          ? 0
+          : id === 0
+            ? onlineSeat
+            : id;
     gameAudio.event(
       event.kind,
       { id: mapId(event.person) },
@@ -3462,13 +3593,13 @@ w("#continue-spectating").onclick = () => {
   w("#spectator-target").focus({ preventScroll: true });
 };
 w("#spectator-target").onchange = (event) => {
-  if (online.active && !K.people[0].alive) {
+  if ((online.active || K.teamSize > 1) && !K.people[0].alive) {
     K.spectatorSeat = Number(event.target.value);
     updateSpectator();
   }
 };
 function cycleSpectator(delta) {
-  if (!online.active || K.people[0].alive) return;
+  if ((!online.active && !(K.teamSize > 1)) || K.people[0].alive) return;
   const alive = K.people.filter((p) => p.alive);
   if (!alive.length) return;
   const index = alive.indexOf(followedPerson(K));

@@ -12,6 +12,7 @@ export const ILLUSTRATED_MAPS = [
   "market",
   "nightmarket",
   "fair",
+  "trampoline",
   "royal",
   "beach",
   "station",

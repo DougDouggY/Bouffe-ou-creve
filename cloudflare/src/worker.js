@@ -52,6 +52,7 @@ export default {
           service: "bouffe-private-rooms",
           version: SIMULATION_VERSION,
           roomLimit: 8,
+          teamSizes: [1, 2, 3, 4],
           sizes: [8, 24, 50],
         },
         200,

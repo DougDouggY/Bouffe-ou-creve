@@ -1,4 +1,5 @@
-import { validMultiplayerMap } from "../../multiplayer-maps.js?v=lobby-26";
+import { validTeamSetup } from "../../teams.js?v=teams-31";
+import { validMultiplayerMap } from "../../multiplayer-maps.js?v=teams-31";
 import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
 import {
   createSimulation,
@@ -96,6 +97,7 @@ export class Room {
       expiresAt: now + IDLE_MS,
       phase: "lobby",
       count: 24,
+      teamSize: 1,
       mapId: "cantine",
       chat: [],
       members: [],
@@ -112,12 +114,6 @@ export class Room {
   }
   join(name, cosmetics) {
     this.exists();
-    if (this.data.phase !== "lobby")
-      fail(
-        "STARTED",
-        "La partie a déjà commencé. Seuls ses joueurs peuvent se reconnecter.",
-        409,
-      );
     if (this.data.members.length >= MAX_HUMANS)
       fail("FULL", "Le salon accueille au maximum 8 humains.", 409);
     const m = {
@@ -129,10 +125,26 @@ export class Room {
       disconnectedAt: this.now(),
       ready: false,
       seat: null,
+      team: this.data.phase === "lobby" ? this.freeTeam() : null,
     };
     this.data.members.push(m);
     this.touch();
     return m;
+  }
+  freeTeam() {
+    const d = this.data,
+      size = d.teamSize || 1;
+    if (size === 1) return null;
+    for (let team = 0; team < d.count / size; team++)
+      if (d.members.filter((m) => m.team === team).length < size) return team;
+    return null;
+  }
+  resetTeams() {
+    const d = this.data;
+    d.members.forEach((m, i) => {
+      m.team = d.teamSize > 1 ? Math.floor(i / d.teamSize) : null;
+      m.ready = false;
+    });
   }
   authenticate(ticket) {
     this.exists();
@@ -171,11 +183,14 @@ export class Room {
       code: d.code,
       phase: d.phase,
       count: d.count,
+      teamSize: d.teamSize || 1,
       mapId: d.mapId || "cantine",
       chat: d.chat || [],
       canRematch: this.canRematch(),
       rematchVotes: d.members.filter((m) => m.rematch).length,
-      aiCount: d.count - d.members.length,
+      aiCount:
+        d.count -
+        d.members.filter((m) => d.phase === "lobby" || m.seat !== null).length,
       host: d.host,
       revision: d.revision,
       turn: this.game?.round || 0,
@@ -184,15 +199,18 @@ export class Room {
       serverTime: this.now(),
       expiresAt: d.expiresAt,
       members: d.members.map(
-        ({ id, name, connected, ready, seat, cosmetics, rematch }) => ({
+        ({ id, name, connected, ready, seat, cosmetics, rematch, team }) => ({
           id,
           name,
           cosmetics: normalizeCosmetics(cosmetics),
+          team,
           rematch: rematch === true,
           connected,
           ready,
           seat,
-          alive: seat === null || !!this.game?.people[seat]?.alive,
+          alive:
+            this.data.phase === "lobby" ||
+            (seat !== null && !!this.game?.people[seat]?.alive),
           locked: seat !== null && Object.hasOwn(d.shots, seat),
         }),
       ),
@@ -245,6 +263,30 @@ export class Room {
         );
       member.rematch = message.vote === true;
       this.tryRematch();
+    } else if (message.type === "teamSize") {
+      if (d.host !== member.id || d.phase !== "lobby")
+        fail("HOST", "Seul l’hôte choisit le mode au salon.", 403);
+      if (![1, 2, 3, 4].includes(message.teamSize))
+        fail("TEAM_SIZE", "Choisis solo, duo, trio ou quatuor.");
+      d.teamSize = message.teamSize;
+      if (!validTeamSetup(d.count, d.teamSize)) d.count = 24;
+      this.resetTeams();
+    } else if (message.type === "team") {
+      if (d.phase !== "lobby" || !(d.teamSize > 1))
+        fail("PHASE", "Choisis ton équipe avant le départ.");
+      if (
+        !Number.isInteger(message.team) ||
+        message.team < 0 ||
+        message.team >= d.count / d.teamSize
+      )
+        fail("TEAM", "Équipe invalide.");
+      if (
+        d.members.filter((m) => m.id !== member.id && m.team === message.team)
+          .length >= d.teamSize
+      )
+        fail("TEAM_FULL", "Cette équipe est complète.");
+      member.team = message.team;
+      member.ready = false;
     } else if (message.type === "map") {
       if (d.host !== member.id || d.phase !== "lobby")
         fail("HOST", "Seul l’hôte choisit la carte au salon.", 403);
@@ -266,7 +308,13 @@ export class Room {
         );
       if (![8, 24, 50].includes(message.count))
         fail("SIZE", "Choisis 8, 24 ou 50 gourmands.");
+      if (!validTeamSetup(message.count, d.teamSize || 1))
+        fail(
+          "TEAM_SIZE",
+          "Ce nombre de gourmands ne permet pas des équipes égales.",
+        );
       d.count = message.count;
+      this.resetTeams();
       d.members.forEach((m) => {
         m.ready = false;
       });
@@ -279,14 +327,27 @@ export class Room {
           "NOT_READY",
           "Tous les gourmands doivent être connectés et prêts.",
         );
+      const occupied = new Map();
       d.members.forEach((m, i) => {
-        m.seat = i;
+        if (d.teamSize > 1) {
+          const offset = occupied.get(m.team) || 0;
+          if (
+            !Number.isInteger(m.team) ||
+            m.team < 0 ||
+            m.team >= d.count / d.teamSize ||
+            offset >= d.teamSize
+          )
+            fail("TEAM", "Vérifiez la composition des équipes.");
+          m.seat = m.team * d.teamSize + offset;
+          occupied.set(m.team, offset + 1);
+        } else m.seat = i;
       });
       this.game = createSimulation(
         d.count,
         d.seed,
         d.members,
         d.mapId || "cantine",
+        d.teamSize || 1,
       );
       d.phase = "playing";
       d.readyAt = this.now();
@@ -347,6 +408,8 @@ export class Room {
     d.readyAt = 0;
     d.deadline = 0;
     d.seed = crypto.getRandomValues(new Uint32Array(1))[0];
+    for (const m of d.members)
+      if (d.teamSize > 1 && !Number.isInteger(m.team)) m.team = this.freeTeam();
     d.members.forEach((m) => {
       m.seat = null;
       m.ready = false;

@@ -1,5 +1,5 @@
-import { mapGroups } from "./map-catalog.js?v=filmovore-15";
-import { mapArtURL } from "./map-art.js?v=filmovore-15";
+import { mapGroups } from "./map-catalog.js?v=teams-31";
+import { mapArtURL } from "./map-art.js?v=teams-31";
 export function modeUnlocked(mode, profile) {
   return (
     !["gros", "usa"].includes(mode) ||

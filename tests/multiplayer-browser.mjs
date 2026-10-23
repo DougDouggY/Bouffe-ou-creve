@@ -289,7 +289,7 @@ try {
         ws.onopen = () =>
           ws.send(
             JSON.stringify({
-              version: "multi-20",
+              version: "multi-21",
               type: "shot",
               turn: 0,
               x: 17,

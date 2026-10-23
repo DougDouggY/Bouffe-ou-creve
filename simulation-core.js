@@ -1,4 +1,11 @@
-import { REMOVED_MAPS } from "./map-catalog.js?v=filmovore-15";
+import {
+  sameTeam,
+  lastTeamStanding,
+  localTeamWon,
+  validTeamSetup,
+} from "./teams.js?v=teams-31";
+import { royalRisk, insideRoyalMouth } from "./royal-rules.js?v=royal-29";
+import { REMOVED_MAPS } from "./map-catalog.js?v=teams-31";
 // Shared headless engine: solo and authoritative private rooms use the same rules.
 import {
   SurvivalRules,
@@ -17,7 +24,7 @@ import {
   insideHungerZone,
 } from "./hunger-games.js?v=filmovore-15";
 import { arenaBorderBodies } from "./arena-bounds.js?v=hunger-18";
-import { ArenaMechanics } from "./arena-mechanics.js?v=filmovore-15";
+import { ArenaMechanics } from "./arena-mechanics.js?v=teams-31";
 import { isVisible as xA } from "./visibility.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 const SECRET_MAP_MODE = (mode) => Object.hasOwn(SECRET_GAME_MODES, mode);
@@ -280,13 +287,23 @@ CA.royal = {
   meal: "burger",
   mealName: "Burgers",
   description:
-    "Gargantouille, roi des secondes portions : manches impaires, aspiration physique dans le cône annoncé ; manches paires, rot royal. Sa bouche élimine tous les poids.",
+    "Gargantouille aspire tous les 2 ou 3 tours, annoncés par le cône. Entre les repas, il digère. Seul le passage dans sa bouche ouverte peut te faire dévorer, quel que soit ton poids.",
 };
 CA.fair.description =
   "Flipper gourmand : trois bumpers fixes amplifient les rebonds selon l’angle du choc. Compression, ressort et trajectoires en chaîne !";
+CA.trampoline = {
+  name: "Trampoline Park",
+  icon: "🌀",
+  floor: "#152a3c",
+  experimental: true,
+  meal: "burger",
+  mealName: "Burgers",
+  description:
+    "Des bumpers sur les côtés et au milieu ! Termine ton tour sur un trampoline pour être téléporté ailleurs. À l’arrivée, le plus gros peut dévorer le plus petit selon les règles habituelles.",
+};
 CA.beach.name = "La Plage des Gourmands";
 CA.beach.description =
-  "Une vague annoncée traverse la plage de bas en haut toutes les trois manches. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
+  "Une vague annoncée traverse la plage de bas en haut tous les 2 ou 3 tours. Sa poussée physique regroupe les gourmands, les plus lourds résistent mieux.";
 function _e(e, g, o, u = 1) {
   const E = (A, n, i, I, C = 0, Q = {}) => ({
     x: A * g,
@@ -296,6 +313,35 @@ function _e(e, g, o, u = 1) {
     angle: C,
     ...Q,
   });
+  if (e === "trampoline") {
+    const r = Math.min(g, o) * 0.027;
+    const points = [0.15, 0.29, 0.43, 0.57, 0.71, 0.85]
+      .flatMap((y) => [
+        [0.065, y],
+        [0.935, y],
+      ])
+      .concat(
+        [0.2, 0.35, 0.5, 0.65, 0.8].flatMap((x) => [
+          [x, 0.065],
+          [x, 0.935],
+        ]),
+        [
+          [0.38, 0.43],
+          [0.62, 0.43],
+          [0.38, 0.68],
+          [0.62, 0.68],
+        ],
+      );
+    return points.map(([x, y]) => ({
+      x: x * g,
+      y: y * o,
+      w: r * 2,
+      h: r * 2,
+      r,
+      angle: 0,
+      bumper: true,
+    }));
+  }
   if (e === "icecream") return [];
   if (e === "survival") return survivalObstacles(g, o);
   if (e === "cuisine")
@@ -413,6 +459,15 @@ function Ee(e, g, o, u = 1) {
       }),
     );
   }
+  if (e === "trampoline")
+    return [
+      [0.25, 0.3],
+      [0.75, 0.3],
+      [0.5, 0.53],
+      [0.25, 0.76],
+      [0.75, 0.76],
+    ].map(([x, y]) => i("trampoline", x, y, 0.065));
+  if (e === "beach") return [n("sand", { regularSand: true })];
   return e === "sushi"
     ? [
         E("sushi", 0.5, 0.28, 0.85, 0.15, { ax: 1, ay: 0 }),
@@ -476,7 +531,9 @@ function ce(e, g = []) {
     : o.some((u) => u.kind === "ice")
       ? 0.004
       : o.some((u) => u.kind === "sand")
-        ? 0.03
+        ? o.some((u) => u.regularSand)
+          ? 0.024
+          : 0.03
         : o.some((u) => !u.kind || u.kind === "oil")
           ? 0.009
           : 0.024;
@@ -6531,6 +6588,10 @@ const pt = 0.976,
 function CI(e) {
   return {
     mapId: e.mapId,
+    royal:
+      e.mapId === "royal"
+        ? { mouth: e.mechanics.mouth(), suction: e.mechanics.royalSuctionRound }
+        : null,
     w: e.w,
     h: e.h,
     obstacles: e.obstacles.map((g) => ({ ...g })),
@@ -6540,6 +6601,7 @@ function CI(e) {
       .filter((g) => g.alive)
       .map((g) => ({
         id: g.id,
+        teamId: g.teamId,
         heading: g.heading ?? 0,
         lightBoost: g.lightBoost || 1,
         mass: g.mass,
@@ -6592,7 +6654,7 @@ function Zt(e, g, o = Math.random) {
       people: e.people.filter((s) => s.id === g || mA(u, s) < 1050),
     });
   const n = e.people
-      .filter((s) => s.id !== g)
+      .filter((s) => s.id !== g && !sameTeam(s, u))
       .map((s) => ({ ...s, forecast: Gt(s, e) })),
     i = [],
     I = (s, r, d, M = null) => {
@@ -6785,6 +6847,10 @@ function xt(e, g, o, u, E) {
           !R.has(p.id) &&
           (R.add(p.id), (t += 24), (s = !0));
     }
+    if (u.royal && insideRoyalMouth({ x: i, y: I }, u.royal.mouth)) {
+      t += 10000;
+      break;
+    }
     if (s || y < 0.2) break;
   }
   for (const m of o)
@@ -6793,6 +6859,7 @@ function xt(e, g, o, u, E) {
         J = Math.hypot(i - m.x, I - m.y);
       J < Y && (t += Math.max(0, 1 - J / Y) * 38);
     }
+  if (u.royal) t += royalRisk({ x: i, y: I }, u.royal, u.h);
   let h = 0;
   const c = u.food.filter(Fe);
   if (c.length) {
@@ -6849,7 +6916,14 @@ const Ft = [
   ];
 class zt {
   constructor(g = 1e3, o = 560, u = Math.random, E = {}) {
-    ((this.mode = E.mode || "classic"),
+    ((this.teamSize =
+      validTeamSetup(E.count || 8, E.teamSize || 1) &&
+      !SECRET_MAP_MODE(E.mode) &&
+      E.mode !== "somalia"
+        ? E.teamSize || 1
+        : 1),
+      (this.spectate = this.teamSize > 1),
+      (this.mode = E.mode || "classic"),
       (this.mapId = this.mode === "somalia" ? "savanna" : E.mapId || "cantine"),
       (this.savanna = this.mapId === "savanna"),
       (this.count =
@@ -7057,6 +7131,11 @@ class zt {
         });
       }
     }
+    if (this.teamSize > 1)
+      for (const p of this.people) {
+        p.teamId = Math.floor(p.id / this.teamSize);
+        p.networkSeat = p.id;
+      }
     (this.mapId === "foodcourt" && this.spawnCheese(1),
       BI.on(this.engine, "collisionStart", (i) => {
         for (const I of i.pairs) {
@@ -7100,6 +7179,8 @@ class zt {
       Body: eA,
       World: XA,
       intersects: RA,
+      canEat: (eater, victim) =>
+        !sameTeam(eater, victim) && Bt(eater.mass, victim.mass) === "prey",
     });
     if (SECRET_MAP_MODE(this.mode))
       this.secretRules = new (
@@ -7310,7 +7391,7 @@ class zt {
     });
   }
   eat(g, o) {
-    if (this.mode === "platform") return;
+    if (this.mode === "platform" || sameTeam(g, o)) return;
     if (!g.alive || !o.alive || this.mechanics?.protect(o, g)) return;
     ((o.alive = !1),
       XA.remove(this.engine.world, o.body),
@@ -7348,6 +7429,7 @@ class zt {
   }
   checkTruce() {
     if (
+      this.teamSize > 1 ||
       this.mechanics?.blocksTruce() ||
       this.phase === "ended" ||
       this.phase === "cinematic" ||
@@ -7543,11 +7625,13 @@ class zt {
             if (
               (!this.chef || !this.people[0].alive) &&
               ((!this.people[0].alive && !this.spectate) ||
-                this.people.filter((o) => o.alive).length === 1)
+                (this.teamSize > 1
+                  ? lastTeamStanding(this)
+                  : this.people.filter((o) => o.alive).length === 1))
             ) {
               (this.recordMotion(),
                 this.mechanics.finishRound(),
-                (this.outcome = this.people[0].alive ? "win" : "loss"),
+                (this.outcome = localTeamWon(this) ? "win" : "loss"),
                 (this.phase = "ended"),
                 this.emit("end"));
               return;
@@ -7564,10 +7648,12 @@ class zt {
               if (
                 (!this.chef || !this.people[0].alive) &&
                 ((!this.people[0].alive && !this.spectate) ||
-                  this.people.filter((p) => p.alive).length <= 1)
+                  (this.teamSize > 1
+                    ? lastTeamStanding(this)
+                    : this.people.filter((p) => p.alive).length <= 1))
               ) {
                 this.recordMotion();
-                this.outcome = this.people[0].alive ? "win" : "loss";
+                this.outcome = localTeamWon(this) ? "win" : "loss";
                 this.phase = "ended";
                 this.emit("end");
                 return;

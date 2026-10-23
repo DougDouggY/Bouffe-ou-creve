@@ -3903,3 +3903,50 @@ body.online-playing .character-badge[data-human="true"][data-player="true"] {
     animation: none;
   }
 }
+
+body.online-spectator .stat:has(#mass) {
+  display: none;
+}
+
+.team-order {
+  margin: 1rem auto;
+  max-width: 40rem;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid #a77d49;
+  border-radius: 8px;
+  background: #f6edd9;
+}
+.team-order label {
+  font-weight: 800;
+  margin-right: 0.6rem;
+}
+.team-order select {
+  max-width: 100%;
+  padding: 0.6rem;
+  color: #513b22;
+  background: #fff9ec;
+  border: 1px solid #a77d49;
+  border-radius: 5px;
+}
+.team-order p {
+  font-size: 0.85rem;
+  margin: 0.6rem 0 0;
+}
+#multiplayer-players li[data-team] {
+  border-bottom: 4px solid var(--team-color);
+}
+.lobby-team {
+  font-weight: 800;
+}
+.character-badge[data-team]:not([data-team=""]) {
+  border-bottom: 3px solid;
+}
+
+.badge-team {
+  flex: 0 0 auto;
+  font-size: 8px;
+  font-weight: 900;
+}
+.badge-team[hidden] {
+  display: none;
+}

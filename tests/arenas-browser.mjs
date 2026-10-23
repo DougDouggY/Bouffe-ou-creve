@@ -183,7 +183,7 @@ try {
       );
       m.pickup(p, { kind: "lamp" });
       m.pickup(p, { kind: "securityShield" });
-      g.round = 2;
+      g.round++;
       m.beginRound();
       check(
         "both exclusive powers cover next complete turn",
@@ -244,13 +244,15 @@ try {
         m = g.mechanics,
         p = g.people[0],
         q = g.people[1];
+      g.round = m.nextRoyalMealRound;
+      m.beginRound();
       move(p, 450, 320);
       move(q, 550, 320);
       g.resize(q, 600);
       move(q, 550, 320);
       g.food = [{ x: 500, y: 145, type: "burger", size: "normal" }];
       check(
-        "royal odd turn begins progressive suction",
+        "royal announced meal begins progressive suction",
         !m.finishReady() && m.environment.kind === "suction",
         m.environment,
       );
@@ -276,7 +278,7 @@ try {
       g.round = 2;
       m.beginRound();
       check(
-        "royal even turn is cosmetic burp",
+        "royal rest turn is cosmetic burp",
         !m.finishReady() && m.environment.kind === "burp",
         m.environment,
       );
@@ -289,7 +291,8 @@ try {
         m = g.mechanics,
         p = g.people[0],
         q = g.people[1];
-      g.round = 3;
+      g.round = m.nextWaveRound;
+      m.beginRound();
       move(p, 160, 240);
       move(q, 190, 360);
       m.launch();
@@ -304,7 +307,7 @@ try {
         last = { ...p.body.position };
       }
       check(
-        "third-turn wave physically pushes and groups gourmands",
+        "scheduled wave physically pushes and groups gourmands",
         p.body.position.y < 180 && q.body.position.y < 180,
         { a: p.body.position, b: q.body.position, hit: [...m.waveHit] },
       );
@@ -716,13 +719,14 @@ try {
     "royal",
     "beach",
     "hunger",
+    "trampoline",
   ]) {
-    await page.locator('[data-menu-mode="classic"]').focus();
+    await page.locator('[data-actual-mode="classic"]').focus();
     await page.keyboard.press("Enter");
     await page.locator("#map-screen").waitFor({ state: "visible" });
     await page
       .locator(
-        `[data-group="${id === "hunger" ? "in-progress" : "available"}"] .book-cover`,
+        `[data-group="${["hunger", "trampoline"].includes(id) ? "in-progress" : "available"}"] .book-cover`,
       )
       .click();
     await page.locator(`[data-map="${id}"]`).click();
@@ -735,7 +739,10 @@ try {
     if (id === "royal" || id === "beach") {
       await page.evaluate((id) => {
         const g = window.__arenaTest.active;
-        if (id === "beach") g.round = 3;
+        if (id === "beach") {
+          g.round = g.mechanics.nextWaveRound;
+          g.mechanics.beginRound();
+        }
         g.launch({ x: 0, y: 0 });
         if (id === "royal") g.mechanics.finishReady();
       }, id);
@@ -779,7 +786,7 @@ try {
     path: path.join(root, "test-results", "guide-pouvoirs-mobile.png"),
   });
   await mobile.locator("#close-options").click();
-  await mobile.locator('[data-menu-mode="classic"]').focus();
+  await mobile.locator('[data-actual-mode="classic"]').focus();
   await mobile.keyboard.press("Enter");
   await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="nightmarket"]').click();

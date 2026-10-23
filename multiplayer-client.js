@@ -1,10 +1,11 @@
-import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=lobby-26";
+import { validTeamSetup, teamColor } from "./teams.js?v=teams-31";
+import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=teams-31";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
 } from "./cosmetic-catalog.js?v=identity-22";
 import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
-const VERSION = "multi-20";
+const VERSION = "multi-21";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
   ? "http://127.0.0.1:8787"
   : "https://bouffeoucrevemulti.jeferson-patry-sin.workers.dev";
@@ -128,6 +129,35 @@ export function setupMultiplayer({
     $("#multiplayer-size").disabled =
       room?.host !== self?.id || room?.phase !== "lobby";
     $("#multiplayer-size").value = String(room?.count || 24);
+    const teamSize = room?.teamSize || 1;
+    $("#multiplayer-team-size").value = String(teamSize);
+    $("#multiplayer-team-size").disabled =
+      room?.host !== self?.id || room?.phase !== "lobby";
+    for (const option of $("#multiplayer-size").options)
+      option.disabled = !validTeamSetup(Number(option.value), teamSize);
+    $("#multiplayer-team-choice").hidden =
+      teamSize === 1 || (self?.seat === null && room?.phase !== "lobby");
+    const teamSelect = $("#multiplayer-team");
+    teamSelect.disabled = room?.phase !== "lobby";
+    const teamKey = JSON.stringify([
+      teamSize,
+      room?.count,
+      room?.members.map((m) => [m.id, m.team]),
+    ]);
+    if (teamSelect.dataset.roster !== teamKey) {
+      teamSelect.replaceChildren();
+      if (teamSize > 1)
+        for (let i = 0; i < room.count / teamSize; i++) {
+          const count = room.members.filter((m) => m.team === i).length;
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `Équipe ${i + 1} · ${count} humain${count > 1 ? "s" : ""} / ${teamSize}`;
+          option.disabled = count >= teamSize && self?.team !== i;
+          teamSelect.append(option);
+        }
+      teamSelect.dataset.roster = teamKey;
+    }
+    teamSelect.value = String(self?.team ?? "");
     $("#multiplayer-map").value = room?.mapId || "cantine";
     $("#multiplayer-map").disabled =
       room?.host !== self?.id || room?.phase !== "lobby";
@@ -156,6 +186,7 @@ export function setupMultiplayer({
     const rosterKey = JSON.stringify([
       room?.phase,
       room?.host,
+      room?.teamSize,
       ticket?.memberId,
       room?.members,
     ]);
@@ -173,6 +204,10 @@ export function setupMultiplayer({
             .join(" · ");
           li.dataset.self = String(m.id === ticket.memberId);
           li.dataset.ready = String(m.ready);
+          if (room.teamSize > 1 && Number.isInteger(m.team)) {
+            li.dataset.team = m.team;
+            li.style.setProperty("--team-color", teamColor(m.team));
+          }
           const label = document.createElement("span");
           label.className = "lobby-identity";
           const name = document.createElement("strong");
@@ -180,6 +215,12 @@ export function setupMultiplayer({
           const status = document.createElement("small");
           status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
           label.append(name, status);
+          if (room.teamSize > 1 && Number.isInteger(m.team)) {
+            const team = document.createElement("small");
+            team.className = "lobby-team";
+            team.textContent = `Équipe ${m.team + 1}`;
+            label.append(team);
+          }
           const avatar = document.createElement("canvas");
           avatar.width = 288;
           avatar.height = 360;
@@ -516,6 +557,10 @@ export function setupMultiplayer({
   };
   $("#multiplayer-size").onchange = (e) =>
     send({ type: "size", count: Number(e.target.value) });
+  $("#multiplayer-team-size").onchange = (e) =>
+    send({ type: "teamSize", teamSize: Number(e.target.value) });
+  $("#multiplayer-team").onchange = (e) =>
+    send({ type: "team", team: Number(e.target.value) });
   $("#multiplayer-start").onclick = () => send({ type: "start" });
   $("#multiplayer-close").onclick = () => {
     leave();

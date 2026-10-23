@@ -107,6 +107,7 @@ try {
             body,
             Buffer.from(`
           window.__cosmeticTest = {
+            shoot(v) { return online.shoot(v); },
             ready(ids) { return lA.complete && lA.naturalWidth > 0 && DA.complete && DA.naturalWidth > 0 && ids.every(id => { const im = extraCosmeticImage(id); return !im || im.complete && im.naturalWidth > 0; }); },
             avatar(memberId) {
               const p = window.__game.people.find(p => p.memberId === memberId);
@@ -248,9 +249,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=social-28"));
-  assert(resources.has("style.css?v=social-28"));
-  assert(resources.has("multiplayer-client.js?v=social-28"));
+  assert(resources.has("game.js?v=teams-31"));
+  assert(resources.has("style.css?v=teams-31"));
+  assert(resources.has("multiplayer-client.js?v=teams-31"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
@@ -528,6 +529,59 @@ try {
   });
   for (const wire of wires)
     assert.deepEqual(wire.find((p) => p.type === "state").state, start);
+  const spectator = await host.context().newPage();
+  spectator.on("pageerror", (e) => errors.push(e.message));
+  await spectator.goto(SITE + "?v=teams-31-observer");
+  await spectator.locator("#multiplayer-entry").click();
+  await spectator.waitForFunction(
+    () => !document.querySelector("#multiplayer-join").disabled,
+  );
+  await spectator.locator("#multiplayer-name").fill("Invité spectateur");
+  await spectator
+    .locator("#multiplayer-join-code")
+    .fill(await host.locator("#multiplayer-code").textContent());
+  await spectator.locator("#multiplayer-join").click();
+  await spectator.waitForFunction(
+    () =>
+      document.body.classList.contains("online-spectator") &&
+      window.__game.people.filter((p) => p.alive).length === 24,
+  );
+  assert(await spectator.locator("#spectator-panel").isVisible());
+  assert(await spectator.locator("#overlay").isHidden());
+  assert.match(
+    await spectator.locator("#online-death").textContent(),
+    /regardes/,
+  );
+  assert.equal(await spectator.locator("#spectator-target option").count(), 24);
+  assert(await spectator.locator("#mass").isHidden());
+  const viewed = await spectator.locator("#spectator-target").inputValue();
+  await spectator.locator("#spectator-next").click();
+  assert.notEqual(
+    await spectator.locator("#spectator-target").inputValue(),
+    viewed,
+  );
+  await spectator.reload();
+  await spectator.waitForFunction(
+    () =>
+      document.body.classList.contains("online-spectator") &&
+      !document.querySelector("#spectator-panel").hidden,
+  );
+  assert(await spectator.locator("#overlay").isHidden());
+  const spectatorChat = spectator.locator("#game-shell > [data-chat-panel]");
+  await spectatorChat.locator("summary").click();
+  await spectatorChat.locator("[data-chat-input]").fill("Je vous regarde !");
+  await spectatorChat.locator("button[type=submit]").click();
+  await host.waitForFunction(() =>
+    document
+      .querySelector("#game-shell [data-chat-messages]")
+      .textContent.includes("Je vous regarde !"),
+  );
+  await spectator.screenshot({ path: path.join(output, "late-spectator.png") });
+  await spectator.locator("#back-menu").click();
+  await host.waitForFunction(
+    () => document.querySelectorAll("#multiplayer-players li").length === 4,
+  );
+  await spectator.close();
   for (const [i, page] of pages.entries()) {
     const p = await page.evaluate(() => {
       const b = document.querySelector("#game").getBoundingClientRect(),
@@ -703,16 +757,73 @@ try {
       "Je suis prêt",
     );
   }
-  await host.locator("#multiplayer-map").selectOption("volcan");
+  await host.locator("#multiplayer-team-size").selectOption("2");
+  for (const page of pages)
+    await page.waitForFunction(
+      () => document.querySelector("#multiplayer-team-size").value === "2",
+    );
+  assert(await pages[1].locator("#multiplayer-team-size").isDisabled());
+  await pages[2].locator("#multiplayer-team").selectOption("2");
+  await pages[3].locator("#multiplayer-team").selectOption("2");
+  await host.locator("#multiplayer-map").selectOption("trampoline");
   for (const page of pages) await page.locator("#multiplayer-ready").click();
   await host.locator("#multiplayer-start").click();
   for (const page of pages)
     await page.waitForFunction(
       () =>
         document.body.classList.contains("online-playing") &&
-        window.__game.mapId === "volcan" &&
+        window.__game.mapId === "trampoline" &&
+        window.__game.teamSize === 2 &&
         window.__game.round === 1,
     );
+  for (const [i, page] of pages.entries()) {
+    assert.equal(
+      await page.evaluate(() => window.__game.people[0].name),
+      names[i],
+    );
+    assert.equal(
+      await page.evaluate(() => window.__game.people[0].teamId),
+      i < 2 ? 0 : 2,
+    );
+    await page.waitForFunction(() =>
+      document
+        .querySelector('.character-badge[data-player="true"]')
+        ?.textContent.includes("Éq."),
+    );
+  }
+  await host.screenshot({
+    path: path.join(output, "teams-trampoline-online.png"),
+  });
+  for (const page of pages)
+    assert(
+      await page.evaluate(() => window.__cosmeticTest.shoot({ x: 0, y: 0 })),
+    );
+  for (const page of pages)
+    await page.waitForFunction(
+      () => window.__game.round === 2 || window.__game.phase === "ended",
+    );
+  const teamStates = await Promise.all(
+    pages.map((p) =>
+      p.evaluate(() =>
+        window.__game.people
+          .filter((p) => p.alive)
+          .map((p) => [p.networkSeat, p.teamId])
+          .sort((a, b) => a[0] - b[0]),
+      ),
+    ),
+  );
+  for (const state of teamStates) assert.deepEqual(state, teamStates[0]);
+  await pages[2].reload();
+  await pages[2].waitForFunction(
+    () =>
+      document.body.classList.contains("online-playing") &&
+      window.__game.teamSize === 2 &&
+      window.__game.people[0].teamId === 2,
+  );
+  assert.equal(
+    await pages[2].evaluate(() => window.__game.people[0].name),
+    names[2],
+  );
   for (const page of pages) {
     await page.locator("#back-menu").click();
     assert(await page.locator("#multiplayer-entry").isVisible());
@@ -720,7 +831,7 @@ try {
   assert.equal(
     httpRequests.filter((r) => r.path === "/api/join" && r.status === 200)
       .length,
-    3,
+    4,
   );
   assert.deepEqual(failures, []);
   assert.deepEqual(errors, []);

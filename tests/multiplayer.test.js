@@ -477,3 +477,57 @@ test("shared chat validates messages, uses the real sender, rate-limits and surv
   restored.game.destroy();
   r.game.destroy();
 });
+
+test("late members join as spectators, survive checkpoint restore without taking a player seat, then play the rematch", () => {
+  const { r, a, b } = fixture(8);
+  const before = r.game.people.map((p) => ({
+    name: p.name,
+    memberId: p.memberId,
+  }));
+  const observer = r.join("Spectateur", { hat: "chef", outfit: "cook" });
+  r.connect(observer);
+  assert.equal(observer.seat, null);
+  assert.equal(
+    r.publicState().members.find((m) => m.id === observer.id).alive,
+    false,
+  );
+  assert.equal(r.required().length, 2);
+  assert.throws(
+    () =>
+      r.action(observer, {
+        type: "shot",
+        turn: r.game.round,
+        x: 1,
+        y: 0,
+        version,
+      }),
+    { code: "SPECTATOR" },
+  );
+  r.action(observer, { type: "chat", text: "Je regarde !", version });
+  assert.equal(r.publicState().chat.at(-1).name, "Spectateur");
+  r.data.checkpoint = checkpoint(r.game);
+  const restored = new Room(structuredClone(r.data), () => 1000000);
+  assert.deepEqual(
+    restored.game.people.map((p) => ({ name: p.name, memberId: p.memberId })),
+    before,
+  );
+  const saved = restored.data.members.find((m) => m.id === observer.id);
+  restored.connect(saved);
+  assert.equal(saved.seat, null);
+  assert.equal(restored.game.people.filter((p) => p.human).length, 2);
+  for (const m of restored.data.members) restored.connect(m);
+  for (const p of restored.game.people) p.alive = false;
+  for (const m of restored.data.members)
+    restored.action(m, { type: "rematch", vote: true, version });
+  assert.equal(restored.data.phase, "lobby");
+  for (const m of restored.data.members)
+    restored.action(m, { type: "ready", ready: true, version });
+  restored.action(
+    restored.data.members.find((m) => m.id === a.id),
+    { type: "start", version },
+  );
+  assert.equal(saved.seat, 2);
+  assert.equal(restored.game.people[2].name, "Spectateur");
+  while (r.data.members.length < 8) r.join("Invité");
+  assert.throws(() => r.join("Neuvième"), { code: "FULL" });
+});

@@ -1,0 +1,13 @@
+# Buffet du roi et silhouettes habillées
+
+Le repas de Gargantouille est espacé aléatoirement de 2 ou 3 tours, avec un premier repas au tour 2 ou 3. Le tirage utilise le générateur du jeu et n'est effectué qu'au choix du prochain repas. Le calendrier est conservé dans les états multijoueurs et les checkpoints. Le cône prévient dès la phase de visée du tour concerné.
+
+La bouche utilise une ellipse inscrite dans l'intérieur de la bouche de l'illustration existante. Le centre du gourmand doit la traverser pendant l'ouverture d'aspiration ; la taille du gourmand n'agrandit plus artificiellement la zone mortelle. Le segment parcouru entre deux sous-pas physiques évite de traverser la bouche à grande vitesse sans être détecté. La bouche fermée et le rot ne dévorent pas. L'aspiration reste progressive, avec les forces existantes.
+
+Les IA évaluent le danger de l'ouverture le long de leurs trajectoires et pénalisent les positions finales exposées au cône annoncé. Elles peuvent traverser la zone pour rejoindre un point sûr et préfèrent sortir du cône aux aliments qui les attireraient vers le roi. Ce comportement ne concerne que le Buffet du roi.
+
+Les tenues habillées deviennent la silhouette du torse et des bras, au lieu de laisser dépasser les bras du corps de base. Un rendu en bandes déforme les ressources existantes avec la prise de poids : épaules et col restent raccordés à la tête, tandis que le ventre et le bas du vêtement s'arrondissent. Les ressources et identifiants du Dressing sont conservés ; aucune image n'est envoyée par WebSocket. Les mêmes fonctions dessinent l'aperçu, le jeu solo et les humains multijoueurs. Les textures adaptées sont mises en cache avec une limite de mémoire.
+
+Les chapeaux supplémentaires restent à leur position d'origine. Leur partie basse est masquée au raccord avec le crâne pour laisser le front dégagé, et le fond brun du crâne ne dépasse plus derrière ces chapeaux. Le cercle de sélection est retiré des seuls aperçus du Dressing ; l'indicateur en partie reste présent.
+
+Validation : tests ciblés de la bouche fermée, du rot, du contact extérieur avec un gros gourmand, de l'entrée réelle et du passage rapide ; séries de repas montrant exclusivement des intervalles de 2 et 3 tours, avec les deux valeurs obtenues ; conservation du calendrier après checkpoint ; choix d'évasion de l'IA face à de la nourriture dans la zone dangereuse. Vérification des arènes avec le véritable moteur, régression des menus et du solo, comparaison visuelle de la tenue royale à 60, 500 et 2 000 kg et tests multijoueurs à quatre clients avec tenues distinctes.

@@ -1,10 +1,13 @@
-import { CA } from "./simulation-core.js?v=multi-20";
-import { mapGroups } from "./map-catalog.js?v=filmovore-15";
-export const MULTIPLAYER_MAPS = mapGroups(CA)[0]
-  .maps.filter(([id]) => id !== "savanna")
+import { CA } from "./simulation-core.js?v=teams-31";
+import { mapGroups } from "./map-catalog.js?v=teams-31";
+export const MULTIPLAYER_MAPS = [
+  ...mapGroups(CA)[0].maps,
+  ...mapGroups(CA)[1].maps.filter(([id]) => id === "trampoline"),
+]
+  .filter(([id]) => id !== "savanna")
   .map(([id, map]) => ({
     id,
-    name: map.name,
+    name: map.name + (id === "trampoline" ? " · En travaux" : ""),
   }));
 export const validMultiplayerMap = (id) =>
   MULTIPLAYER_MAPS.some((map) => map.id === id);

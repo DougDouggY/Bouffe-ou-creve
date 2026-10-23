@@ -162,6 +162,7 @@ export async function verifyDeployment(
       health = await (await request("/health")).json();
       assert.equal(health.service, "bouffe-private-rooms");
       assert.equal(health.version, SIMULATION_VERSION);
+      assert.deepEqual(health.teamSizes, [1, 2, 3, 4]);
       break;
     } catch {
       if (attempt === 5)

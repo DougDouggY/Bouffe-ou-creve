@@ -1,4 +1,10 @@
-// Physics-only rules. All impulses run inside Matter substeps, never by moving a gourmand directly.
+import {
+  royalMouth,
+  insideRoyalMouth,
+  crossesRoyalMouth,
+  inRoyalCone,
+} from "./royal-rules.js?v=royal-29";
+// Impulses run inside Matter substeps. Trampolines relocate only at the end of a turn.
 import { hungerZone, insideHungerZone } from "./hunger-games.js?v=filmovore-15";
 export const GLOBAL_SPECIAL_CHANCE = 0.01;
 export const GLOBAL_SPECIALS = ["armored", "inferno"];
@@ -45,7 +51,14 @@ export class ArenaMechanics {
     this.bumperImpulses = [];
     this.dynamicMap =
       game.mode === "platform" ||
-      ["market", "nightmarket", "fair", "royal", "beach"].includes(game.mapId);
+      [
+        "market",
+        "nightmarket",
+        "fair",
+        "trampoline",
+        "royal",
+        "beach",
+      ].includes(game.mapId);
     if (["market", "nightmarket"].includes(game.mapId)) {
       const guard = game.mapId === "nightmarket";
       for (let i = 0; i < (guard ? 6 : 8); i++) {
@@ -118,6 +131,19 @@ export class ArenaMechanics {
     const g = this.game;
     this.environment = null;
     this.environmentDone = false;
+    if (g.mapId === "royal") {
+      if (
+        !Number.isInteger(this.nextRoyalMealRound) ||
+        this.nextRoyalMealRound < g.round
+      )
+        this.nextRoyalMealRound = g.round + 1 + Math.floor(g.random() * 2);
+      this.royalSuctionRound = g.round === this.nextRoyalMealRound;
+    }
+    if (g.mapId === "beach") {
+      if (!Number.isInteger(this.nextWaveRound) || this.nextWaveRound < g.round)
+        this.nextWaveRound = g.round + 1 + Math.floor(g.random() * 2);
+      this.waveRound = g.round === this.nextWaveRound;
+    }
     this.waveHit = new Set();
     this.trails = [];
     for (const p of g.people) {
@@ -237,7 +263,7 @@ export class ArenaMechanics {
     for (const actor of this.actors)
       if (actor.kind === "security")
         this.api.Body.setVelocity(actor.body, actor.plan);
-    if (this.game.mapId === "beach" && this.game.round % 3 === 0)
+    if (this.game.mapId === "beach" && this.waveRound)
       this.environment = {
         kind: "wave",
         elapsed: 0,
@@ -304,7 +330,11 @@ export class ArenaMechanics {
     }
     if (actor?.kind === "security") this.guardContact(p, actor);
     const bumper = g.obstacleBodies.indexOf(a.person ? b : a);
-    if (g.mapId === "fair" && bumper >= 0 && g.obstacles[bumper].bumper) {
+    if (
+      ["fair", "trampoline"].includes(g.mapId) &&
+      bumper >= 0 &&
+      g.obstacles[bumper].bumper
+    ) {
       const obstacle = g.obstacles[bumper],
         key = "bumper" + bumper;
       if ((p[key] || 0) > this.clock) return;
@@ -473,7 +503,7 @@ export class ArenaMechanics {
           food.y += velocity.y * scale;
         }
       const mouth = this.mouth();
-      g.food = g.food.filter((f) => distance(f, mouth) > mouth.r);
+      g.food = g.food.filter((f) => !insideRoyalMouth(f, mouth));
     }
     if (env.kind === "wave") {
       const front =
@@ -568,28 +598,20 @@ export class ArenaMechanics {
       if (
         p.alive &&
         g.mapId === "royal" &&
-        distance(p.body.position, this.mouth()) <
-          this.mouth().r + p.body.circleRadius * 0.4
+        this.environment?.kind === "suction" &&
+        this.environment.elapsed >= 140 &&
+        this.environment.elapsed <= this.environment.duration - 140 &&
+        crossesRoyalMouth(from, to, this.mouth())
       )
         this.kill(p, "king");
     }
     this.pulses = this.pulses.filter((p) => p.until > this.clock);
   }
   mouth() {
-    return {
-      x: this.game.w * 0.5,
-      y: this.game.h * 0.14,
-      r: Math.min(this.game.w, this.game.h) * 0.052,
-    };
+    return royalMouth(this.game.w, this.game.h);
   }
   inCone(p) {
-    const m = this.mouth(),
-      dy = p.y - m.y;
-    return (
-      dy >= -m.r &&
-      dy < this.game.h * 0.86 &&
-      Math.abs(p.x - m.x) < m.r + Math.max(0, dy) * 0.65
-    );
+    return inRoyalCone(p, this.mouth(), this.game.h);
   }
   finishReady() {
     const g = this.game;
@@ -610,7 +632,7 @@ export class ArenaMechanics {
       g.food = g.food.filter((food) => insideHungerZone(food, 15, zone));
     }
     if (g.mapId === "royal" && !this.environment && !this.environmentDone) {
-      const kind = g.round % 2 ? "suction" : "burp";
+      const kind = this.royalSuctionRound ? "suction" : "burp";
       this.environment = {
         kind,
         elapsed: 0,
@@ -625,8 +647,67 @@ export class ArenaMechanics {
     )
       return false;
     if (this.environment) {
+      if (g.mapId === "beach" && this.environment.kind === "wave")
+        this.nextWaveRound = g.round + 2 + Math.floor(g.random() * 2);
+      if (g.mapId === "royal" && this.environment.kind === "suction")
+        this.nextRoyalMealRound = g.round + 2 + Math.floor(g.random() * 2);
       this.environmentDone = true;
       this.environment = null;
+    }
+    if (g.mapId === "trampoline" && this.trampolineResolvedRound !== g.round) {
+      this.trampolineResolvedRound = g.round;
+      const jumping = g.people.filter(
+        (p) =>
+          p.alive &&
+          g.zones.some(
+            (z) =>
+              z.kind === "trampoline" && distance(p.body.position, z) < z.r,
+          ),
+      );
+      for (const p of jumping) {
+        if (!p.alive) continue;
+        const radius = p.body.circleRadius;
+        let destination;
+        for (let i = 0; i < 160; i++) {
+          const mx = radius + g.w * 0.04,
+            my = radius + g.h * 0.04;
+          const point = {
+            x: mx + g.random() * (g.w - 2 * mx),
+            y: my + g.random() * (g.h - 2 * my),
+          };
+          if (
+            g.obstacles.some((o) => this.api.intersects(point, radius + 8, o))
+          )
+            continue;
+          if (distance(point, p.body.position) < radius * 2 + 30) continue;
+          destination = point;
+          break;
+        }
+        if (!destination) continue;
+        this.pulse(p.body.position, "bumper");
+        this.api.Body.setPosition(p.body, destination);
+        this.api.Body.setVelocity(p.body, { x: 0, y: 0 });
+        this.api.Body.setAngularVelocity(p.body, 0);
+        this.pulse(destination, "bumper");
+        g.effects.push({
+          ...destination,
+          text: "BOÏNG !",
+          life: 1.4,
+          color: "#55cbd6",
+        });
+        for (const other of g.people) {
+          if (!p.alive) break;
+          if (
+            other === p ||
+            !other.alive ||
+            distance(destination, other.body.position) >=
+              radius + other.body.circleRadius
+          )
+            continue;
+          if (this.api.canEat(p, other)) g.eat(p, other);
+          else if (this.api.canEat(other, p)) g.eat(other, p);
+        }
+      }
     }
     return true;
   }

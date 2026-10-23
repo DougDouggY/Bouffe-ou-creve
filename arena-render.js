@@ -119,7 +119,60 @@ export function drawArenaFloor(ctx, g, time) {
           ellipse(ctx, x, y, 3, 3, "#e0f4fa");
       ctx.restore();
     }
-  if (g.mapId === "fair")
+  if (g.mapId === "trampoline")
+    for (const pad of g.zones.filter((z) => z.kind === "trampoline")) {
+      ctx.save();
+      ctx.translate(pad.x, pad.y);
+      ctx.shadowColor = "#0009";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 5;
+      ellipse(ctx, 0, 0, pad.r + 12, pad.r + 12, "#0a1521");
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      ellipse(ctx, 0, 0, pad.r + 8, pad.r + 8, "#1d4a59");
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 20) {
+        ctx.strokeStyle = "#a2c0c8";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * (pad.r - 2), Math.sin(a) * (pad.r - 2));
+        ctx.lineTo(Math.cos(a) * (pad.r + 7), Math.sin(a) * (pad.r + 7));
+        ctx.stroke();
+      }
+      ellipse(ctx, 0, 0, pad.r, pad.r, "#ffab32");
+      const bed = ctx.createRadialGradient(
+        -pad.r * 0.25,
+        -pad.r * 0.3,
+        1,
+        0,
+        0,
+        pad.r,
+      );
+      bed.addColorStop(0, "#344756");
+      bed.addColorStop(1, "#101d2a");
+      ellipse(ctx, 0, 0, pad.r - 7, pad.r - 7, bed);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, pad.r - 8, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.strokeStyle = "#a6e7ee19";
+      ctx.lineWidth = 1;
+      for (let n = -pad.r; n < pad.r; n += 7) {
+        ctx.beginPath();
+        ctx.moveTo(n, -pad.r);
+        ctx.lineTo(n, pad.r);
+        ctx.moveTo(-pad.r, n);
+        ctx.lineTo(pad.r, n);
+        ctx.stroke();
+      }
+      ctx.restore();
+      ctx.strokeStyle = "#68e5edaa";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, pad.r * 0.28, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  if (["fair", "trampoline"].includes(g.mapId))
     for (const bumper of g.obstacles) {
       if (!bumper.bumper) continue;
       const compressed = Math.max(
@@ -136,14 +189,14 @@ export function drawArenaFloor(ctx, g, time) {
     }
   if (g.mapId === "royal") {
     const mouth = rules.mouth(),
-      suction = g.round % 2 === 1,
+      suction = rules.royalSuctionRound,
       env = rules.environment;
     if (suction) {
       ctx.beginPath();
-      ctx.moveTo(mouth.x - mouth.r, mouth.y);
-      ctx.lineTo(mouth.x - g.h * 0.6, g.h);
-      ctx.lineTo(mouth.x + g.h * 0.6, g.h);
-      ctx.lineTo(mouth.x + mouth.r, mouth.y);
+      ctx.moveTo(mouth.x - mouth.rx, mouth.y);
+      ctx.lineTo(mouth.x - mouth.rx - (g.h - mouth.y) * 0.65, g.h);
+      ctx.lineTo(mouth.x + mouth.rx + (g.h - mouth.y) * 0.65, g.h);
+      ctx.lineTo(mouth.x + mouth.rx, mouth.y);
       ctx.closePath();
       ctx.fillStyle = env?.kind === "suction" ? "#ffe1a22e" : "#ffd89916";
       ctx.fill();
@@ -222,9 +275,9 @@ export function drawArenaFloor(ctx, g, time) {
     if (g.phase === "aim")
       label(
         ctx,
-        g.round % 3 === 0
+        rules.waveRound
           ? "GROSSE VAGUE CE TOUR  ↑"
-          : `VAGUE DANS ${3 - (g.round % 3)} TOUR${3 - (g.round % 3) > 1 ? "S" : ""}  ↑`,
+          : `VAGUE DANS ${rules.nextWaveRound - g.round} TOUR${rules.nextWaveRound - g.round > 1 ? "S" : ""}  ↑`,
         g.w * 0.5,
         28,
         "#e4ffff",
@@ -378,12 +431,12 @@ export function drawArenaPowers(ctx, g, time) {
   const player = g.people[0],
     powers = [];
   if (player.alive) {
-    if (g.phase === "aim" && g.mapId === "beach" && g.round % 3 === 0)
+    if (g.phase === "aim" && g.mapId === "beach" && rules.waveRound)
       powers.push("VAGUE CE TOUR ↑");
     if (
       g.phase === "aim" &&
       g.mapId === "royal" &&
-      g.round % 2 === 1 &&
+      rules.royalSuctionRound &&
       rules.inCone(player.body.position)
     )
       powers.push("ZONE D’ASPIRATION");

@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=social-28"></script>
+    <script type="module" src="./game.js?v=teams-31"></script>
 
-    <link rel="stylesheet" href="./style.css?v=social-28" />
+    <link rel="stylesheet" href="./style.css?v=teams-31" />
   </head>
   <body>
     <div id="app">
@@ -168,6 +168,19 @@
             <p class="menu-kicker">Bouffe ou Crève · La maison des gourmands</p>
             <h2 id="map-mode-title">CLASSIQUE</h2>
             <p>Notre carte, vos envies. Choisissez le décor de votre festin.</p>
+            <div id="solo-team-controls" class="team-order">
+              <label for="solo-team-size">Votre formule</label>
+              <select id="solo-team-size">
+                <option value="1">Chacun pour soi</option>
+                <option value="2">Équipes · Duo</option>
+                <option value="3">Équipes · Trio · 24 gourmands</option>
+                <option value="4">Équipes · Quatuor</option>
+              </select>
+              <p>
+                En équipe, les IA complètent votre groupe. La dernière équipe en
+                vie remporte le festin.
+              </p>
+            </div>
             <div class="gallery-heading">
               <h3>La carte du jour</h3>
               <label
@@ -325,6 +338,21 @@
               </div>
               <label for="multiplayer-map">Le lieu du festin</label>
               <select id="multiplayer-map"></select>
+              <label for="multiplayer-team-size">La formule du festin</label>
+              <select id="multiplayer-team-size">
+                <option value="1">Chacun pour soi</option>
+                <option value="2">Équipes · Duo</option>
+                <option value="3">Équipes · Trio</option>
+                <option value="4">Équipes · Quatuor</option>
+              </select>
+              <div id="multiplayer-team-choice" hidden>
+                <label for="multiplayer-team">Mon équipe</label>
+                <select id="multiplayer-team"></select>
+                <p class="multiplayer-help">
+                  Les IA complètent les équipes. Les alliés ne se mangent pas ;
+                  la dernière équipe en vie gagne.
+                </p>
+              </div>
               <label for="multiplayer-size">Les couverts</label>
               <select id="multiplayer-size">
                 <option value="8">8 gourmands</option>

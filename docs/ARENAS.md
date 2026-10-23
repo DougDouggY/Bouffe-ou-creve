@@ -6,13 +6,13 @@ Aucune carte accessible avant cette mise à jour n'est retirée. Fête foraine e
 
 `ArenaMechanics` s'appuie sur les vrais corps Matter du jeu. Les intentions des IA et du joueur restent calculées avant tout déplacement. Les agents annoncent leur direction avant le tir et ne réagissent pas à la direction secrète du joueur. Un parcours de grille évite les rayons lors de la préparation de leur petite propulsion (vitesse 3,2 contre 17 maximum pour un gourmand avant coefficient de poids).
 
-Les cinq arènes modifiées utilisent quatre sous-pas physiques par image logique. Le même découpage s'active sur les autres cartes lorsqu'un piment brûle. Les trajectoires de feu sont vérifiées par distances entre segments réellement parcourus, et non par une trajectoire théorique. Les collisions secondaires des chariots sont résolues par Matter, avec une masse de 14, une faible friction et un plafond de vitesse 18. Les gourmands ne sont jamais déplacés directement par ces nouvelles mécaniques.
+Les cinq arènes modifiées utilisent quatre sous-pas physiques par image logique. Le même découpage s'active sur les autres cartes lorsqu'un piment brûle. Les trajectoires de feu sont vérifiées par distances entre segments réellement parcourus, et non par une trajectoire théorique. Les collisions secondaires des chariots sont résolues par Matter, avec une masse de 14, une faible friction et un plafond de vitesse 18. Les poussées restent physiques ; seuls les trampolines de la nouvelle arène de test téléportent en fin de tour.
 
 Les bumpers restent fixes. Leur impulsion normale dépend de l'angle du contact, multiplie la vitesse incidente par 2,8, a un minimum de 23 et un plafond de 48. Un délai de 220 ms empêche les rebonds répétés sur un même contact.
 
-Le roi aspire pendant 2,4 secondes après la résolution des déplacements des manches impaires. La force varie avec la distance et la racine inverse du poids, avec des bornes. Les manches paires se terminent par un rot de 1,1 seconde, animé et sonorisé doucement. Le rot ne pousse personne dans cette première version. La bouche tue indépendamment du poids. La fin du tour attend la fin de ces animations physiques.
+Le roi aspire pendant 2,4 secondes après les déplacements, à des intervalles aléatoires de 2 ou 3 tours annoncés par le cône. La force varie avec la distance et la racine inverse du poids, avec des bornes. Les tours de digestion se terminent par un rot de 1,1 seconde, animé et sonorisé doucement. Le rot ne pousse personne dans cette première version. La bouche élimine indépendamment du poids uniquement pendant son ouverture d’aspiration, lorsque le centre du gourmand traverse l’ellipse intérieure visible. Les joues et le simple contact extérieur ne déclenchent pas de dévoration. Les IA évitent cette ouverture et évaluent leur position finale dans le cône annoncé. La fin du tour attend la fin de ces animations physiques.
 
-La vague des manches multiples de trois parcourt la plage de bas en haut en 2,6 à 6 secondes, selon la taille du terrain. Une bande mobile applique une poussée aux corps qui la rencontrent, avec une résistance accrue des gros poids. Les murs restent solides et regroupent les gourmands du côté opposé.
+La vague, espacée aléatoirement de 2 ou 3 manches, parcourt la plage de bas en haut en 2,6 à 6 secondes, selon la taille du terrain. Une bande mobile applique une poussée aux corps qui la rencontrent, avec une résistance accrue des gros poids. Les murs restent solides et regroupent les gourmands du côté opposé.
 
 ## Apparition et durée des pouvoirs
 
@@ -80,3 +80,11 @@ Contrôles ajoutés : placement circulaire de 50 participants, festin central, a
 - Trois lampes et un anti-sécurité sont disponibles au début de chaque tour s’ils manquent. Les exemplaires expirent toujours après quatre tours.
 - Sable : frottement ramené de 0,065 à 0,030, proche du sol normal à 0,024.
 - Le rot du roi reste le son synthétique discret existant. Aucun enregistrement authentique n’a été ajouté ; l’accès à la source audio externe testée est bloqué depuis cet environnement.
+
+## Trampoline Park (en travaux)
+
+Nouvelle arène de test disponible en solo dans le carnet « En travaux » et dans le choix des cartes du salon privé, avec ce même libellé. Vingt-deux bumpers bordent le terrain et quatre autres occupent le milieu ; ils réutilisent l’impulsion physique de Fête foraine. Cinq trampolines ont une surface jouable circulaire correspondant à leur bord orange.
+
+Une fois tous les mouvements terminés, chaque gourmand dont le centre est sur un trampoline est téléporté une seule fois. La destination est tirée avec le générateur du jeu, à distance des murs et des obstacles, mais elle peut être occupée : le rapport de poids habituel détermine qui mange qui, avec conservation des protections existantes. Un trampoline d’arrivée ne déclenche pas une seconde téléportation pendant ce même tour. Les IA suivent exactement ces mêmes règles. Le fond est une nouvelle illustration de sol rembourré ; les trampolines et les bumpers sont dessinés aux coordonnées de leurs vrais volumes physiques.
+
+La plage a désormais un sable uniforme avec la résistance ordinaire du sol. Les deux anciennes bandes invisibles de glace sont supprimées. La vague est annoncée et revient aléatoirement tous les deux ou trois tours ; le calendrier est conservé dans l’état partagé et les checkpoints, comme celui du roi.

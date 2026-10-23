@@ -1,4 +1,5 @@
-import { validMultiplayerMap } from "./multiplayer-maps.js?v=lobby-26";
+import { validTeamSetup } from "./teams.js?v=teams-31";
+import { validMultiplayerMap } from "./multiplayer-maps.js?v=teams-31";
 import { arenaSize } from "./arena-bounds.js?v=filmovore-15";
 import { normalizeCosmetics } from "./cosmetic-catalog.js?v=identity-22";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
@@ -8,9 +9,9 @@ import {
   XA as World,
   he as Engine,
   yA as Bodies,
-} from "./simulation-core.js?v=multi-20";
+} from "./simulation-core.js?v=teams-31";
 
-export const SIMULATION_VERSION = "multi-20";
+export const SIMULATION_VERSION = "multi-21";
 export function seededRandom(seed) {
   let state = seed >>> 0;
   const random = () => {
@@ -27,8 +28,16 @@ export function seededRandom(seed) {
   return random;
 }
 const clone = (value) => JSON.parse(JSON.stringify(value));
-export function createSimulation(count, seed, humans, mapId = "cantine") {
+export function createSimulation(
+  count,
+  seed,
+  humans,
+  mapId = "cantine",
+  teamSize = 1,
+) {
   if (![8, 24, 50].includes(count)) throw new Error("Unsupported size");
+  if (!validTeamSetup(count, teamSize))
+    throw new Error("Unsupported team size");
   if (!validMultiplayerMap(mapId)) throw new Error("Unsupported map");
   const mode = count === 8 ? "classic" : count === 24 ? "gros" : "usa";
   const size = arenaSize(mode, mapId);
@@ -37,11 +46,13 @@ export function createSimulation(count, seed, humans, mapId = "cantine") {
     mode,
     mapId,
     count,
+    teamSize,
   });
   game.spectate = true;
   // This is an online last-survivor match, including after seat zero dies.
   game.checkTruce = () => false;
   humans.forEach((member, index) => {
+    if (member.seat === null) return; // Joined after launch: observer until the next match.
     const person = game.people[member.seat ?? index];
     person.name = member.name;
     person.human = true;
@@ -57,6 +68,7 @@ export function snapshot(game) {
     mode: game.mode,
     mapId: game.mapId,
     count: game.count,
+    teamSize: game.teamSize,
     round: game.round,
     phase: game.phase,
     elapsed: game.elapsed,
@@ -112,6 +124,7 @@ export function restoreSimulation(saved, seed, humans) {
     seed,
     humans,
     saved.state.mapId,
+    saved.state.teamSize || 1,
   );
   const s = saved.state;
   for (const data of s.people) {
