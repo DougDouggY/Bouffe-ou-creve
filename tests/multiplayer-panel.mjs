@@ -249,9 +249,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=trophies-32"));
-  assert(resources.has("style.css?v=trophies-32"));
-  assert(resources.has("multiplayer-client.js?v=trophies-32"));
+  assert(resources.has("game.js?v=rivalries-33"));
+  assert(resources.has("style.css?v=rivalries-33"));
+  assert(resources.has("multiplayer-client.js?v=rivalries-33"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
@@ -327,6 +327,29 @@ try {
       path: path.join(output, `restaurant-lobby-${sizes[i].width}.png`),
     });
   }
+  for (const page of pages) {
+    assert.equal(await page.locator(".lobby-statistics").count(), 4);
+    assert.match(
+      await page.locator(".lobby-statistics").first().textContent(),
+      /0 victoire.*Record/,
+    );
+    await page
+      .locator('#multiplayer-players li[data-self="false"]')
+      .first()
+      .click();
+    await page.locator("#rivalry-dialog").waitFor({ state: "visible" });
+    await page.waitForFunction(
+      () => document.querySelectorAll(".rivalry-row").length === 3,
+    );
+    assert.equal(
+      await page
+        .locator(".rivalry-row b")
+        .allTextContents()
+        .then((x) => x.join(",")),
+      "0,0,0",
+    );
+    await page.locator("#close-rivalry").click();
+  }
   const host = pages[0];
   const trophyPage = await host.context().newPage();
   trophyPage.on("pageerror", (e) => errors.push(e.message));
@@ -338,7 +361,7 @@ try {
     await trophyPage
       .locator('[data-trophy^="mp-"], [data-trophy^="team-"]')
       .count(),
-    25,
+    33,
   );
   assert(
     await trophyPage
@@ -351,9 +374,7 @@ try {
     .allTextContents())
     assert.equal(name, "???");
   assert.equal(
-    await trophyPage
-      .locator('[data-trophy="team-betrayal"] small')
-      .textContent(),
+    await trophyPage.locator('[data-trophy="team-assist"] small').textContent(),
     "INDISPONIBLE",
   );
   await trophyPage.screenshot({

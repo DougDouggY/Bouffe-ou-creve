@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=trophies-32"></script>
+    <script type="module" src="./game.js?v=rivalries-33"></script>
 
-    <link rel="stylesheet" href="./style.css?v=trophies-32" />
+    <link rel="stylesheet" href="./style.css?v=rivalries-33" />
   </head>
   <body>
     <div id="app">
@@ -360,6 +360,11 @@
                 <option value="50">50 gourmands</option>
               </select>
               <p id="multiplayer-fill"></p>
+              <p class="multiplayer-help">
+                Les statistiques comptent les parties multijoueurs enregistrées.
+                Les records de poids sont suivis depuis cette mise à jour.
+                Clique sur un autre gourmand pour voir votre passif.
+              </p>
               <div class="lobby-service">
                 <button id="multiplayer-ready">Je suis prêt</button>
                 <button id="multiplayer-start">
@@ -507,6 +512,16 @@
           ><button id="option-fullscreen">Passer en plein écran</button
           ><button id="chef-entry">Atelier du Chef · accès provisoire</button
           ><button id="close-options">Retour au burger</button>
+        </dialog>
+        <dialog id="rivalry-dialog" aria-labelledby="rivalry-title">
+          <header>
+            <div>
+              <small>LE PASSIF DE LA TABLÉE</small>
+              <h2 id="rivalry-title">Nos rivalités</h2>
+            </div>
+            <button id="close-rivalry">Retour à la table</button>
+          </header>
+          <div id="rivalry-content" aria-live="polite"></div>
         </dialog>
         <dialog id="trophies-dialog">
           <header>
@@ -739,13 +754,35 @@
             <p id="camera-help" hidden></p>
             <div id="event-notice" role="status"></div>
             <div class="toolbar">
-              <div class="stat">
+              <div
+                class="stat inspect-stat"
+                data-inspect="survivors"
+                tabindex="0"
+                role="button"
+                aria-label="Détail des équipes et des survivants"
+                aria-expanded="false"
+                aria-controls="survivors-breakdown"
+              >
                 <span>SURVIVANTS</span
                 ><strong id="survivors">8 <small>/ 8</small></strong>
+                <div
+                  id="survivors-breakdown"
+                  class="hud-breakdown"
+                  hidden
+                ></div>
               </div>
-              <div class="stat">
+              <div
+                class="stat inspect-stat"
+                data-inspect="weight"
+                tabindex="0"
+                role="button"
+                aria-label="Poids des membres de ton équipe"
+                aria-expanded="false"
+                aria-controls="weight-breakdown"
+              >
                 <span>TON POIDS</span
                 ><strong id="mass">60 <small>kg</small></strong>
+                <div id="weight-breakdown" class="hud-breakdown" hidden></div>
               </div>
               <div class="stat round">
                 <span>MANCHE</span><strong id="round">01</strong>
@@ -781,6 +818,7 @@
             </div>
             <div class="arena-wrap">
               <div id="trophy-toast" role="status" hidden></div>
+              <div id="weight-record-toast" role="status" hidden></div>
               <div id="pirate-direction" hidden role="status"></div>
               <canvas
                 id="game"

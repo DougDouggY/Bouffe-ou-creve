@@ -4,7 +4,7 @@ import {
   trophyTurn,
   finishTrophyMatch,
 } from "./trophy-rules.js";
-import { validTeamSetup } from "../../teams.js?v=teams-31";
+import { validTeamSetup } from "../../teams.js?v=rivalries-33";
 import { validMultiplayerMap } from "../../multiplayer-maps.js?v=teams-31";
 import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
 import {
@@ -92,7 +92,7 @@ export class Room {
     )
       fail("EXPIRED", "Ce salon a expiré. Crée un nouveau salon.", 410);
   }
-  create(code, name, seed, cosmetics, profileId = null) {
+  create(code, name, seed, cosmetics, profileId = null, statistics = null) {
     if (this.data) fail("EXISTS", "Ce salon existe déjà.", 409);
     const now = this.now();
     this.data = {
@@ -114,11 +114,11 @@ export class Room {
       readyAt: 0,
       deadline: 0,
     };
-    const member = this.join(name, cosmetics, profileId);
+    const member = this.join(name, cosmetics, profileId, statistics);
     this.data.host = member.id;
     return member;
   }
-  join(name, cosmetics, profileId = null) {
+  join(name, cosmetics, profileId = null, statistics = null) {
     this.exists();
     if (this.data.members.length >= MAX_HUMANS)
       fail("FULL", "Le salon accueille au maximum 8 humains.", 409);
@@ -127,6 +127,7 @@ export class Room {
       token: token(),
       name: cleanName(name),
       profileId,
+      statistics,
       cosmetics: normalizeCosmetics(cosmetics),
       connected: false,
       disconnectedAt: this.now(),
@@ -206,10 +207,21 @@ export class Room {
       serverTime: this.now(),
       expiresAt: d.expiresAt,
       members: d.members.map(
-        ({ id, name, connected, ready, seat, cosmetics, rematch, team }) => ({
+        ({
+          id,
+          name,
+          connected,
+          ready,
+          seat,
+          cosmetics,
+          rematch,
+          team,
+          statistics,
+        }) => ({
           id,
           name,
           cosmetics: normalizeCosmetics(cosmetics),
+          statistics: statistics || null,
           team,
           rematch: rematch === true,
           connected,

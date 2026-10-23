@@ -1,4 +1,4 @@
-import { validTeamSetup } from "./teams.js?v=teams-31";
+import { validTeamSetup } from "./teams.js?v=rivalries-33";
 import { validMultiplayerMap } from "./multiplayer-maps.js?v=teams-31";
 import { arenaSize } from "./arena-bounds.js?v=filmovore-15";
 import { normalizeCosmetics } from "./cosmetic-catalog.js?v=identity-22";
@@ -204,6 +204,11 @@ export function restoreSimulation(saved, seed, humans) {
 export function resolveTurn(game, shots) {
   const turn = game.round;
   const events = [];
+  const massPeaks = Object.fromEntries(game.people.map((p) => [p.id, p.mass]));
+  function measureMass() {
+    for (const p of game.people)
+      massPeaks[p.id] = Math.max(massPeaks[p.id] || 0, p.mass);
+  }
   let time = 0;
   const aliveAtStart = new Set(
     game.people.filter((p) => p.alive).map((p) => p.id),
@@ -224,6 +229,8 @@ export function resolveTurn(game, shots) {
     for (const person of game.people) recordElimination(person);
   }
   game.onEvent = (kind, person, food) => {
+    if (person && Number.isFinite(person.mass))
+      massPeaks[person.id] = Math.max(massPeaks[person.id] || 0, person.mass);
     if (kind === "eat" && food && person) {
       food.eliminatedBy = { id: person.id, name: person.name };
       recordElimination(food);
@@ -244,6 +251,7 @@ export function resolveTurn(game, shots) {
   for (let i = 0; i < 720 && game.phase === "moving"; i++) {
     time += 1000 / 60;
     game.step(1000 / 60);
+    measureMass();
     recordEliminations();
     if ((i + 1) % 6 === 0 || game.phase !== "moving")
       frames.push({ t: Math.round(time), state: clone(snapshot(game)) });
@@ -256,5 +264,5 @@ export function resolveTurn(game, shots) {
   }
   const final = clone(snapshot(game));
   frames[frames.length - 1].state = final;
-  return { turn, duration: Math.round(time), frames, final, events };
+  return { turn, duration: Math.round(time), frames, final, events, massPeaks };
 }

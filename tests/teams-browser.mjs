@@ -99,6 +99,66 @@ try {
         .querySelector('.character-badge[data-player="true"]')
         ?.textContent.includes("Éq.1"),
     );
+    await page.locator('[data-inspect="survivors"]').hover();
+    assert.equal(
+      await page.locator('[data-inspect="survivors"] .hud-team-member').count(),
+      expected,
+    );
+    assert.equal(
+      await page.locator('[data-inspect="survivors"] .hud-team-title').count(),
+      expected / size,
+    );
+    await page.locator('[data-inspect="weight"]').focus();
+    assert.equal(
+      await page.locator('[data-inspect="weight"] .hud-team-member').count(),
+      size,
+    );
+    assert(
+      await page
+        .locator('.character-badge[data-player="true"]')
+        .evaluate(
+          (el) => getComputedStyle(el).backgroundColor !== "rgba(0, 0, 0, 0)",
+        ),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('[data-inspect="weight"]').click();
+    const panelBox = await page
+      .locator('[data-inspect="weight"] .hud-breakdown')
+      .boundingBox();
+    assert(panelBox.x >= 0 && panelBox.x + panelBox.width <= 391);
+    await page.keyboard.press("Escape");
+    assert(
+      await page.locator('[data-inspect="weight"] .hud-breakdown').isHidden(),
+    );
+    const notice = await page.evaluate(async () => {
+      const { deathNotice } = await import("./team-hud.js?v=rivalries-33");
+      const row = deathNotice(
+        {
+          name: "<victim>",
+          person: 0,
+          teamId: 0,
+          eliminatedBy: { name: "<killer>", id: 1, teamId: 1 },
+        },
+        [],
+        2,
+      );
+      return {
+        text: row.textContent,
+        tags: [...row.querySelectorAll(".death-name")].map((el) => [
+          el.dataset.team,
+          el.style.backgroundColor,
+        ]),
+        unsafe: !!row.querySelector("victim, killer"),
+        background: row.style.backgroundColor,
+      };
+    });
+    assert.equal(notice.unsafe, false);
+    assert.match(notice.text, /<victim>.*<killer>/);
+    assert.equal(notice.tags.length, 2);
+    assert.notEqual(notice.tags[0][1], notice.tags[1][1]);
+    assert(notice.background);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    checks += 10;
     await page.screenshot({
       path: path.join(output, `trampoline-equipes-${size}.png`),
     });

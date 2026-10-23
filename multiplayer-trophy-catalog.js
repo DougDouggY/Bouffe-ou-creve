@@ -12,7 +12,7 @@ export const MULTIPLAYER_TROPHIES = [
   ["mp-win1", "Le roi du buffet", "Remporter sa première partie multijoueur."],
   [
     "mp-revenge",
-    "Trahison calorique",
+    "Le plat de la vengeance",
     "Éliminer l’humain qui nous a éliminé lors de la partie précédente du même salon.",
   ],
   [
@@ -98,12 +98,6 @@ export const MULTIPLAYER_TROPHIES = [
     "Remporter au moins une partie en Duo, en Trio et en Quatuor.",
   ],
   [
-    "team-betrayal",
-    "C’est pas toi, c’est moi",
-    "Désactivé : les alliés ne peuvent pas se dévorer et les poussées ne sont pas attribuées.",
-    false,
-  ],
-  [
     "team-quad-last",
     "La famille, quelle famille ?",
     "Remporter une partie en Quatuor en étant le seul survivant de son équipe.",
@@ -113,15 +107,62 @@ export const MULTIPLAYER_TROPHIES = [
     "Buffet à volonté",
     "Remporter une partie en Quatuor sans perdre un membre de son équipe.",
   ],
-].map(([id, name, condition, enabled = true], art) => ({
+  [
+    "mp-regulars",
+    "Les habitués du buffet",
+    "Disputer dix parties avec au moins un même humain, même sur plusieurs sessions.",
+  ],
+  [
+    "team-trio-intact",
+    "Les trois mousquetaires",
+    "Remporter une partie en Trio avec les trois coéquipiers encore vivants.",
+  ],
+  [
+    "team-quad-meals",
+    "Les quatre à table !",
+    "En Quatuor, chaque coéquipier mange un adversaire pendant la même partie, humain ou IA.",
+  ],
+  [
+    "team-duo-human-win",
+    "À deux, c’est mieux",
+    "En Duo, chaque partenaire mange un adversaire humain et l’équipe remporte la partie.",
+  ],
+  [
+    "team-assist",
+    "Passe décisive",
+    "Désactivé : le lien causal entre une poussée alliée et une dévoration n’est pas encore vérifiable.",
+    false,
+  ],
+  [
+    "team-against-all",
+    "Seul contre tous",
+    "Gagner en équipe après être devenu seul survivant de son équipe alors qu’au moins la moitié des participants étaient encore vivants.",
+  ],
+  [
+    "team-weak-link",
+    "Le maillon faible",
+    "Gagner en équipe en étant le seul membre n’ayant mangé aucun adversaire ; tous les autres en ont mangé au moins un.",
+  ],
+  [
+    "team-stowaway",
+    "Le passager clandestin",
+    "Gagner en équipe, vivant, sans avoir personnellement mangé un seul gourmand ou joueur. Burgers et salades autorisés.",
+  ],
+  [
+    "team-no-burger",
+    "Sans supplément",
+    "Gagner en équipe, vivant, sans avoir mangé le moindre burger pendant la partie.",
+  ],
+].map(([id, name, condition, enabled = true], index) => ({
   id,
   name,
   condition,
   enabled,
-  art,
+  art: index < 22 ? index : index < 24 ? index + 1 : index - 24,
+  extraArt: index >= 24,
   online: true,
   secret: true,
-  section: art < 10 ? "multiplayer" : "teams",
+  section: id.startsWith("mp-") ? "multiplayer" : "teams",
 }));
 export const ONLINE_TROPHY_IDS = new Set(
   MULTIPLAYER_TROPHIES.filter((t) => t.enabled).map((t) => t.id),
@@ -132,11 +173,31 @@ export function onlineProfile(value = {}) {
     revision: 0,
     trophies: {},
     wins: 0,
+    maxMass: 0,
+    rivals: {},
     teamWins: { 2: 0, 3: 0, 4: 0 },
   };
   for (const key of ["revision", "wins"])
     if (Number.isSafeInteger(value[key]) && value[key] >= 0)
       result[key] = value[key];
+  if (Number.isFinite(value.maxMass) && value.maxMass >= 0)
+    result.maxMass = value.maxMass;
+  for (const [id, rival] of Object.entries(value.rivals || {})) {
+    if (!/^[a-f0-9-]{36}$/.test(id) || !rival || typeof rival !== "object")
+      continue;
+    result.rivals[id] = {
+      name:
+        typeof rival.name === "string"
+          ? Array.from(rival.name).slice(0, 24).join("")
+          : "Gourmand",
+      together: 0,
+      eaten: 0,
+      wasEaten: 0,
+    };
+    for (const key of ["together", "eaten", "wasEaten"])
+      if (Number.isSafeInteger(rival[key]) && rival[key] >= 0)
+        result.rivals[id][key] = rival[key];
+  }
   for (const id of ONLINE_TROPHY_IDS)
     if (Number.isSafeInteger(value.trophies?.[id]) && value.trophies[id] > 0)
       result.trophies[id] = value.trophies[id];
@@ -147,4 +208,9 @@ export function onlineProfile(value = {}) {
     )
       result.teamWins[size] = value.teamWins[size];
   return result;
+}
+
+export function clientProfile(state) {
+  const { rivals, ...publicState } = state;
+  return publicState;
 }

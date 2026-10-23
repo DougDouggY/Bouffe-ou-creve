@@ -74,10 +74,10 @@ function rematch(r) {
   assert.equal(r.data.phase, "lobby");
   start(r);
 }
-test("catalog has 25 masked online trophies, 24 active, with ally betrayal explicitly disabled", () => {
-  assert.equal(MULTIPLAYER_TROPHIES.length, 25);
-  assert.equal(ONLINE_TROPHY_IDS.size, 24);
-  assert(!ONLINE_TROPHY_IDS.has("team-betrayal"));
+test("catalog merges 33 trophies, 32 active, and explicitly disables unproven assists", () => {
+  assert.equal(MULTIPLAYER_TROPHIES.length, 33);
+  assert.equal(ONLINE_TROPHY_IDS.size, 32);
+  assert(!ONLINE_TROPHY_IDS.has("team-assist"));
   assert(MULTIPLAYER_TROPHIES.every((t) => t.secret && t.online));
 });
 test("human meals and first-human elimination exclude AI and teammates; real individual profiles own rewards", () => {

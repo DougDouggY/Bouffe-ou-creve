@@ -1,5 +1,9 @@
-import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=trophies-32";
-import { validTeamSetup, teamColor } from "./teams.js?v=teams-31";
+import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=rivalries-33";
+import {
+  validTeamSetup,
+  teamColor,
+  teamSurface,
+} from "./teams.js?v=rivalries-33";
 import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=teams-31";
 import {
   normalizeCosmetics,
@@ -57,6 +61,49 @@ export function setupMultiplayer({
     option.value = map.id;
     option.textContent = map.name;
     $("#multiplayer-map").append(option);
+  }
+  const rivalryDialog = $("#rivalry-dialog"),
+    rivalryContent = $("#rivalry-content");
+  let rivalryTarget = null;
+  $("#close-rivalry").onclick = () => rivalryDialog.close();
+  function openRivalry(member) {
+    rivalryTarget = member.id;
+    $("#rivalry-title").textContent = "Nos rivalités";
+    rivalryContent.textContent = "La maison retrouve votre addition…";
+    rivalryDialog.showModal();
+    send({ type: "rivalry", targetId: member.id });
+  }
+  function showRivalry(packet) {
+    if (packet.targetId !== rivalryTarget) return;
+    $("#rivalry-title").textContent =
+      `${packet.selfName} VS ${packet.opponentName}`;
+    rivalryContent.replaceChildren();
+    if (!packet.available || packet.records?.sameProfile) {
+      rivalryContent.textContent = packet.records?.sameProfile
+        ? "Ces deux gourmands utilisent le même profil de navigateur. Il n’y a pas de rivalité entre deux copies du même profil."
+        : "Cet historique sera disponible dans un nouveau salon avec les profils multijoueurs.";
+      return;
+    }
+    for (const [label, value] of [
+      [
+        `${packet.selfName} a mangé ${packet.opponentName}`,
+        packet.records.eaten,
+      ],
+      [
+        `${packet.opponentName} a mangé ${packet.selfName}`,
+        packet.records.wasEaten,
+      ],
+      ["Parties disputées ensemble", packet.records.together],
+    ]) {
+      const row = document.createElement("div");
+      row.className = "rivalry-row";
+      const text = document.createElement("span"),
+        number = document.createElement("b");
+      text.textContent = label;
+      number.textContent = String(value);
+      row.append(text, number);
+      rivalryContent.append(row);
+    }
   }
   const hud = $("#multiplayer-hud");
   const message = (text) => {
@@ -212,6 +259,7 @@ export function setupMultiplayer({
           if (room.teamSize > 1 && Number.isInteger(m.team)) {
             li.dataset.team = m.team;
             li.style.setProperty("--team-color", teamColor(m.team));
+            li.style.setProperty("--team-surface", teamSurface(m.team));
           }
           const label = document.createElement("span");
           label.className = "lobby-identity";
@@ -220,6 +268,24 @@ export function setupMultiplayer({
           const status = document.createElement("small");
           status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
           label.append(name, status);
+          const statistics = document.createElement("small");
+          statistics.className = "lobby-statistics";
+          statistics.textContent = m.statistics
+            ? `${m.statistics.wins} victoire${m.statistics.wins > 1 ? "s" : ""} · Record ${m.statistics.maxMass > 0 ? `${Number(m.statistics.maxMass.toFixed(1)).toLocaleString("fr-FR")} kg` : "non enregistré"}`
+            : "Statistiques non enregistrées";
+          label.append(statistics);
+          if (m.id !== ticket.memberId) {
+            li.tabIndex = 0;
+            li.setAttribute("role", "button");
+            li.setAttribute("aria-label", `Voir notre passif avec ${m.name}`);
+            li.onclick = () => openRivalry(m);
+            li.onkeydown = (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openRivalry(m);
+              }
+            };
+          }
           if (room.teamSize > 1 && Number.isInteger(m.team)) {
             const team = document.createElement("small");
             team.className = "lobby-team";
@@ -345,7 +411,8 @@ export function setupMultiplayer({
         welcomed = true;
         if (packet.state) enter(packet.state);
         else syncAppearance();
-      } else if (packet.type === "profile") pendingProfile = packet.state;
+      } else if (packet.type === "rivalry") showRivalry(packet);
+      else if (packet.type === "profile") pendingProfile = packet.state;
       else if (packet.type === "room") acceptRoom(packet.room);
       else if (packet.type === "state") enter(packet.state);
       else if (packet.type === "resolution") {
@@ -360,6 +427,8 @@ export function setupMultiplayer({
         }
         replay.complete = packet.last;
       } else if (packet.type === "error") {
+        if (packet.error === "RIVALRY")
+          rivalryContent.textContent = packet.message;
         message(packet.message);
         if (["CHAT", "CHAT_RATE"].includes(packet.error))
           chatPanels.forEach(
@@ -443,6 +512,7 @@ export function setupMultiplayer({
     }
   }
   function leave() {
+    rivalryDialog.close();
     clearTimeout(retry);
     if (ws?.readyState === WebSocket.OPEN) send({ type: "leave" });
     const old = ws;

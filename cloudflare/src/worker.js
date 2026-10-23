@@ -59,6 +59,7 @@ export default {
           roomLimit: 8,
           teamSizes: [1, 2, 3, 4],
           trophies: true,
+          rivalries: true,
           sizes: [8, 24, 50],
         },
         200,
@@ -172,7 +173,8 @@ export default {
             status: admission.status,
             headers: { ...cors, "Content-Type": "application/json" },
           });
-        let profileId = null;
+        let profileId = null,
+          statistics = null;
         if (body.profile !== undefined) {
           if (
             !validProfileId(body.profile?.profileId) ||
@@ -187,14 +189,19 @@ export default {
           });
           if (!verified.ok)
             throw new RoomError("PROFILE", "Profil multijoueur invalide.", 401);
-          profileId = (await verified.json()).profileId;
+          const verifiedState = await verified.json();
+          profileId = verifiedState.profileId;
+          statistics = {
+            wins: verifiedState.wins,
+            maxMass: verifiedState.maxMass || 0,
+          };
         }
         const room = env.ROOMS.get(env.ROOMS.idFromName("room:" + code));
         response = await room.fetch(
           "https://internal/" + (creating ? "create" : "join"),
           {
             method: "POST",
-            body: JSON.stringify({ ...body, code, profileId }),
+            body: JSON.stringify({ ...body, code, profileId, statistics }),
           },
         );
       } else if (
@@ -286,6 +293,12 @@ export class PrivateRoom {
         });
         if (!result.ok) throw Error("Profile receipt pending");
         const state = await result.json();
+        for (const member of this.room.data.members)
+          if (member.profileId === grant.profileId)
+            member.statistics = {
+              wins: state.wins,
+              maxMass: state.maxMass || 0,
+            };
         for (const ws of this.ctx.getWebSockets()) {
           const member = this.room.data.members.find(
             (m) => m.id === ws.deserializeAttachment()?.memberId,
@@ -298,12 +311,16 @@ export class PrivateRoom {
       }
     }
     this.room.data.trophyOutbox = remaining;
+    this.room.data.revision++;
     await this.ctx.storage.put("room", this.room.data);
     await this.ctx.storage.setAlarm(
       this.room.data.trophyOutbox.length
         ? Date.now() + 5000
         : this.room.nextAlarm(),
     );
+    try {
+      this.publish();
+    } catch {}
   }
   send(ws, message) {
     try {
@@ -354,8 +371,14 @@ export class PrivateRoom {
                   crypto.getRandomValues(new Uint32Array(1))[0],
                   body.cosmetics,
                   body.profileId,
+                  body.statistics,
                 )
-              : this.room.join(body.name, body.cosmetics, body.profileId);
+              : this.room.join(
+                  body.name,
+                  body.cosmetics,
+                  body.profileId,
+                  body.statistics,
+                );
           await this.persist();
           this.publish();
           return json({
@@ -374,6 +397,15 @@ export class PrivateRoom {
         if (!protocols.includes("bouffe-v1") || !ticket)
           throw new RoomError("AUTH", "Reconnexion invalide.", 401);
         const m = this.room.authenticate(ticket);
+        if (m.profileId) {
+          const summary = await this.env.ROOMS.get(
+            this.env.ROOMS.idFromName("profile:" + m.profileId),
+          ).fetch("https://internal/profile/summary", {
+            method: "POST",
+            body: "{}",
+          });
+          if (summary.ok) m.statistics = await summary.json();
+        }
         for (const old of this.ctx.getWebSockets())
           if (old.deserializeAttachment()?.memberId === m.id)
             old.close(4001, "Connexion remplacée");
@@ -464,6 +496,48 @@ export class PrivateRoom {
           message = JSON.parse(raw);
         } catch {
           throw new RoomError("JSON", "Message invalide.");
+        }
+        if (message.type === "rivalry") {
+          if (message.version !== SIMULATION_VERSION)
+            throw new RoomError("VERSION", "Recharge le jeu.");
+          const target = this.room.data.members.find(
+            (x) => x.id === message.targetId && x.id !== m.id,
+          );
+          if (!target)
+            throw new RoomError(
+              "RIVALRY",
+              "Ce gourmand n’est plus à cette table.",
+            );
+          if (!m.profileId || !target.profileId) {
+            this.send(ws, {
+              type: "rivalry",
+              targetId: target.id,
+              selfName: m.name,
+              opponentName: target.name,
+              available: false,
+            });
+            return;
+          }
+          const response = await this.env.ROOMS.get(
+            this.env.ROOMS.idFromName("profile:" + m.profileId),
+          ).fetch("https://internal/profile/rivalry", {
+            method: "POST",
+            body: JSON.stringify({ otherProfileId: target.profileId }),
+          });
+          if (!response.ok)
+            throw new RoomError(
+              "RIVALRY",
+              "Historique momentanément indisponible.",
+            );
+          this.send(ws, {
+            type: "rivalry",
+            targetId: target.id,
+            selfName: m.name,
+            opponentName: target.name,
+            available: true,
+            records: await response.json(),
+          });
+          return;
         }
         const replay = this.room.action(m, message);
         await this.persist();

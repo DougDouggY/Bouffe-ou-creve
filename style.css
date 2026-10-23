@@ -3964,3 +3964,144 @@ body.online-spectator .stat:has(#mass) {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
 }
+
+.character-badge[data-team]:not([data-team=""]) {
+  color: #fff5df;
+}
+.character-badge[data-team]:not([data-team=""]) .badge-weight {
+  color: #fff5df;
+}
+.death-name[data-team] {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: #fff8e8;
+  font-weight: 800;
+}
+.inspect-stat {
+  cursor: help;
+}
+.inspect-stat:focus-visible {
+  outline: 2px solid #ffe0a1;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.hud-breakdown {
+  position: fixed;
+  top: 82px;
+  right: 12px;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(65vh, 520px);
+  overflow: auto;
+  padding: 12px;
+  background: #172d30f5;
+  border: 1px solid #c5b78b;
+  box-shadow: 0 6px 24px #0006;
+  border-radius: 10px;
+  color: #fff3da;
+  text-align: left;
+  z-index: 40;
+}
+.hud-breakdown[hidden] {
+  display: none;
+}
+.hud-team-title {
+  display: block;
+  margin: 8px 0 5px;
+  font-size: 12px;
+}
+.hud-team-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px;
+  margin: 3px 0;
+  border-left: 3px solid #a9b8b4;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.hud-team-member[data-alive="false"] {
+  opacity: 0.58;
+}
+.hud-team-member b {
+  white-space: nowrap;
+}
+#weight-record-toast {
+  position: fixed;
+  top: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 26;
+  max-width: calc(100vw - 24px);
+  padding: 10px 16px;
+  background: #efd390;
+  color: #573b21;
+  border: 2px solid #b48540;
+  border-radius: 10px;
+  text-align: center;
+  pointer-events: none;
+  animation: trophy-arrive 0.45s cubic-bezier(0.2, 1.5, 0.5, 1);
+  box-shadow: 0 4px 18px #0005;
+}
+#weight-record-toast[hidden] {
+  display: none;
+}
+#weight-record-toast strong,
+#weight-record-toast span {
+  display: block;
+}
+#weight-record-toast strong {
+  font-size: 11px;
+}
+#weight-record-toast span {
+  font-size: 22px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+#rivalry-dialog {
+  width: min(620px, calc(100vw - 24px));
+  background: #f7edd6;
+  border: 2px solid #a77d49;
+  color: #5c3e2a;
+  border-radius: 8px;
+}
+#rivalry-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.rivalry-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #c5ac7e;
+}
+.rivalry-row b {
+  white-space: nowrap;
+}
+#multiplayer-players li[role="button"] {
+  cursor: pointer;
+}
+#multiplayer-players li[role="button"]:focus-visible {
+  outline: 3px solid #bf8c43;
+  outline-offset: 2px;
+}
+#multiplayer-players li[data-team] .lobby-identity {
+  background: var(--team-surface);
+  color: #fff4df;
+  padding: 8px;
+  border-radius: 6px;
+}
+#multiplayer-players li[data-team] .lobby-identity small {
+  color: #f6e9ce;
+}
+
+body.playing .toolbar .inspect-stat {
+  pointer-events: auto;
+}
+.hud-breakdown .hud-team-title {
+  font-size: 12px;
+}

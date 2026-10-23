@@ -1,5 +1,8 @@
 import { applyProfileGrant } from "./trophy-rules.js";
-import { onlineProfile } from "../../multiplayer-trophy-catalog.js?v=trophies-32";
+import {
+  onlineProfile,
+  clientProfile,
+} from "../../multiplayer-trophy-catalog.js?v=rivalries-33";
 import { RoomError } from "./room.js";
 export const validProfileId = (id) =>
   typeof id === "string" && /^[a-f0-9-]{36}$/.test(id);
@@ -24,7 +27,21 @@ export async function profileRequest(storage, action, body) {
   if (action === "state") {
     if (body.profileToken !== player.token)
       throw new RoomError("PROFILE", "Profil multijoueur invalide.", 401);
-    return player.state;
+    return clientProfile(player.state);
+  }
+  if (action === "summary")
+    return { wins: player.state.wins, maxMass: player.state.maxMass || 0 };
+  if (action === "rivalry") {
+    if (!validProfileId(body.otherProfileId))
+      throw new RoomError("RIVALRY", "Profil adverse invalide.");
+    if (body.otherProfileId === player.state.profileId)
+      return { sameProfile: true, together: 0, eaten: 0, wasEaten: 0 };
+    const rival = player.state.rivals?.[body.otherProfileId];
+    return {
+      together: rival?.together || 0,
+      eaten: rival?.eaten || 0,
+      wasEaten: rival?.wasEaten || 0,
+    };
   }
   if (action === "apply") {
     if (
@@ -36,10 +53,10 @@ export async function profileRequest(storage, action, body) {
     return storage.transaction(async (txn) => {
       const receipt = "receipt:" + body.key;
       const current = await txn.get("player");
-      if (await txn.get(receipt)) return current.state;
+      if (await txn.get(receipt)) return clientProfile(current.state);
       current.state = applyProfileGrant(current.state, body);
       await txn.put({ player: current, [receipt]: Date.now() });
-      return current.state;
+      return clientProfile(current.state);
     });
   }
   throw new RoomError("PROFILE", "Action de profil inconnue.");

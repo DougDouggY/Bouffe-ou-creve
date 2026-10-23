@@ -23,3 +23,6 @@ export function teamColor(id) {
 export function teamLabel(size) {
   return { 1: "Chacun pour soi", 2: "Duo", 3: "Trio", 4: "Quatuor" }[size];
 }
+export function teamSurface(id) {
+  return `hsl(${(id * 137.508 + 165) % 360} 47% 25%)`;
+}

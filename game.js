@@ -1,3 +1,4 @@
+import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
   drawFittedHat,
@@ -5,16 +6,17 @@ import {
 import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
-} from "./multiplayer-trophy-catalog.js?v=trophies-32";
+} from "./multiplayer-trophy-catalog.js?v=rivalries-33";
 import { mergeProfileProgress } from "./profile-storage.js?v=trophies-32";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
 import {
   sameTeam,
   localTeamWon,
   teamColor,
+  teamSurface,
   teamLabel,
-} from "./teams.js?v=teams-31";
-import { setupMultiplayer } from "./multiplayer-client.js?v=trophies-32";
+} from "./teams.js?v=rivalries-33";
+import { setupMultiplayer } from "./multiplayer-client.js?v=rivalries-33";
 import {
   CA,
   Ee,
@@ -1227,16 +1229,20 @@ const _I = "./assets/trophies.webp",
 setupSecretTrophyLab(xe);
 FA.src = _I;
 SHADOW_TROPHY_IMAGE.src = "./assets/secrets/trophies.webp";
+const COOP_TROPHY_IMAGE = new Image();
+COOP_TROPHY_IMAGE.src = "./assets/cooperation-trophies.webp";
 const ONLINE_TROPHY_IMAGE = new Image();
 ONLINE_TROPHY_IMAGE.src = "./assets/multiplayer-trophies.webp";
 const trophyById = (id) =>
   [...GA, ...SECRET_TROPHIES, ...MULTIPLAYER_TROPHIES].find((t) => t.id === id);
 function xe(e, g = !1, o = !1) {
-  const source = e.online
-    ? ONLINE_TROPHY_IMAGE
-    : e.shadow
-      ? SHADOW_TROPHY_IMAGE
-      : FA;
+  const source = e.extraArt
+    ? COOP_TROPHY_IMAGE
+    : e.online
+      ? ONLINE_TROPHY_IMAGE
+      : e.shadow
+        ? SHADOW_TROPHY_IMAGE
+        : FA;
   const u = document.createElement("canvas");
   ((u.width = u.height = 180),
     (u.className = "trophy-medal"),
@@ -1261,11 +1267,11 @@ function xe(e, g = !1, o = !1) {
       A.fillText("?", 90, 116);
       return;
     }
-    const columns = e.online ? 5 : 7,
-      rows = e.online ? 5 : 6;
+    const columns = e.extraArt ? 3 : e.online ? 5 : 7,
+      rows = e.extraArt ? 3 : e.online ? 5 : 6;
     const n = source.naturalWidth / columns,
       i = source.naturalHeight / rows;
-    const cacheKey = `${e.online ? "online" : e.shadow ? "shadow" : "normal"}-${e.art}`;
+    const cacheKey = `${e.extraArt ? "cooperation" : e.online ? "online" : e.shadow ? "shadow" : "normal"}-${e.art}`;
     let I = eI.get(cacheKey);
     (I ||
       ((I = Be(source, [
@@ -1412,6 +1418,29 @@ function tt(e) {
     (o.hidden = !1),
     clearTimeout(Ye),
     (Ye = setTimeout(() => (o.hidden = !0), 4500)));
+}
+let recordTimer;
+function showWeightRecord(mass) {
+  const toast = document.querySelector("#weight-record-toast");
+  const modal = [...document.querySelectorAll("dialog[open]")].at(-1);
+  (
+    modal ||
+    document.fullscreenElement ||
+    (document.body.classList.contains("playing")
+      ? document.querySelector("#game-shell")
+      : document.body)
+  ).append(toast);
+  const title = document.createElement("strong"),
+    value = document.createElement("span");
+  title.textContent = "NOUVEAU RECORD DE GRAISSE !";
+  value.textContent = RI(mass);
+  toast.replaceChildren(title, value);
+  toast.hidden = false;
+  toast.style.animation = "none";
+  void toast.offsetWidth;
+  toast.style.animation = "";
+  clearTimeout(recordTimer);
+  recordTimer = setTimeout(() => (toast.hidden = true), 4000);
 }
 function II() {
   (clearTimeout(Ye), (document.querySelector("#trophy-toast").hidden = !0));
@@ -1770,13 +1799,21 @@ function Qt({ start: e, appearance: g }) {
           latest.online.profileId === verified.profileId
             ? latest.online.trophies
             : {};
+        const oldRecord =
+          latest.online.profileId === verified.profileId
+            ? latest.online.maxMass
+            : 0;
         const ids = Object.keys(verified.trophies).filter(
           (id) => !previous[id],
         );
         o.online = verified;
         a(verified);
         if (L("#trophies-dialog").open) et(o);
-        if (notify) tt(ids);
+        if (notify) {
+          tt(ids);
+          if (Math.round(verified.maxMass * 10) > Math.round(oldRecord * 10))
+            showWeightRecord(verified.maxMass);
+        }
       },
       startOnline() {
         i = false;
@@ -2751,6 +2788,7 @@ let online = null;
 let onlineMembers = new Map();
 let onlinePeople = [],
   onlineSeat = 0;
+const teamHud = createTeamHud(() => K);
 let ve = "resin",
   nA = "classic",
   $ = "cantine",
@@ -2809,6 +2847,7 @@ function OA() {
     (w("#discovery").hidden = !0),
     WA?.newRun(),
     K?.destroy(),
+    teamHud.close(),
     (gA = Math.max(320, innerWidth)),
     (sA = Math.max(320, innerHeight)),
     (uA = 0),
@@ -2943,6 +2982,7 @@ function pe(e) {
   );
 }
 function ze() {
+  teamHud.update();
   ((w("#camera-help").hidden = nA !== "gros"),
     (w("#camera-help").textContent =
       "Caméra centrée sur toi en permanence. La minicarte montre le reste du terrain."),
@@ -3048,6 +3088,9 @@ function Dt() {
       (Q.querySelector(".badge-team").textContent =
         K.teamSize > 1 ? `Éq.${C.teamId + 1}` : ""),
       (Q.dataset.team = Number.isInteger(C.teamId) ? String(C.teamId) : ""),
+      (Q.style.backgroundColor = Number.isInteger(C.teamId)
+        ? teamSurface(C.teamId)
+        : ""),
       (Q.style.borderBottomColor = Number.isInteger(C.teamId)
         ? teamColor(C.teamId)
         : ""),
@@ -3509,6 +3552,7 @@ online = setupMultiplayer({
   onStart(state, seat) {
     clearTimeout(Re);
     K?.destroy();
+    teamHud.close();
     document.body.classList.add("online-playing");
     document.body.classList.toggle("online-spectator", seat === null);
     onlineSeat = seat;
@@ -3533,6 +3577,7 @@ online = setupMultiplayer({
     K.spectate = true;
     K.floorSkin = ve;
     onlinePeople = [...K.people];
+    K.onlineObserver = seat === null;
     K.onlineDeathSeen = seat === null;
     K.people =
       seat === null
@@ -3607,6 +3652,7 @@ online = setupMultiplayer({
     updateSpectator();
   },
   onLeave() {
+    teamHud.close();
     document.body.classList.remove("online-playing", "online-spectator");
     w("#again").hidden = false;
     w("#spectator-panel").hidden = true;
@@ -3650,11 +3696,7 @@ online = setupMultiplayer({
   },
   onEvent(event) {
     if (event.kind === "elimination") {
-      const row = document.createElement("li");
-      row.dataset.human = String(event.human);
-      row.textContent = event.eliminatedBy
-        ? `${event.name} a été dévoré par ${event.eliminatedBy.name}.`
-        : `${event.name} a été éliminé.`;
+      const row = deathNotice(event, onlinePeople, K.teamSize);
       const feed = w("#kill-feed");
       feed.append(row);
       while (feed.children.length > 3) feed.firstElementChild.remove();

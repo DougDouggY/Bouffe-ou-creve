@@ -164,6 +164,7 @@ export async function verifyDeployment(
       assert.equal(health.version, SIMULATION_VERSION);
       assert.deepEqual(health.teamSizes, [1, 2, 3, 4]);
       assert.equal(health.trophies, true);
+      assert.equal(health.rivalries, true);
       break;
     } catch {
       if (attempt === 5)
@@ -223,6 +224,20 @@ export async function verifyDeployment(
     );
     assert.equal(roster.room.count, 24);
     assert.equal(roster.room.aiCount, 22);
+    for (const member of roster.room.members) {
+      assert.deepEqual(member.statistics, { wins: 0, maxMass: 0 });
+      assert(!Object.hasOwn(member, "profileId"));
+    }
+    a.send({ type: "rivalry", targetId: second.memberId });
+    const rivalry = await a.wait(
+      (p) => p.type === "rivalry" && p.targetId === second.memberId,
+    );
+    assert.equal(rivalry.available, true);
+    assert.equal(rivalry.records.together, 0);
+    assert.equal(rivalry.records.eaten, 0);
+    assert.equal(rivalry.records.wasEaten, 0);
+    assert(!b.packets.some((p) => p.type === "rivalry"));
+
     console.log(
       "OK : salon SQLite, deux invités et deux WebSockets authentifiés.",
     );
@@ -320,6 +335,21 @@ export async function verifyDeployment(
       a.wait((p) => p.type === "frames" && p.last),
       b.wait((p) => p.type === "frames" && p.last),
     ]);
+    const record = await a.wait(
+      (p) => p.type === "profile" && p.state.maxMass > 0,
+    );
+    assert(!Object.hasOwn(record.state, "rivals"));
+    const updatedRoster = await b.wait(
+      (p) =>
+        p.type === "room" &&
+        p.room.members.some(
+          (m) => m.id === first.memberId && m.statistics?.maxMass > 0,
+        ),
+    );
+    assert(
+      updatedRoster.room.members.find((m) => m.id === first.memberId).statistics
+        .maxMass >= startA.people[0].mass,
+    );
     console.log(
       "OK : 2 humains + 22 IA, tirs secrets, tour autoritaire et résultats identiques.",
     );
