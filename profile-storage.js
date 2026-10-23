@@ -47,7 +47,7 @@ export function mergeProfileProgress(current, baseline, latest) {
     result.online = structuredClone(result.online);
   }
   result.equipped = { ...latest.equipped };
-  for (const slot of ["hat", "outfit"])
+  for (const slot of ["hat", "outfit", "aura", "podium", "title"])
     if (!baseline || current.equipped?.[slot] !== baseline.equipped?.[slot])
       result.equipped[slot] = current.equipped?.[slot];
   return result;

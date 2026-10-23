@@ -198,7 +198,13 @@ export async function verifyDeployment(
     const first = await post("/api/rooms", {
       name: "Test déploiement A",
       profile: credentials(profileA),
-      cosmetics: { hat: "chef", outfit: "cook" },
+      cosmetics: {
+        hat: "chef",
+        outfit: "cook",
+        aura: "aura_gold",
+        podium: "podium_jump",
+        title: "title_3",
+      },
     });
     assert.match(first.code, /^[A-HJ-NP-Z2-9]{12}$/);
     assert.match(first.token, /^[a-f0-9]{64}$/);
@@ -281,7 +287,17 @@ export async function verifyDeployment(
     assert.equal(startA.people.length, 24);
     assert.equal(startA.mapId, "cold");
     for (const [ticket, name, cosmetics] of [
-      [first, "Test déploiement A", { hat: "chef", outfit: "cook" }],
+      [
+        first,
+        "Test déploiement A",
+        {
+          hat: "chef",
+          outfit: "cook",
+          aura: "aura_gold",
+          podium: "podium_jump",
+          title: "title_3",
+        },
+      ],
       [
         second,
         "Test déploiement B",

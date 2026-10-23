@@ -1,4 +1,4 @@
-import { CA } from "./simulation-core.js?v=teams-31";
+import { CA } from "./simulation-core.js?v=podium-35";
 import { mapGroups } from "./map-catalog.js?v=teams-31";
 export const MULTIPLAYER_MAPS = [
   ...mapGroups(CA)[0].maps,

@@ -335,7 +335,12 @@ export class PrivateRoom {
       // Small packets avoid oversized WebSocket frames and avoid a running timer
       // inside the DO: browsers interpolate this one authoritative recording.
       const { frames: rawFrames, ...meta } = replay;
+      const encodeStart = performance.now();
       const frames = encodeFrames(rawFrames);
+      meta.metrics = {
+        ...meta.metrics,
+        encodeMs: performance.now() - encodeStart,
+      };
       this.broadcast({ type: "resolution", ...meta });
       for (let i = 0; i < frames.length; i += 10)
         this.broadcast({

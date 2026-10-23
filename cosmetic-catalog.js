@@ -1,5 +1,9 @@
+import {
+  EFFECT_COSMETICS,
+  COSMETIC_SLOTS,
+} from "./cosmetic-effects.js?v=podium-35";
 // The Dressing catalog is shared by solo, multiplayer clients and server validation.
-import { EXTRA_COSMETICS } from "./cosmetics.js?v=hat-mask-25";
+import { EXTRA_COSMETICS } from "./cosmetics.js?v=podium-35";
 export const COSMETIC_CATALOG = [
   {
     id: "plain",
@@ -90,6 +94,7 @@ export const COSMETIC_CATALOG = [
     icon: "🤵",
   },
   ...EXTRA_COSMETICS,
+  ...EFFECT_COSMETICS,
 ];
 const hats = new Set(
   COSMETIC_CATALOG.filter((item) => item.slot === "hat").map((item) => item.id),
@@ -100,7 +105,16 @@ const outfits = new Set(
   ),
 );
 export function normalizeCosmetics(value) {
+  const extra = {};
+  for (const slot of COSMETIC_SLOTS.slice(2))
+    if (
+      COSMETIC_CATALOG.some(
+        (item) => item.slot === slot && item.id === value?.[slot],
+      )
+    )
+      extra[slot] = value[slot];
   return {
+    ...extra,
     hat:
       typeof value?.hat === "string" && hats.has(value.hat)
         ? value.hat

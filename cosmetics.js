@@ -59,6 +59,7 @@ export const EXTRA_HAT_BOUNDS = Object.fromEntries(
 );
 const ids = new Set(EXTRA_COSMETICS.map((item) => item.id));
 const images = new Map();
+const rasterSources = new Map();
 export function extraCosmeticImage(id) {
   if (!ids.has(id)) return null;
   if (!images.has(id)) {
@@ -75,6 +76,14 @@ export function drawExtraCosmetic(context, id, x, y, width, height) {
   const image = extraCosmeticImage(id);
   if (!image) return null;
   if (!image.complete || !image.naturalWidth) return false;
-  context.drawImage(image, x, y, width, height);
+  let source = rasterSources.get(id);
+  if (!source) {
+    source = document.createElement("canvas");
+    source.width = image.naturalWidth;
+    source.height = image.naturalHeight;
+    source.getContext("2d").drawImage(image, 0, 0);
+    rasterSources.set(id, source);
+  }
+  context.drawImage(source, x, y, width, height);
   return true;
 }

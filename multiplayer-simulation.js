@@ -1,7 +1,7 @@
 import { validTeamSetup } from "./teams.js?v=rivalries-33";
-import { validMultiplayerMap } from "./multiplayer-maps.js?v=teams-31";
+import { validMultiplayerMap } from "./multiplayer-maps.js?v=podium-35";
 import { arenaSize } from "./arena-bounds.js?v=filmovore-15";
-import { normalizeCosmetics } from "./cosmetic-catalog.js?v=identity-22";
+import { normalizeCosmetics } from "./cosmetic-catalog.js?v=podium-35";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
   zt as Game,
@@ -9,7 +9,7 @@ import {
   XA as World,
   he as Engine,
   yA as Bodies,
-} from "./simulation-core.js?v=teams-31";
+} from "./simulation-core.js?v=podium-35";
 
 export const SIMULATION_VERSION = "multi-21";
 export function seededRandom(seed) {
@@ -73,6 +73,7 @@ export function snapshot(game) {
     phase: game.phase,
     elapsed: game.elapsed,
     outcome: game.outcome || null,
+    results: game.results || null,
     people: game.people.map((p) => {
       const { body, ...data } = p;
       return {
@@ -144,12 +145,13 @@ export function restoreSimulation(saved, seed, humans) {
     "phase",
     "elapsed",
     "outcome",
+    "results",
     "food",
     "zones",
     "effects",
     "announcement",
   ])
-    game[field] = clone(s[field]);
+    game[field] = clone(field === "results" ? s[field] || null : s[field]);
   const { actors, ...mechanics } = clone(s.mechanics);
   Object.assign(game.mechanics, mechanics);
   if (actors)
@@ -202,6 +204,7 @@ export function restoreSimulation(saved, seed, humans) {
   return game;
 }
 export function resolveTurn(game, shots) {
+  const measuredStart = performance.now();
   const turn = game.round;
   const events = [];
   const massPeaks = Object.fromEntries(game.people.map((p) => [p.id, p.mass]));
@@ -264,5 +267,17 @@ export function resolveTurn(game, shots) {
   }
   const final = clone(snapshot(game));
   frames[frames.length - 1].state = final;
-  return { turn, duration: Math.round(time), frames, final, events, massPeaks };
+  return {
+    turn,
+    duration: Math.round(time),
+    frames,
+    final,
+    events,
+    massPeaks,
+    metrics: {
+      simulationMs: performance.now() - measuredStart,
+      frames: frames.length,
+      events: events.length,
+    },
+  };
 }

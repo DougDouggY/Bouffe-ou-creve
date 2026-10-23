@@ -1,14 +1,23 @@
+import {
+  COSMETIC_SLOTS,
+  SLOT_LABELS,
+  drawAura,
+  cosmeticMotion,
+  setCosmeticMotion,
+  equippedTitle,
+} from "./cosmetic-effects.js?v=podium-35";
+import { showPodium, clearPodium } from "./podium.js?v=podium-35";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
   drawFittedHat,
-} from "./wardrobe-render.js?v=wardrobe-29";
+} from "./wardrobe-render.js?v=podium-35";
 import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
 } from "./multiplayer-trophy-catalog.js?v=rivalries-33";
-import { mergeProfileProgress } from "./profile-storage.js?v=trophies-32";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
+import { mergeProfileProgress } from "./profile-storage.js?v=podium-35";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=podium-35";
 import {
   sameTeam,
   localTeamWon,
@@ -16,7 +25,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=rivalries-33";
+import { setupMultiplayer } from "./multiplayer-client.js?v=podium-35";
 import {
   CA,
   Ee,
@@ -29,7 +38,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=teams-31";
+} from "./simulation-core.js?v=podium-35";
 import { drawSurvivalFloor } from "./survival.js?v=hunger-18";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -63,7 +72,7 @@ import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=hat-mask-25";
+} from "./cosmetics.js?v=podium-35";
 import { drawMapArt, mapArtURL } from "./map-art.js?v=teams-31";
 import { WORK_IN_PROGRESS_MAPS, mapGroups } from "./map-catalog.js?v=teams-31";
 import {
@@ -425,7 +434,7 @@ function Te() {
     points: 0,
     earned: 0,
     wins: 0,
-    owned: ["plain", "none"],
+    owned: ["plain", "none", "aura_none", "podium_none", "title_none"],
     equipped: { hat: "none", outfit: "plain" },
   };
 }
@@ -475,7 +484,7 @@ function Xe(e) {
         ),
       ]),
     ];
-    for (const u of ["hat", "outfit"])
+    for (const u of COSMETIC_SLOTS)
       o.owned.includes(g.equipped?.[u]) &&
         KA.some((E) => E.id === g.equipped[u] && E.slot === u) &&
         (o.equipped[u] = g.equipped[u]);
@@ -633,6 +642,41 @@ function TI(e, g) {
     lA.complete || lA.addEventListener("load", o, { once: !0 }),
     DA.complete || DA.addEventListener("load", o, { once: !0 }));
 }
+function drawEffectThumbnail(canvas, item) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (item.slot === "aura") {
+    ctx.save();
+    ctx.translate(70, 62);
+    ctx.scale(44, 44);
+    drawAura(ctx, item.id, 0, "simple");
+    ctx.restore();
+  } else {
+    ctx.font = "42px serif";
+    ctx.textAlign = "center";
+    ctx.fillText(item.icon, 70, 65);
+  }
+}
+function renderPodiumAvatar(canvas, person) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  Se(
+    ctx,
+    {
+      ...person,
+      id: person.id,
+      preview: true,
+      pop: 0,
+      body: {
+        position: { x: canvas.width / 2, y: canvas.height * 0.77 },
+        circleRadius: canvas.width * 0.22,
+        speed: 0,
+      },
+    },
+    0,
+    person.cosmetics || { hat: "none", outfit: "plain" },
+  );
+}
 function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   const { x: E, y: A } = g.body.position,
     n = g.body.circleRadius,
@@ -645,6 +689,7 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
       Math.min(0.035, (g.body.speed || 0) * 0.006) +
     (g.pop || 0) * 0.05;
   e.scale(n * C, n / C);
+  drawAura(e, u.aura, o);
   const Q = (r, d, M, S, v) => {
     ((e.fillStyle = v),
       e.beginPath(),
@@ -703,14 +748,13 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   const a = xI(1, g.mass ?? 60);
   ((g.id === 0 || g.cosmetics || u.outfit !== "plain") &&
     (u.outfit !== "plain"
-      ? drawTailoredOutfit(e, u.outfit, I, Ie) ||
-        Q(0, 0.2, I.bodyWidth, I.bodyHeight, t)
+      ? drawTailoredOutfit(e, u.outfit, I, Ie)
       : Ie(e, u.outfit, a.x, a.y, a.w, a.h)),
     e.save(),
     e.translate(0, I.headY),
     e.scale(I.headScale, I.headScale));
   const s = dI(u.hat);
-  (s && !s.front && drawFittedHat(e, u.hat, s, Ie),
+  (s && drawFittedHat(e, u.hat, s, Ie, "rear"),
     !u.hat.startsWith("hat_") && Q(0, -0.39, 0.52, 0.51, "#724831"),
     Q(0, -0.38, 0.49, 0.49, i),
     Q(-0.42, -0.37, 0.13, 0.17, i),
@@ -720,7 +764,7 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
       e.beginPath(),
       e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2),
       e.fill()),
-    s?.front && drawFittedHat(e, u.hat, s, Ie),
+    s && u.hat !== "halo" && drawFittedHat(e, u.hat, s, Ie, "front"),
     Q(-0.17, -0.43, 0.055, 0.068, "#2c3028"),
     Q(0.17, -0.43, 0.055, 0.068, "#2c3028"),
     Q(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b"),
@@ -1496,7 +1540,7 @@ function Qt({ start: e, appearance: g }) {
         {
           id: 0,
           preview: true,
-          mass: (I && Number(L("#chef-weight").value)) || 60,
+          mass: Number(L("#wardrobe-weight").value) || 60,
           color: "#ed9a41",
           pop: 0,
           body: { position: { x: 160, y: 191 }, circleRadius: 65, speed: 0 },
@@ -1504,6 +1548,8 @@ function Qt({ start: e, appearance: g }) {
         0,
         B(),
       ));
+    L("#wardrobe-weight-value").textContent =
+      `${Number(L("#wardrobe-weight").value).toLocaleString("fr-FR")} kg`;
     const h = L("#growth-preview"),
       c = h.getContext("2d");
     c.clearRect(0, 0, 520, 320);
@@ -1532,6 +1578,7 @@ function Qt({ start: e, appearance: g }) {
         c.fillText(Y.toLocaleString("fr-FR") + " kg", J, 310));
     }
   }
+  L("#wardrobe-weight").oninput = k;
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
   document.addEventListener("extra-cosmetics-loaded", k);
   function t() {
@@ -1589,6 +1636,12 @@ function Qt({ start: e, appearance: g }) {
     const R = KA.find((h) => h.id === l);
     R && (I ? ((C[R.slot] = l), t(), r()) : LI(o, l) && (a(), r()));
   }
+  const motionControl = L("#cosmetic-motion");
+  motionControl.value = cosmeticMotion();
+  motionControl.onchange = () => {
+    setCosmeticMotion(motionControl.value);
+    k();
+  };
   let cosmeticFilter = "all";
   document.querySelectorAll("[data-cosmetics-filter]").forEach((button) => {
     button.onclick = () => {
@@ -1611,8 +1664,12 @@ function Qt({ start: e, appearance: g }) {
       );
     l.replaceChildren();
     for (const R of KA) {
-      const h = o.owned.includes(R.id),
-        c = B()[R.slot] === R.id,
+      const h = o.owned.includes(R.id) || R.price === 0,
+        c =
+          (B()[R.slot] ||
+            { aura: "aura_none", podium: "podium_none", title: "title_none" }[
+              R.slot
+            ]) === R.id,
         m = document.createElement("article");
       m.className = "shop-card";
       m.dataset.slot = R.slot;
@@ -1623,10 +1680,12 @@ function Qt({ start: e, appearance: g }) {
         (Y.height = 126),
         (Y.className = "equipment-thumb"),
         Y.setAttribute("aria-label", R.name),
-        TI(Y, R.id),
+        COSMETIC_SLOTS.slice(2).includes(R.slot)
+          ? drawEffectThumbnail(Y, R)
+          : TI(Y, R.id),
         m.append(Y));
       const J = document.createElement("div");
-      ((J.innerHTML = `<small>${R.slot === "hat" ? "CHAPEAU" : "TENUE"}</small><h3>${R.name}</h3>${R.isNew ? '<small class="new-cosmetic">NOUVEAU</small>' : ""}<p>${I ? "ESSAI LIBRE" : h ? "Dans ton vestiaire" : R.price + " points de graisse"}</p>`),
+      ((J.innerHTML = `<small>${SLOT_LABELS[R.slot]}</small><h3>${R.name}</h3>${R.isNew ? '<small class="new-cosmetic">NOUVEAU</small>' : ""}<p>${I ? "ESSAI LIBRE" : h ? "Dans ton vestiaire" : R.price + " points de graisse"}</p>`),
         m.append(J));
       const Z = document.createElement("button");
       ((Z.textContent = c
@@ -3084,7 +3143,12 @@ function Dt() {
       (Q.dataset.player = C.id === 0 ? "true" : "false"),
       (Q.dataset.human = C.human === true ? "true" : "false"),
       (Q.dataset.member = C.memberId || ""),
-      (Q.title = C.name + (K.teamSize > 1 ? ` · Équipe ${C.teamId + 1}` : "")),
+      (Q.title =
+        C.name +
+        (equippedTitle(equippedFor(C))
+          ? " · " + equippedTitle(equippedFor(C))
+          : "") +
+        (K.teamSize > 1 ? ` · Équipe ${C.teamId + 1}` : "")),
       (Q.querySelector(".badge-team").hidden = !(K.teamSize > 1)),
       (Q.querySelector(".badge-team").textContent =
         K.teamSize > 1 ? `Éq.${C.teamId + 1}` : ""),
@@ -3551,6 +3615,7 @@ online = setupMultiplayer({
         person.human = onlineMembers.has(person.memberId);
   },
   onStart(state, seat) {
+    clearPodium();
     clearTimeout(Re);
     K?.destroy();
     teamHud.close();
@@ -3653,6 +3718,7 @@ online = setupMultiplayer({
     updateSpectator();
   },
   onLeave() {
+    clearPodium();
     teamHud.close();
     document.body.classList.remove("online-playing", "online-spectator");
     w("#again").hidden = false;
@@ -3693,6 +3759,8 @@ online = setupMultiplayer({
       w("#result-text").textContent =
         `${teamLabel(state.teamSize)} · ${state.round} tours. ${won ? "Victoire de votre équipe !" : "Bravo aux gourmands !"}`;
     }
+    if (state.phase === "ended")
+      showPodium(state.results, state.people, renderPodiumAvatar);
     w("#overlay").hidden = false;
   },
   onEvent(event) {

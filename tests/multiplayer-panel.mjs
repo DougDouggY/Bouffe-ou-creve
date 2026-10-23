@@ -106,6 +106,8 @@ try {
           body = Buffer.concat([
             body,
             Buffer.from(`
+          window.__replayStarts=[];let replayMetric;
+          Object.defineProperty(window,'__bouffeReplayMetrics',{get(){return replayMetric},set(value){replayMetric=value;if(!window.__replayStarts.some(x=>x.turn===value.turn))window.__replayStarts.push({...value})}});
           window.__cosmeticTest = {
             shoot(v) { return online.shoot(v); },
             ready(ids) { return lA.complete && lA.naturalWidth > 0 && DA.complete && DA.naturalWidth > 0 && ids.every(id => { const im = extraCosmeticImage(id); return !im || im.complete && im.naturalWidth > 0; }); },
@@ -179,9 +181,29 @@ try {
         server.on("open", () => {
           for (const message of pending) server.send(message);
         });
+        let framePackets = 0,
+          delayDone = false,
+          delayed = null;
         server.on("message", (message) => {
-          wire.push(JSON.parse(message.toString()));
-          route.send(message.toString());
+          const packet = JSON.parse(message.toString());
+          wire.push(packet);
+          if (delayed) {
+            delayed.push(message.toString());
+            return;
+          }
+          if (
+            i === 3 &&
+            !delayDone &&
+            packet.type === "frames" &&
+            ++framePackets === 2
+          ) {
+            delayDone = true;
+            delayed = [message.toString()];
+            setTimeout(() => {
+              for (const raw of delayed) route.send(raw);
+              delayed = null;
+            }, 5500);
+          } else route.send(message.toString());
         });
         server.on("error", () => errors.push("WebSocket relay failed"));
         server.on("close", () => route.close());
@@ -249,15 +271,15 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=rivalries-33"));
-  assert(resources.has("style.css?v=rivalries-33"));
-  assert(resources.has("multiplayer-client.js?v=rivalries-33"));
+  assert(resources.has("game.js?v=podium-35"));
+  assert(resources.has("style.css?v=podium-35"));
+  assert(resources.has("multiplayer-client.js?v=podium-35"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
-  async function dress(page, hat, outfit) {
+  async function dress(page, hat, outfit, extra = {}) {
     await page.locator("#menu-shop").focus();
     await page.keyboard.press("Enter");
     await page.locator("#shop-dialog").waitFor({ state: "visible" });
-    for (const id of [hat, outfit]) {
+    for (const id of [hat, outfit, ...Object.values(extra)]) {
       const button = page.locator(`[data-item="${id}"]`);
       if (!(await button.isDisabled())) await button.click();
     }
@@ -266,19 +288,36 @@ try {
       await page.evaluate(
         () => JSON.parse(localStorage.getItem("bouffe-profile-v1")).equipped,
       ),
-      { hat, outfit },
+      { hat, outfit, ...extra },
     );
   }
   const outfits = [
     { hat: "cap", outfit: "sport" },
-    { hat: "chef", outfit: "cook" },
+    {
+      hat: "chef",
+      outfit: "cook",
+      aura: "aura_gold",
+      podium: "podium_jump",
+      title: "title_3",
+    },
     { hat: "hat_pizza", outfit: "outfit_royal" },
     { hat: "hat_teapot", outfit: "outfit_chocolate" },
   ];
   // Equip through the real Dressing UI rather than inventing display-only skins.
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-close").click();
-    await dress(page, outfits[i].hat, outfits[i].outfit);
+    await dress(
+      page,
+      outfits[i].hat,
+      outfits[i].outfit,
+      i === 1
+        ? {
+            aura: outfits[i].aura,
+            podium: outfits[i].podium,
+            title: outfits[i].title,
+          }
+        : {},
+    );
     await page.locator("#multiplayer-entry").click();
     await page.waitForFunction(
       () => !document.querySelector("#multiplayer-create").disabled,
@@ -609,9 +648,19 @@ try {
               total += delta;
               max = Math.max(max, delta);
             }
+          if (!(total / x.length < 0.75 && max <= 32)) {
+            await writeFile(
+              path.join(output, "avatar-diff-reference.png"),
+              Buffer.from(reference[j].png.split(",")[1], "base64"),
+            );
+            await writeFile(
+              path.join(output, "avatar-diff-current.png"),
+              Buffer.from(rendered[j].png.split(",")[1], "base64"),
+            );
+          }
           assert(
             total / x.length < 0.75 && max <= 32,
-            "Same costume, pose and proportions across clients",
+            `Same costume, pose and proportions across clients: ${identities[j].name}, mean ${total / x.length}, max ${max}, page ${pages.indexOf(page)}`,
           );
         }
       } else reference = rendered;
@@ -763,6 +812,19 @@ try {
         }))
         .sort((a, b) => a.name.localeCompare(b.name) || a.x - b.x),
     );
+  for (const [i, page] of pages.entries()) {
+    const first = await page.evaluate(() => window.__replayStarts[0]);
+    assert.equal(
+      first.playbackMs,
+      0,
+      "First visible frame must never skip the movement",
+    );
+    if (i === 3)
+      assert(
+        first.bufferMs >= 5000,
+        "Delayed frame packets must be buffered before starting",
+      );
+  }
   const reference = await rendered(host);
   for (const page of pages) assert.deepEqual(await rendered(page), reference);
   // A changed Dressing during the match applies only to the next lobby.
@@ -876,6 +938,20 @@ try {
     await page.locator("#multiplayer-rematch").waitFor({ state: "visible" });
     assert(await page.locator("#overlay").isVisible());
   }
+  for (const page of pages) {
+    await page.locator("#match-podium").waitFor({ state: "visible" });
+    assert.equal(await page.locator(".podium-course").count(), 3);
+    assert.match(
+      await page.locator(".podium-course--first h3").textContent(),
+      /LE BURGER DU JOUR/,
+    );
+  }
+  const sharedPodium = await host.locator("#match-podium").textContent();
+  for (const page of pages)
+    assert.equal(
+      await page.locator("#match-podium").textContent(),
+      sharedPodium,
+    );
   await pages[1].evaluate(() => (window.__forceHidden = false));
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-rematch").click();

@@ -444,7 +444,7 @@ try {
   await page.locator("#menu-shop").focus();
   await page.keyboard.press("Enter");
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
-  assert.equal(await page.locator(".shop-card").count(), 46);
+  assert.equal(await page.locator(".shop-card").count(), 67);
   await page.locator("#close-shop").click();
   checks++;
   await page.locator("#options-entry").focus();

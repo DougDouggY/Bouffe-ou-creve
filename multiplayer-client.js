@@ -1,14 +1,16 @@
+import { equippedTitle } from "./cosmetic-effects.js?v=podium-35";
+import { ReplayClock } from "./replay-clock.js?v=podium-35";
 import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=rivalries-33";
 import {
   validTeamSetup,
   teamColor,
   teamSurface,
 } from "./teams.js?v=rivalries-33";
-import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=teams-31";
+import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=podium-35";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
-} from "./cosmetic-catalog.js?v=identity-22";
+} from "./cosmetic-catalog.js?v=podium-35";
 import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
 const VERSION = "multi-21";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
@@ -267,7 +269,15 @@ export function setupMultiplayer({
           name.textContent = m.name;
           const status = document.createElement("small");
           status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
-          label.append(name, status);
+          label.append(name);
+          const nickname = equippedTitle(cosmetics);
+          if (nickname) {
+            const title = document.createElement("small");
+            title.className = "cosmetic-title";
+            title.textContent = nickname;
+            label.append(title);
+          }
+          label.append(status);
           const statistics = document.createElement("small");
           statistics.className = "lobby-statistics";
           statistics.textContent = m.statistics
@@ -416,15 +426,24 @@ export function setupMultiplayer({
       else if (packet.type === "room") acceptRoom(packet.room);
       else if (packet.type === "state") enter(packet.state);
       else if (packet.type === "resolution") {
-        replay = { ...packet, frames: [], complete: false };
+        replay = {
+          ...packet,
+          frames: [],
+          complete: false,
+          clock: new ReplayClock(),
+          receivedAt: performance.now(),
+          decodeMs: 0,
+        };
         frameIndex = 0;
         eventIndex = 0;
         pendingTurn = null;
       } else if (packet.type === "frames" && replay?.turn === packet.turn) {
+        const decodeStart = performance.now();
         for (const frame of packet.frames) {
           const decoded = decodeFrame(frame, replay.frames.at(-1)?.state);
           replay.frames.push(decoded);
         }
+        replay.decodeMs += performance.now() - decodeStart;
         replay.complete = packet.last;
       } else if (packet.type === "error") {
         if (packet.error === "RIVALRY")
@@ -537,6 +556,7 @@ export function setupMultiplayer({
       active &&
       ws?.readyState === WebSocket.OPEN &&
       room.phase === "playing" &&
+      !replay &&
       self?.alive &&
       !self.locked &&
       pendingTurn !== room.turn &&
@@ -547,7 +567,21 @@ export function setupMultiplayer({
   function tick() {
     if (!active || !room) return;
     if (replay?.frames.length) {
-      const t = Math.max(0, Date.now() + offset - replay.startedAt);
+      const t = replay.clock.sample(
+        performance.now(),
+        replay.complete,
+        performance.now() + Math.max(0, replay.startedAt - Date.now() - offset),
+      );
+      if (t === null) return;
+      window.__bouffeReplayMetrics = {
+        turn: replay.turn,
+        server: replay.metrics,
+        decodeMs: replay.decodeMs,
+        bufferMs: performance.now() - replay.receivedAt - t,
+        playbackMs: t,
+        duration: replay.duration,
+        renderStalls: replay.clock.stalls,
+      };
       while (
         frameIndex + 1 < replay.frames.length &&
         replay.frames[frameIndex + 1].t <= t
@@ -583,10 +617,10 @@ export function setupMultiplayer({
       (room.canRematch || room.phase === "ended") &&
       !replay &&
       lastState &&
-      !ended &&
+      (!ended || (ended === "provisional" && lastState?.phase === "ended")) &&
       Date.now() + offset >= room.readyAt
     ) {
-      ended = true;
+      ended = lastState.phase === "ended" ? "final" : "provisional";
       onEnd(lastState);
     }
   }

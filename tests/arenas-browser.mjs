@@ -380,7 +380,7 @@ try {
       let draws = 0;
       g.random = () => {
         draws++;
-        return 0.01;
+        return 0.03;
       };
       m.beginRound();
       check("same round cannot repeat global rarity roll", draws === 0, draws);

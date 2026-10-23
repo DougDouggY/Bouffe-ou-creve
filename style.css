@@ -4105,3 +4105,261 @@ body.playing .toolbar .inspect-stat {
 .hud-breakdown .hud-team-title {
   font-size: 12px;
 }
+
+#wardrobe-weight {
+  width: min(100%, 260px);
+  accent-color: #b65832;
+}
+.wardrobe-preview label {
+  display: block;
+  margin: 12px 0 4px;
+}
+.cosmetic-title {
+  color: #8c431d;
+  font-style: italic;
+  font-weight: 700;
+}
+.match-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+}
+.match-podium[hidden] {
+  display: none;
+}
+.online-playing #overlay > div:has(.match-podium:not([hidden])) {
+  width: min(1120px, 95vw);
+  max-width: 1120px;
+  max-height: 94dvh;
+  overflow: auto;
+}
+.podium-course {
+  border: 1px solid #ae8451;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 20%, #fff9e8, #ecd0a0);
+  box-shadow: 0 9px 20px #45220f33;
+  min-width: 0;
+}
+.podium-course h3 {
+  font-size: clamp(11px, 1.2vw, 17px);
+  letter-spacing: 0.06em;
+  color: #fff3cf;
+  background: #713722;
+  padding: 14px 5px;
+  margin: 0;
+}
+.podium-course--champion {
+  transform: translateY(-10px);
+  border: 3px solid #cda03c;
+}
+.podium-course--champion h3 {
+  background: linear-gradient(#91662c, #633b1f);
+}
+.podium-stage {
+  min-height: 205px;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  flex-wrap: wrap;
+  position: relative;
+  padding: 10px 4px 24px;
+  background: radial-gradient(
+    ellipse at 50% 92%,
+    #fff8df 0 26%,
+    #bca77c 27% 28%,
+    transparent 29%
+  );
+}
+.podium-stage figure {
+  margin: 0;
+  flex: 0 1 125px;
+  min-width: 65px;
+  position: relative;
+}
+.podium-stage canvas {
+  width: 100%;
+  height: auto;
+  vertical-align: bottom;
+  transform-origin: 50% 80%;
+}
+.podium-stage figcaption {
+  font-weight: 800;
+  font-size: 13px;
+  padding: 4px 5px;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+}
+.podium-course p {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0 10px;
+  color: #69422b;
+}
+.podium-bun {
+  position: absolute;
+  right: 9px;
+  top: 12px;
+  font-size: 38px;
+  animation: burger-du-jour 1.3s ease-out both;
+}
+.podium-animation {
+  animation-duration: 1.8s;
+  animation-iteration-count: 2;
+  animation-timing-function: ease-in-out;
+}
+.podium_belly {
+  animation-name: podium-belly;
+}
+.podium_burp {
+  animation-name: podium-burp;
+}
+.podium_jump {
+  animation-name: podium-jump;
+}
+.podium_champion {
+  animation-name: podium-champion;
+}
+.podium_despair {
+  animation-name: podium-despair;
+}
+@keyframes podium-belly {
+  25% {
+    transform: rotate(-7deg) scaleX(1.06);
+  }
+  75% {
+    transform: rotate(7deg) scaleX(0.96);
+  }
+}
+@keyframes podium-burp {
+  45% {
+    transform: scale(1.07, 0.94) rotate(-4deg);
+  }
+  65% {
+    transform: scale(0.98, 1.04);
+  }
+}
+@keyframes podium-jump {
+  35% {
+    transform: translateY(-22px) rotate(6deg);
+  }
+  70% {
+    transform: scale(1.06, 0.94);
+  }
+}
+@keyframes podium-champion {
+  40%,
+  75% {
+    transform: scale(1.08) rotate(-6deg);
+  }
+}
+@keyframes podium-despair {
+  40%,
+  75% {
+    transform: translateY(8px) rotate(10deg) scaleY(0.94);
+  }
+}
+@keyframes burger-du-jour {
+  from {
+    transform: translateY(-50px) rotate(-35deg);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(6px) rotate(8deg);
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.match-podium[data-motion="simple"] *,
+.match-podium[data-motion="off"] * {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .podium-animation,
+  .podium-bun {
+    animation: none !important;
+  }
+}
+@media (max-width: 600px) {
+  .match-podium {
+    grid-template-columns: 1fr;
+  }
+  .podium-course--champion {
+    transform: none;
+  }
+  .podium-stage {
+    min-height: 150px;
+  }
+  .podium-stage figure {
+    flex-basis: 100px;
+  }
+}
+body.online-playing #overlay:has(#match-podium:not([hidden])) {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  padding: 16px;
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at top, #65412a, #17291fef 70%);
+}
+body.online-playing #overlay > div:has(#match-podium:not([hidden])) {
+  width: min(1120px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 24px;
+  border: 3px double #ac8750;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #f5e7c9, #fff8e8 50%, #ead2a8);
+  box-shadow: 0 15px 65px #0008;
+  color: #57391f;
+}
+body.online-playing #overlay:has(#match-podium:not([hidden])) #result-title {
+  color: #643a20;
+}
+.podium-stage {
+  background: radial-gradient(ellipse at top, #fff8ddaa, transparent 70%);
+  min-height: 240px;
+}
+.podium-stage::after {
+  content: "";
+  position: absolute;
+  bottom: 22px;
+  left: 8%;
+  width: 84%;
+  height: 27px;
+  border-radius: 50%;
+  background: linear-gradient(#fff9e6, #e1d6ba);
+  border: 4px double #b4a17e;
+  box-shadow:
+    0 8px 0 #bb9567,
+    0 12px 10px #66421c33;
+}
+.podium-stage figure {
+  flex-basis: 170px;
+  z-index: 1;
+}
+.podium-course--champion .podium-stage figure {
+  flex-basis: 130px;
+}
+@media (max-width: 600px) {
+  body.online-playing #overlay > div:has(#match-podium:not([hidden])) {
+    padding: 12px;
+  }
+  .podium-stage {
+    min-height: 180px;
+  }
+  .podium-stage figure {
+    flex-basis: 140px;
+  }
+}
+.podium-stage::after {
+  bottom: 40px;
+}
+.podium-course--champion .podium-stage::after {
+  border-color: #b18a36;
+  box-shadow:
+    0 10px 0 #b18a36,
+    0 14px 10px #66421c33;
+}

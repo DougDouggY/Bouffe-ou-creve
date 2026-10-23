@@ -1,3 +1,4 @@
+import { beginResults, recordResults } from "../../match-results.js";
 import {
   beginTrophyMatch,
   trophyChat,
@@ -5,8 +6,8 @@ import {
   finishTrophyMatch,
 } from "./trophy-rules.js";
 import { validTeamSetup } from "../../teams.js?v=rivalries-33";
-import { validMultiplayerMap } from "../../multiplayer-maps.js?v=teams-31";
-import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
+import { validMultiplayerMap } from "../../multiplayer-maps.js?v=podium-35";
+import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=podium-35";
 import {
   createSimulation,
   resolveTurn,
@@ -370,6 +371,7 @@ export class Room {
         d.teamSize || 1,
       );
       beginTrophyMatch(this);
+      d.resultTracker = beginResults(this.game);
       d.phase = "playing";
       d.readyAt = this.now();
       d.deadline = this.now() + TURN_MS;
@@ -454,6 +456,16 @@ export class Room {
     // Missing / disconnected humans use the existing AI, never another client's decision.
     const replay = resolveTurn(this.game, inputs);
     trophyTurn(this, replay);
+    const results = recordResults(
+      this.data.resultTracker,
+      this.game,
+      replay.events,
+    );
+    if (results) {
+      this.game.results = results;
+      replay.final.results = results;
+      replay.frames[replay.frames.length - 1].state.results = results;
+    }
     const now = this.now();
     replay.startedAt = now + 300;
     this.data.readyAt = replay.startedAt + replay.duration;

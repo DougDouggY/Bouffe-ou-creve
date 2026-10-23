@@ -6,12 +6,12 @@ import {
   segmentsDistance,
 } from "../arena-mechanics.js";
 import { lightRadius } from "../visibility.js";
-test("one global roll per round, equal conditional choice, exact 1% boundary", () => {
+test("one global roll per round, equal conditional choice, exact 3% boundary", () => {
   let calls = 0;
   assert.equal(
     rollGlobalSpecial(() => {
       calls++;
-      return 0.01;
+      return 0.03;
     }),
     null,
   );
@@ -22,7 +22,7 @@ test("one global roll per round, equal conditional choice, exact 1% boundary", (
     [0.5, "inferno"],
     [0.9999, "inferno"],
   ]) {
-    const values = [0.009999, choice];
+    const values = [0.029999, choice];
     calls = 0;
     assert.equal(
       rollGlobalSpecial(() => {
@@ -47,7 +47,7 @@ test("one global roll per round, equal conditional choice, exact 1% boundary", (
   }
   assert.deepEqual(
     { count, armored, inferno },
-    { count: 100, armored: 50, inferno: 50 },
+    { count: 300, armored: 150, inferno: 150 },
   );
 });
 test("swept fire detection catches crossing segments and finite endpoints", () => {

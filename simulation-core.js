@@ -24,7 +24,7 @@ import {
   insideHungerZone,
 } from "./hunger-games.js?v=filmovore-15";
 import { arenaBorderBodies } from "./arena-bounds.js?v=hunger-18";
-import { ArenaMechanics } from "./arena-mechanics.js?v=teams-31";
+import { ArenaMechanics } from "./arena-mechanics.js?v=podium-35";
 import { isVisible as xA } from "./visibility.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 const SECRET_MAP_MODE = (mode) => Object.hasOwn(SECRET_GAME_MODES, mode);

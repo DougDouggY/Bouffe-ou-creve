@@ -6,7 +6,7 @@ import {
 } from "./royal-rules.js?v=royal-29";
 // Impulses run inside Matter substeps. Trampolines relocate only at the end of a turn.
 import { hungerZone, insideHungerZone } from "./hunger-games.js?v=filmovore-15";
-export const GLOBAL_SPECIAL_CHANCE = 0.01;
+export const GLOBAL_SPECIAL_CHANCE = 0.03;
 export const GLOBAL_SPECIALS = ["armored", "inferno"];
 export function rollGlobalSpecial(random) {
   return random() < GLOBAL_SPECIAL_CHANCE

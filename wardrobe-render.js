@@ -51,14 +51,23 @@ export function drawTailoredOutfit(context, id, shape, drawSource) {
   );
   return true;
 }
-export function drawFittedHat(context, id, bounds, drawSource) {
-  if (!id.startsWith("hat_"))
-    return drawSource(context, id, bounds.x, bounds.y, bounds.w, bounds.h);
+export function drawFittedHat(
+  context,
+  id,
+  bounds,
+  drawSource,
+  layer = "front",
+) {
   context.save();
-  // Remove the backing that projects down behind the forehead; keep the original placement.
-  context.beginPath();
-  context.rect(-3, -5, 6, 4.18);
-  context.clip();
+  if (layer === "front") {
+    // Two layers share their exact original placement. The front keeps its real
+    // alpha silhouette, with an opening matching the head rather than a flat cut.
+    context.beginPath();
+    context.rect(-3, -5, 6, 8);
+    context.moveTo(0.5, -0.38);
+    context.ellipse(0, -0.38, 0.5, 0.5, 0, 0, Math.PI * 2);
+    context.clip("evenodd");
+  }
   const result = drawSource(
     context,
     id,

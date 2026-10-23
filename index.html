@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=shadow-jingle-34"></script>
+    <script type="module" src="./game.js?v=podium-35"></script>
 
-    <link rel="stylesheet" href="./style.css?v=rivalries-33" />
+    <link rel="stylesheet" href="./style.css?v=podium-35" />
   </head>
   <body>
     <div id="app">
@@ -593,6 +593,18 @@
             <div>
               <h3>TON LOOK À TABLE</h3>
               <small>Vue rapprochée</small>
+              <label for="wardrobe-weight"
+                >Poids d’essai :
+                <output id="wardrobe-weight-value">60 kg</output></label
+              >
+              <input
+                id="wardrobe-weight"
+                type="range"
+                min="8"
+                max="4000"
+                value="60"
+                step="1"
+              />
               <p id="shop-context"></p>
               <button id="remove-hat">Enlever le chapeau</button
               ><button id="remove-outfit">Tenue de base</button>
@@ -621,7 +633,7 @@
               data-cosmetics-filter="all"
               aria-pressed="true"
             >
-              Tout · 30 nouveautés
+              Tout
             </button>
             <button
               type="button"
@@ -638,6 +650,37 @@
               Tenues
             </button>
           </div>
+          <div class="cosmetic-filters">
+            <button
+              type="button"
+              data-cosmetics-filter="podium"
+              aria-pressed="false"
+            >
+              Animations de podium
+            </button>
+            <button
+              type="button"
+              data-cosmetics-filter="aura"
+              aria-pressed="false"
+            >
+              Auras
+            </button>
+            <button
+              type="button"
+              data-cosmetics-filter="title"
+              aria-pressed="false"
+            >
+              Surnoms
+            </button>
+          </div>
+          <label
+            >Animations cosmétiques
+            <select id="cosmetic-motion">
+              <option value="full">Complètes</option>
+              <option value="simple">Simplifiées</option>
+              <option value="off">Désactivées</option>
+            </select>
+          </label>
           <div id="shop-items" class="shop-items"></div>
         </dialog>
         <div id="play-area" hidden>
@@ -847,6 +890,12 @@
                   <span id="result-icon">👑</span>
                   <h2 id="result-title"></h2>
                   <p id="result-text"></p>
+                  <section
+                    id="match-podium"
+                    class="match-podium"
+                    hidden
+                    aria-label="Podium du festin"
+                  ></section>
                   <dl id="run-summary"></dl>
                   <p id="result-reward"></p>
                   <h3 class="result-trophies-title">
