@@ -1,4 +1,5 @@
 export const SECRET_MODES = new Set([
+  "survival",
   "platform",
   "cannibal",
   "icecream",
@@ -273,7 +274,7 @@ export function secretTrophyEvent(profile, event, actor, data, game) {
   if (event === "end" && !run.ended) {
     run.ended = true;
     if (game.outcome === "win") {
-      state.wins[game.mode]++;
+      state.wins[game.mode] = (state.wins[game.mode] || 0) + 1;
       unlock("win");
       if (state.wins[game.mode] >= 10) unlock("wins10");
       if (state.wins[game.mode] >= 25) unlock("wins25");

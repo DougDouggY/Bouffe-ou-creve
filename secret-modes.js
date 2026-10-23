@@ -1,24 +1,44 @@
-export const SECRET_MAPS = new Set(["platform", "cannibal", "icecream"]);
+export const SECRET_MAPS = new Set([
+  "platform",
+  "cannibal",
+  "icecream",
+  "survival",
+]);
 export const SECRET_GAME_MODES = {
+  survival: { name: "Hunger Games", count: 24, onlyMap: "survival" },
   platform: { name: "La Plateforme", count: 2, onlyMap: "platform" },
   cannibal: { name: "Le Festin Cannibale", count: 16, onlyMap: "cannibal" },
   icecream: { name: "Le Marchand de Glaces", count: 16, onlyMap: "icecream" },
 };
 export function physicalMass(mass, mode) {
-  return mode === "platform" ? 6 * (Math.max(8, mass) / 60) ** 0.45 : mass / 10;
+  return mode === "platform" ? 6 * (Math.max(8, mass) / 60) ** 0.5 : mass / 10;
+}
+export function propulsionFactor(mass, mode) {
+  if (mode !== "platform")
+    return Math.max(0.38, Math.min(1.2, Math.sqrt(60 / mass)));
+  const points = [
+    [60, 1],
+    [500, 0.9],
+    [1000, 0.85],
+    [2000, 0.8],
+    [5000, 0.72],
+  ];
+  for (let i = 1; i < points.length; i++)
+    if (mass <= points[i][0]) {
+      const [lo, a] = points[i - 1],
+        [hi, b] = points[i];
+      return a + (b - a) * Math.max(0, (mass - lo) / (hi - lo));
+    }
+  return 0.72;
 }
 export function shaft(game) {
   const extra = Math.max(0, game.round - 16) * Math.min(game.w, game.h) * 0.016;
-  return { x: game.w / 2, y: game.h / 2, half: game.w * 0.14 + extra };
+  return { x: game.w / 2, y: game.h / 2, half: game.w * 0.17 + extra };
 }
 export function overShaft(game, person) {
   const s = shaft(game),
-    p = person.body.position,
-    support = person.body.circleRadius * 0.25;
-  return (
-    Math.abs(p.x - s.x) < s.half - support &&
-    Math.abs(p.y - s.y) < s.half - support
-  );
+    p = person.body.position;
+  return Math.abs(p.x - s.x) < s.half && Math.abs(p.y - s.y) < s.half;
 }
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export class SecretRules {
@@ -86,16 +106,22 @@ export class SecretRules {
       });
       Body.setVelocity(p.body, { x: 0, y: 0 });
     });
-    const s = shaft(g),
-      gap = (s.half * 1.5) / 5;
-    for (let y = 0; y < 5; y++)
-      for (let x = 0; x < 6; x++)
-        g.food.push({
-          x: s.x + (x - 2.5) * gap,
-          y: s.y + (y - 2) * gap,
-          type: "burger",
-          size: (x + y) % 6 === 0 ? "chef" : "xl",
-        });
+    const s = shaft(g);
+    for (let i = 0; i < 30; i++) {
+      let point;
+      for (let trial = 0; trial < 200; trial++) {
+        point = {
+          x: s.x + (g.random() * 2 - 1) * (s.half - 32),
+          y: s.y + (g.random() * 2 - 1) * (s.half - 32),
+        };
+        if (!g.food.some((f) => distance(f, point) < 40)) break;
+      }
+      g.food.push({
+        ...point,
+        type: "burger",
+        size: i % 6 === 0 ? "chef" : "xl",
+      });
+    }
     g.foodTarget = 0;
     g.foodCap = 30;
   }
@@ -365,7 +391,7 @@ export class SecretRules {
       for (const offset of [0, -0.35, 0.35, -0.8, 0.8])
         for (const speed of [5, 10, 17]) {
           const a = base + offset,
-            weight = Math.max(0.38, Math.min(1.2, Math.sqrt(60 / person.mass))),
+            weight = propulsionFactor(person.mass, "platform"),
             vx = Math.cos(a) * speed * weight,
             vy = Math.sin(a) * speed * weight;
           let x = pos.x,
@@ -390,8 +416,8 @@ export class SecretRules {
             }
             if (
               g.round > 3 &&
-              Math.abs(x - s.x) < s.half - r * 0.2 &&
-              Math.abs(y - s.y) < s.half - r * 0.2
+              Math.abs(x - s.x) < s.half &&
+              Math.abs(y - s.y) < s.half
             )
               risk = true;
             if (
@@ -573,30 +599,14 @@ export function drawSecretFloor(ctx, g, time) {
   if (g.round <= 3 || r.departing) {
     ctx.save();
     ctx.globalAlpha = r.departing ? scale : 1;
-    secretSprite(
-      ctx,
-      "lift",
-      s.x,
-      s.y,
-      s.half * 2.85 * scale,
-      s.half * 2.85 * scale,
-    );
-    ctx.restore();
-  }
-  if (g.round > 16) {
-    ctx.save();
-    const chamber = asset("platform");
-    if (chamber)
+    const lift = asset("lift-food");
+    if (lift)
       ctx.drawImage(
-        chamber,
-        chamber.naturalWidth * 0.32,
-        chamber.naturalHeight * 0.23,
-        chamber.naturalWidth * 0.36,
-        chamber.naturalHeight * 0.48,
-        s.x - s.half * 1.25,
-        s.y - s.half * 1.25,
-        s.half * 2.5,
-        s.half * 2.5,
+        lift,
+        s.x - s.half * scale,
+        s.y - s.half * scale,
+        s.half * 2 * scale,
+        s.half * 2 * scale,
       );
     ctx.restore();
   }
@@ -621,7 +631,7 @@ export function drawSecretFloor(ctx, g, time) {
 export function drawSecretPerson(ctx, g, p, time) {
   if (g.mode !== "icecream") return false;
   const radius = p.body.circleRadius,
-    angle = (p.heading || Math.PI / 2) - Math.PI / 2,
+    angle = (p.heading ?? Math.PI / 2) + Math.PI / 2,
     pop = p.pop || 0;
   const squash =
     1 +
@@ -629,7 +639,7 @@ export function drawSecretPerson(ctx, g, p, time) {
     pop * 0.08;
   secretSprite(
     ctx,
-    "van",
+    "van-white",
     p.body.position.x,
     p.body.position.y,
     radius * 2.2 * squash,
@@ -640,30 +650,41 @@ export function drawSecretPerson(ctx, g, p, time) {
 }
 export function drawSecretFood(ctx, g, food, time) {
   if (!["victim", "child"].includes(food.type)) return false;
-  const fallen = food.fallUntil > g.secretRules.clock,
-    panic = food.fleeing && food.motionLeft > 0;
-  const bounce = panic
-    ? Math.sin(time * 0.025 + food.x) * 2
-    : Math.sin(time * 0.003 + food.x) * 0.5;
-  const scale = food.type === "child" ? 1 : 1.08;
+  const remaining = (food.fallUntil || 0) - g.secretRules.clock;
+  const running = (food.motionLeft || 0) > 0;
+  const frame =
+    remaining > 520
+      ? 3
+      : remaining > 200
+        ? 4
+        : remaining > 0
+          ? 5
+          : running
+            ? Math.floor(g.secretRules.clock / 100) % 2
+            : 2;
+  const sheet = asset(food.type === "child" ? "child-sheet" : "adult-sheet");
+  if (!sheet) return true;
+  const cellW = sheet.naturalWidth / 3,
+    cellH = sheet.naturalHeight / 2;
+  const phase = g.secretRules.clock * 0.025 + food.x;
+  const scale = food.type === "child" ? 1 : 1.1;
   ctx.save();
-  ctx.translate(food.x, food.y + bounce);
-  ctx.rotate(
-    fallen
-      ? Math.PI *
-          0.42 *
-          Math.min(1, (food.fallUntil - g.secretRules.clock) / 200)
-      : panic
-        ? Math.sin(time * 0.025) * 0.1
-        : 0,
+  ctx.translate(
+    food.x,
+    food.y + (running && remaining <= 0 ? Math.sin(phase) * 1.5 : 0),
   );
-  const ok = secretSprite(
-    ctx,
-    food.type === "child" ? "creature" : "victim",
-    0,
-    0,
-    44 * scale,
-    52 * scale,
+  // Mirrored alternating strides supplement the illustrated articulated poses.
+  if (running && frame === 1) ctx.scale(-1, 1);
+  ctx.drawImage(
+    sheet,
+    (frame % 3) * cellW,
+    Math.floor(frame / 3) * cellH,
+    cellW,
+    cellH,
+    -27 * scale,
+    -30 * scale,
+    54 * scale,
+    60 * scale,
   );
   ctx.restore();
   return true;

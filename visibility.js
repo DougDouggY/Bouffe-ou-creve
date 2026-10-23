@@ -96,5 +96,17 @@ export function drawMarketFog(context, game) {
     gradient.addColorStop(offset, `rgba(8, 11, 22, ${alpha})`);
   context.fillStyle = gradient;
   context.fillRect(0, 0, game.w, game.h);
+  // Red beacons remain visible in the darkness without enlarging the player's vision.
+  for (const guard of game.mechanics?.actors || [])
+    if (guard.kind === "security") {
+      const p = guard.body.position,
+        r = guard.soldier ? 145 : 105;
+      const glow = context.createRadialGradient(p.x, p.y, 8, p.x, p.y, r);
+      glow.addColorStop(0, "rgba(245,35,38,.6)");
+      glow.addColorStop(0.4, "rgba(215,25,35,.22)");
+      glow.addColorStop(1, "rgba(200,15,30,0)");
+      context.fillStyle = glow;
+      context.fillRect(p.x - r, p.y - r, r * 2, r * 2);
+    }
   context.restore();
 }

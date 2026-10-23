@@ -7,8 +7,9 @@ import {
   containsArenaPoint,
 } from "../arena-bounds.js";
 import { REMOVED_MAPS } from "../map-catalog.js";
-test("one fixed world size per mode, shared by volcano and every normal map", () => {
-  assert.deepEqual(arenaSize("classic"), { w: 3600, h: 2700 });
+test("classic maps are compact while volcano and larger modes retain their world size", () => {
+  assert.deepEqual(arenaSize("classic", "market"), { w: 2400, h: 1800 });
+  assert.deepEqual(arenaSize("classic", "volcan"), { w: 3600, h: 2700 });
   assert.deepEqual(arenaSize("gros"), { w: 3600, h: 2700 });
   assert.deepEqual(arenaSize("usa"), { w: 3600, h: 2700 });
   for (const id of ["cuisine", "foodcourt"]) assert(REMOVED_MAPS.has(id));

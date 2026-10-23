@@ -298,6 +298,24 @@ try {
   const bounds = await page.locator("#game").boundingBox();
   assert.equal(Math.round(bounds.width), 1280);
   assert.equal(Math.round(bounds.height), 900);
+  await page.setViewportSize({ width: 3440, height: 1440 });
+  await page.waitForFunction(
+    () =>
+      window.__view.width <= window.__game.w &&
+      window.__view.height <= window.__game.h,
+  );
+  const wide = await page.evaluate(() => ({
+    world: window.__game.w,
+    round: window.__game.round,
+    camera: window.__view.camera,
+    width: window.__view.width,
+    height: window.__view.height,
+  }));
+  assert.equal(wide.world, 2400);
+  assert(wide.camera.x >= 0 && wide.camera.y >= 0);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForTimeout(100);
+  checks++;
   for (const id of [
     "phase",
     "restart",

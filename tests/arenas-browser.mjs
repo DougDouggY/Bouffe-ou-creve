@@ -153,7 +153,7 @@ try {
         agent = m.actors[0];
       check(
         "night agents use small preplanned impulses",
-        m.actors.length === 2 && Math.hypot(agent.plan.x, agent.plan.y) <= 3.21,
+        m.actors.length === 6 && Math.hypot(agent.plan.x, agent.plan.y) <= 3.21,
         agent.plan,
       );
       move(agent, 400, 300);

@@ -1,5 +1,5 @@
-import { mapGroups } from "./map-catalog.js?v=secrets-14";
-import { mapArtURL } from "./map-art.js?v=secrets-14";
+import { mapGroups } from "./map-catalog.js?v=filmovore-15";
+import { mapArtURL } from "./map-art.js?v=filmovore-15";
 export function modeUnlocked(mode, profile) {
   return (
     !["gros", "usa"].includes(mode) ||
@@ -20,7 +20,7 @@ export function createRestaurantMenu(catalog, onSelect) {
     books = [];
   groups[0].maps.push(
     ...Object.entries(catalog).filter(([id]) =>
-      ["platform", "cannibal", "icecream"].includes(id),
+      ["platform", "cannibal", "icecream", "survival"].includes(id),
     ),
   );
   const back = document.createElement("button");
@@ -79,12 +79,16 @@ export function createRestaurantMenu(catalog, onSelect) {
   function visibleEntries(group) {
     return group.maps.filter(
       ([id, map]) =>
-        (["platform", "cannibal", "icecream"].includes(mode)
-          ? id === mode
-          : mode === "somalia"
-            ? id === "savanna"
-            : !["platform", "cannibal", "icecream"].includes(id) &&
-              (mode === "chef" || id !== "savanna")) &&
+        (mode === "platform"
+          ? ["platform", "survival"].includes(id)
+          : ["cannibal", "icecream", "survival"].includes(mode)
+            ? id === mode
+            : mode === "somalia"
+              ? id === "savanna"
+              : !["platform", "cannibal", "icecream", "survival"].includes(
+                  id,
+                ) &&
+                (mode === "chef" || id !== "savanna")) &&
         map.name
           .toLocaleLowerCase("fr")
           .includes(search.value.toLocaleLowerCase("fr")),
@@ -132,9 +136,17 @@ export function createRestaurantMenu(catalog, onSelect) {
       const map = catalog[selected],
         at = entries.findIndex(([id]) => id === selected);
       item.page.querySelector("h3").textContent = map.name;
+      item.page.querySelector(".page-kicker").textContent =
+        selected === "platform"
+          ? "FILMOVORE · 16 GOURMANDS · DUELS À 2"
+          : selected === "survival"
+            ? "FILMOVORE · 24 GOURMANDS"
+            : selected === "icecream" || selected === "cannibal"
+              ? "16 GOURMANDS"
+              : "LE FESTIN DU JOUR";
       const figure = item.page.querySelector("figure");
       figure.replaceChildren();
-      const url = `./assets/previews/${selected}.webp?v=secrets-14`;
+      const url = `./assets/previews/${selected}.webp?v=filmovore-15`;
       const img = new Image();
       img.className = "map-preview";
       img.alt = `Aperçu de ${map.name}`;
@@ -184,6 +196,15 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
   );
   slots.push(document.querySelector("#menu-shop"));
   const shopClick = slots[3].onclick;
+  const subtitle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text",
+  );
+  const steakText = slots[3].querySelector("text");
+  subtitle.setAttribute("class", "ingredient-subtitle");
+  subtitle.setAttribute("x", steakText.getAttribute("x"));
+  subtitle.setAttribute("y", String(Number(steakText.getAttribute("y")) + 28));
+  slots[3].append(subtitle);
   const notice = document.createElement("p");
   notice.id = "mode-unlock-note";
   notice.setAttribute("role", "status");
@@ -193,21 +214,17 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
       ? ["somalia", "platform", "cannibal", "icecream"]
       : ["usa", "classic", "gros", "shop"];
     const titles = secret
-      ? [
-          "SOMALIE",
-          "LA PLATEFORME",
-          "LE FESTIN CANNIBALE",
-          "LE MARCHAND DE GLACES",
-        ]
+      ? ["SOMALIE", "FILMOVORE", "LE FESTIN CANNIBALE", "LE MARCHAND DE GLACES"]
       : ["ÉTATS-UNIS", "CLASSIQUE", "GRAND BANQUET", "LE DRESSING DU GLOUTON"];
     const counts = secret
       ? [
           "50 gourmands",
-          "Tournoi · 16 participants",
+          "2 jeux · 16 / 24 gourmands",
           "16 gourmands",
-          "16 camionnettes",
+          "16 gourmands",
         ]
       : ["50 gourmands", "8 gourmands", "24 gourmands", "DU GLOUTON"];
+    subtitle.style.display = secret ? "" : "none";
     slots.forEach((slot, i) => {
       slot.querySelector("text:not(.ingredient-subtitle)").textContent =
         titles[i];

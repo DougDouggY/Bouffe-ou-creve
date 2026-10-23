@@ -1,5 +1,7 @@
 // One layout drives physical walls, safe spawning and the visible rails / room edges.
-export function arenaSize(mode) {
+export function arenaSize(mode, mapId) {
+  if (mode === "survival") return { w: 3000, h: 2250 };
+  if (mode === "classic" && mapId !== "volcan") return { w: 2400, h: 1800 };
   if (mode === "platform") return { w: 1600, h: 1200 };
   if (mode === "cannibal") return { w: 2000, h: 1500 };
   if (mode === "icecream") return { w: 2400, h: 1800 };
@@ -7,6 +9,20 @@ export function arenaSize(mode) {
 }
 
 export function arenaOutline(id, w, h) {
+  if (id === "volcan")
+    return [
+      [0.06, 0.075],
+      [0.94, 0.075],
+      [0.94, 0.925],
+      [0.06, 0.925],
+    ].map(([x, y]) => ({ x: x * w, y: y * h }));
+  if (id === "icecream")
+    return [
+      [0.24, 0.1],
+      [0.76, 0.1],
+      [0.76, 0.9],
+      [0.24, 0.9],
+    ].map(([x, y]) => ({ x: x * w, y: y * h }));
   if (id === "cannibal")
     return Array.from({ length: 20 }, (_, i) => {
       const angle = -Math.PI / 2 + (i * Math.PI) / 10;
@@ -27,15 +43,12 @@ export function arenaOutline(id, w, h) {
   const points =
     id === "pirate"
       ? [
-          [0.5, 0.13],
-          [0.75, 0.27],
-          [0.81, 0.38],
-          [0.84, 0.7],
-          [0.75, 0.84],
-          [0.25, 0.84],
-          [0.16, 0.7],
-          [0.19, 0.38],
-          [0.25, 0.27],
+          [0.2, 0.21],
+          [0.8, 0.21],
+          [0.83, 0.5],
+          [0.85, 0.76],
+          [0.15, 0.76],
+          [0.17, 0.5],
         ]
       : id === "royal"
         ? [
@@ -134,70 +147,8 @@ export function traceOutline(ctx, id, w, h) {
   points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
   ctx.closePath();
 }
-export function drawArenaBorders(ctx, g) {
-  // Solid edges are integrated into the scenery. Keep the requested ship rail.
-  if (g.mapId !== "pirate") return;
-  const id = g.mapId,
-    points = arenaOutline(id, g.w, g.h),
-    width = Math.max(18, Math.min(g.w, g.h) * 0.012);
-  const palettes = {
-    pirate: ["#271c16", "#70442b", "#d0ac74"],
-    royal: ["#3e2219", "#896139", "#ead297"],
-    cold: ["#345b73", "#8db5c5", "#eafaff"],
-    market: ["#26372b", "#687865", "#d3c9a4"],
-    nightmarket: ["#26372b", "#687865", "#d3c9a4"],
-    fair: ["#381b2a", "#886645", "#e7bd78"],
-  };
-  const colors = palettes[id] || ["#3b3b30", "#68695a", "#b8b19a"];
-  ctx.save();
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  // Do not put a visible rail across the mouth corridor.
-  function trace() {
-    ctx.beginPath();
-    for (let i = 0; i < points.length; i++) {
-      if (id === "royal" && [1, 2, 3].includes(i)) continue;
-      const p = points[i],
-        q = points[(i + 1) % points.length];
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(q.x, q.y);
-    }
-  }
-
-  trace();
-  ctx.strokeStyle = "#10251b55";
-  ctx.lineWidth = width + 16;
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetY = 7;
-  ctx.shadowColor = "#10251b77";
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-  for (const [size, color] of [
-    [width, colors[0]],
-    [width * 0.72, colors[1]],
-    [width * 0.12, colors[2]],
-  ]) {
-    trace();
-    ctx.lineWidth = size;
-    ctx.strokeStyle = color;
-    ctx.stroke();
-  }
-  for (let i = 0; i < points.length; i++) {
-    if (id === "royal" && [1, 2, 3].includes(i)) continue;
-    const p = points[i],
-      q = points[(i + 1) % points.length],
-      d = Math.hypot(q.x - p.x, q.y - p.y);
-    for (let step = 35; step < d; step += 75) {
-      const x = p.x + ((q.x - p.x) * step) / d,
-        y = p.y + ((q.y - p.y) * step) / d;
-      ctx.beginPath();
-      ctx.arc(x, y, id === "pirate" ? 4 : 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = colors[2];
-      ctx.fill();
-    }
-  }
-  ctx.restore();
+export function drawArenaBorders() {
+  // Physical edges are supplied by the painted scenery, without an artificial rail.
 }
 export function containsArenaPoint(id, p, w, h) {
   const polygon = arenaOutline(id, w, h);

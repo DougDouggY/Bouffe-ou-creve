@@ -78,7 +78,7 @@ try {
       const game = new Game(2400, 1800, Math.random, {
         mapId: id,
         chef: true,
-        mode: ["platform", "cannibal", "icecream"].includes(id)
+        mode: ["platform", "cannibal", "icecream", "survival"].includes(id)
           ? id
           : "classic",
         headless: true,

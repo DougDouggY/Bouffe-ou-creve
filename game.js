@@ -1,60 +1,62 @@
-import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=secrets-14";
+import { SurvivalRules, drawSurvivalFloor } from "./survival.js?v=filmovore-15";
+import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
   SecretRules,
   SECRET_GAME_MODES,
   physicalMass,
+  propulsionFactor,
   drawSecretFloor,
   drawSecretPerson,
   drawSecretFood,
   drawSecretFalls,
-} from "./secret-modes.js?v=secrets-14";
+} from "./secret-modes.js?v=filmovore-15";
 import {
   SECRET_MODES,
   SECRET_TROPHIES,
   secretProfile,
   secretTrophyEvent,
-} from "./secret-trophies.js?v=secrets-14";
+} from "./secret-trophies.js?v=filmovore-15";
 import {
   hungerStart,
   hungerZone,
   insideHungerZone,
-} from "./hunger-games.js?v=secrets-14";
+} from "./hunger-games.js?v=filmovore-15";
 import {
   arenaSize,
   arenaBorderBodies,
   drawArenaBorders,
-} from "./arena-bounds.js?v=secrets-14";
+} from "./arena-bounds.js?v=filmovore-15";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=secrets-14";
-import { ArenaMechanics } from "./arena-mechanics.js?v=secrets-14";
+} from "./restaurant-menu.js?v=filmovore-15";
+import { ArenaMechanics } from "./arena-mechanics.js?v=filmovore-15";
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=secrets-14";
+} from "./arena-render.js?v=filmovore-15";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=secrets-14";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=secrets-14";
+} from "./cosmetics.js?v=filmovore-15";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=filmovore-15";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js?v=secrets-14";
+} from "./map-catalog.js?v=filmovore-15";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=secrets-14";
-import { setupBurgerMenu } from "./burger-menu.js?v=secrets-14";
-import { createGameAudio } from "./audio.js?v=secrets-14";
-import { setupMusicControls } from "./music.js?v=secrets-14";
+} from "./visibility.js?v=filmovore-15";
+import { setupBurgerMenu } from "./burger-menu.js?v=filmovore-15";
+import { createGameAudio } from "./audio.js?v=filmovore-15";
+import { setupMusicControls } from "./music.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -123,8 +125,8 @@ const me = {
   somalia: { name: "Somalie", count: 50, onlyMap: "savanna" },
   chef: { name: "Chef", count: 1 },
 };
-function GI(mode) {
-  return arenaSize(mode);
+function GI(mode, mapId) {
+  return arenaSize(mode, mapId);
 }
 
 const We = (e, g, o) => Math.max(g, Math.min(o, e));
@@ -1125,10 +1127,12 @@ for (const [id, mode] of Object.entries(SECRET_GAME_MODES))
     experimental: true,
     description:
       id === "platform"
-        ? "Tournoi physique à 16 participants. Chaque duel commence par trois tours de festin. Quitte la plateforme avant sa descente à la fin du troisième tour ! Ensuite, pousse ton adversaire dans le puits. Les gourmands ne se dévorent pas ; le poids gagné est conservé entre les duels. Les autres duels se jouent simultanément, hors écran."
+        ? "Tournoi physique à 16 gourmands. Chaque duel commence par trois tours de festin. Quitte la plateforme avant sa descente à la fin du troisième tour ! Ensuite, pousse ton adversaire dans le puits. Les gourmands ne se dévorent pas ; le poids gagné est conservé entre les duels. Les autres duels se jouent simultanément, hors écran."
         : id === "cannibal"
           ? "Les victimes sont des adultes fictifs de 40 kg. Elles préparent de courtes fuites avant les propulsions simultanées, paniquent et trébuchent parfois. Les gourmands peuvent toujours se dévorer. Dernier survivant : même règle que le Classique."
-          : "Comédie horrifique fantastique : les enfants représentés sont des petits monstres non humains. Dirige une camionnette vivante, avale-les pour grossir et engloutis les camionnettes plus petites. Leurs courtes fuites sont préparées avant chaque propulsion.",
+          : id === "survival"
+            ? "24 gourmands à 60 kg, un festin initial limité et une forêt à explorer. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
+            : "Une grande rue, des fourgons blancs et une course-poursuite de comédie horrifique. Capture les enfants pour grossir, évite les fourgons plus imposants et reste le dernier gourmand en piste.",
   };
 CA.royal = {
   name: "Le Buffet du Roi",
@@ -1154,17 +1158,19 @@ function _e(e, g, o, u = 1) {
     angle: C,
     ...Q,
   });
-  if (e === "icecream")
+  if (e === "icecream") return [];
+  if (e === "survival")
     return [
-      E(0.345, 0.265, 0.06, 0.09),
-      E(0.52, 0.25, 0.075, 0.09),
-      E(0.735, 0.277, 0.1, 0.07),
-      E(0.265, 0.47, 0.075, 0.09),
-      E(0.52, 0.46, 0.05, 0.05),
-      E(0.77, 0.49, 0.07, 0.08),
-      E(0.32, 0.685, 0.055, 0.09),
-      E(0.52, 0.685, 0.08, 0.08),
-      E(0.71, 0.69, 0.045, 0.1),
+      E(0.5, 0.5, 0.08, 0.065),
+      E(0.44, 0.43, 0.02, 0.17, -0.1),
+      E(0.56, 0.43, 0.02, 0.17, 0.1),
+      E(0.5, 0.406, 0.09, 0.023),
+      E(0.29, 0.19, 0.075, 0.07),
+      E(0.74, 0.2, 0.07, 0.08),
+      E(0.23, 0.55, 0.06, 0.09),
+      E(0.76, 0.64, 0.06, 0.09),
+      E(0.34, 0.83, 0.09, 0.065),
+      E(0.7, 0.91, 0.12, 0.045),
     ];
   if (e === "cuisine")
     return [
@@ -1249,7 +1255,7 @@ function Ee(e, g, o, u = 1) {
       y: Q * o,
       r: Math.min(g, o) * B,
     });
-  if (["platform", "cannibal", "icecream"].includes(e)) return [];
+  if (["platform", "cannibal", "icecream", "survival"].includes(e)) return [];
   if (e === "cuisine")
     return [
       A(0.5, 0.24, 0.38, 60 / o, 0.13),
@@ -1344,7 +1350,7 @@ function ce(e, g = []) {
     : o.some((u) => u.kind === "ice")
       ? 0.004
       : o.some((u) => u.kind === "sand")
-        ? 0.065
+        ? 0.03
         : o.some((u) => !u.kind || u.kind === "oil")
           ? 0.009
           : 0.024;
@@ -1966,7 +1972,9 @@ const VA = 2e3,
           ? 24
           : e.size === "xl"
             ? 16
-            : 9;
+            : e.size === "small"
+              ? 6
+              : 9;
 function Et(e, g, o) {
   return o === "chef" || (e !== "salad" && g() < 0.03)
     ? "chef"
@@ -1985,7 +1993,9 @@ const ZA = (e) =>
             ? 120
             : e.size === "xl"
               ? 40
-              : 15,
+              : e.size === "small"
+                ? 8
+                : 15,
   ne = (e) => 19 * Math.sqrt(e / 60),
   Fe = (e) => e.type !== "salad",
   L = (e) => document.querySelector(e);
@@ -2148,7 +2158,7 @@ function Qt({ start: e, appearance: g }) {
     ((E = l),
       (u =
         me[E].onlyMap ||
-        (["savanna", "platform", "cannibal", "icecream"].includes(u)
+        (["savanna", "platform", "cannibal", "icecream", "survival"].includes(u)
           ? "cantine"
           : u)),
       (L("#map-search").value = ""),
@@ -2160,8 +2170,8 @@ function Qt({ start: e, appearance: g }) {
         E === "chef"
           ? "MODE CHEF · ATELIER SOLO"
           : E === "platform"
-            ? "LA PLATEFORME · 16 PARTICIPANTS · DUELS À 2"
-            : `${me[E].name.toUpperCase()} · ${me[E].count} ${E === "icecream" ? "CAMIONNETTES" : "GOURMANDS"}`),
+            ? "FILMOVORE · LA PLATEFORME / HUNGER GAMES"
+            : `${me[E].name.toUpperCase()} · ${me[E].count} GOURMANDS`),
       L("#map-screen").scrollIntoView({ block: "start" }));
   }
   (document.querySelectorAll(".ingredient-button").forEach((l) =>
@@ -2222,7 +2232,7 @@ function Qt({ start: e, appearance: g }) {
         (L("#play-area").hidden = !1),
         (L("#chef-shop").hidden = !I),
         document.body.classList.add("playing"),
-        e(E, u),
+        e(E === "platform" && u === "survival" ? "survival" : E, u),
         t(),
         L("#play-area").scrollIntoView({ block: "start" }));
     }));
@@ -2332,7 +2342,7 @@ function Qt({ start: e, appearance: g }) {
           (c.mode === "cannibal" &&
             Z.push(["Victimes dévorées", c.secretTrophyRun?.food || 0]),
             c.mode === "icecream" &&
-              Z.push(["Enfants avalés", c.secretTrophyRun?.food || 0]),
+              Z.push(["Enfants capturés", c.secretTrophyRun?.food || 0]),
             c.savanna && Z.push(["Steaks de moustiques", J.mosquito]),
             J.fondue && Z.push(["Raclettes avalées", J.fondue]),
             Z.push(["Poids maximal", Math.round(J.maxMass) + " kg"]),
@@ -2959,6 +2969,7 @@ function dt(e, g, o, u = 0) {
     e.restore();
   }
   drawSecretFloor(e, g, u);
+  drawSurvivalFloor(e, g, u);
   drawArenaBorders(e, g);
   e.restore();
 }
@@ -9534,7 +9545,8 @@ class zt {
             }
           }
         }
-      if (this.mapId === "hunger") I = hungerStart(g, o, i, this.count);
+      if (this.mapId === "hunger" || this.mode === "survival")
+        I = hungerStart(g, o, i, this.count);
       if (!I) throw new Error("Aucun point de départ libre");
       n.push(I);
     }
@@ -9651,7 +9663,9 @@ class zt {
       intersects: RA,
     });
     if (SECRET_MAP_MODE(this.mode))
-      this.secretRules = new SecretRules(
+      this.secretRules = new (
+        this.mode === "survival" ? SurvivalRules : SecretRules
+      )(
         this,
         {
           Body: eA,
@@ -9668,7 +9682,7 @@ class zt {
     (Rt(this.stats, g, o, u, this), this.onEvent(g, o, u));
   }
   addFood(g, o) {
-    if (this.mode === "platform") return false;
+    if (["platform", "survival"].includes(this.mode)) return false;
     if (this.mode === "cannibal") {
       g = "victim";
       o = "normal";
@@ -9875,7 +9889,7 @@ class zt {
       this.checkTruce());
   }
   plan(g, o = CI(this)) {
-    if (this.mode === "platform" && this.secretRules)
+    if (["platform", "survival"].includes(this.mode) && this.secretRules)
       return this.secretRules.plan(g);
     if (this.mapId === "hunger" && this.round >= 4) {
       const zone = hungerZone(this.w, this.h, this.round),
@@ -9980,7 +9994,7 @@ class zt {
           eA.setAngle(E.body, E.heading - Math.PI / 2),
         (E.roundStart = { ...E.body.position }));
       const n = Math.hypot(A.x, A.y),
-        i = (n > 17 ? 17 / n : 1) * ke(E.mass);
+        i = (n > 17 ? 17 / n : 1) * propulsionFactor(E.mass, this.mode);
       (eA.setVelocity(E.body, { x: A.x * i, y: A.y * i }),
         eA.setAngularVelocity(E.body, 0));
     }
@@ -10138,7 +10152,7 @@ class zt {
                 o++
               )
                 this.addFood(this.random() < 0.25 ? "salad" : "burger");
-              if (this.round % 4 === 0) {
+              if (this.round % 4 === 0 && this.mode !== "survival") {
                 let o = 0;
                 for (
                   let u = 0;
@@ -10412,12 +10426,27 @@ function OA() {
             ? `Dernier survivant en ${K.round} manches. Le chef te félicite.`
             : `Éliminé à la manche ${K.round}. La prochaine fois, prends un supplément de vengeance.`),
           (w("#overlay").hidden = !1));
+        if (K.mode === "survival") {
+          w("#result-icon").textContent = E ? "🌲 👑" : "🌲";
+          w("#result-title").textContent =
+            K.outcome === "draw"
+              ? "LA FORÊT A TOUT REPRIS."
+              : E
+                ? "LA FORÊT A SON ROI."
+                : "LA FORÊT T’A REPRIS.";
+          w("#result-text").textContent =
+            K.outcome === "draw"
+              ? "Aucun survivant : les derniers gourmands ont été rattrapés ensemble par la fermeture."
+              : E
+                ? `Seul survivant des 24 gourmands après ${K.round} tours. Poids final : ${Math.round(K.people[0].mass)} kg. Le festin est à toi.`
+                : `Éliminé au tour ${K.round}. Le prochain festin n’attendra pas !`;
+        }
         if (K.mode === "platform") {
           w("#result-title").textContent = E
             ? "LE DERNIER ÉTAGE EST À TOI."
             : "LE VIDE A EU FAIM.";
           w("#result-text").textContent = E
-            ? `Tournoi remporté : quatre duels, seize participants. Poids final : ${Math.round(K.people[0].mass)} kg.`
+            ? `Tournoi remporté : quatre duels, seize gourmands. Poids final : ${Math.round(K.people[0].mass)} kg.`
             : `Éliminé en ${["huitième de finale", "quart de finale", "demi-finale", "finale"][K.secretRules.duel - 1]}. Les poids étaient conservés d’un duel à l’autre.`;
         }
       }
@@ -10652,7 +10681,8 @@ function uI(e) {
     return;
   }
   if (
-    (BA(1, 9, 12, 4, "#76815422"),
+    (e.size === "small" && x.scale(0.65, 0.65),
+    BA(1, 9, 12, 4, "#76815422"),
     e.size === "chef" &&
       (x.beginPath(),
       x.arc(0, 0, 28, 0, Math.PI * 2),
@@ -10801,7 +10831,7 @@ function bt(e) {
     const u = K.people[0].body.position,
       E = Math.hypot(q.dx, q.dy);
     if (E > 3) {
-      const A = Math.min(E, 140) * ke(K.people[0].mass),
+      const A = Math.min(E, 140) * propulsionFactor(K.people[0].mass, K.mode),
         n = q.dx / E,
         i = q.dy / E,
         I = u.x + n * (A + 25),
@@ -10896,9 +10926,10 @@ function ae() {
 }
 function be() {
   if (w("#play-area").hidden) return;
-  const scale = SECRET_MAP_MODE(K.mode)
-    ? Math.max(1, innerWidth / K.w, innerHeight / K.h)
-    : 1;
+  const scale =
+    SECRET_MAP_MODE(K.mode) || K.mode === "classic"
+      ? Math.max(1, innerWidth / K.w, innerHeight / K.h)
+      : 1;
   const width = Math.max(320, innerWidth) / scale,
     height = Math.max(320, innerHeight) / scale;
   if (gA !== width || sA !== height) {

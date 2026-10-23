@@ -152,7 +152,7 @@ export async function setupBurgerMenu() {
   );
   svg.prepend(defs);
   const secretIllustration = await loadImage(
-    new URL("./assets/secrets/burger.webp", import.meta.url).href,
+    new URL("./assets/secrets/burger-bloody.webp", import.meta.url).href,
   );
   function applyTheme() {
     const secret = document.body.classList.contains("shadow-realm");

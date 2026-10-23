@@ -1,4 +1,6 @@
+import { shaft } from "./secret-modes.js?v=filmovore-15";
 export const ILLUSTRATED_MAPS = [
+  "survival",
   "platform",
   "cannibal",
   "icecream",
@@ -24,7 +26,12 @@ export const ILLUSTRATED_MAPS = [
 const images = new Map();
 export function mapArtURL(id) {
   if (!ILLUSTRATED_MAPS.includes(id)) return null;
-  if (["platform", "cannibal", "icecream"].includes(id))
+  if (id === "icecream")
+    return new URL("./assets/secrets/icecream-street.webp", import.meta.url)
+      .href;
+  if (id === "pirate")
+    return new URL("./assets/maps/pirate-barrels.webp", import.meta.url).href;
+  if (["platform", "cannibal", "icecream", "survival"].includes(id))
     return new URL(`./assets/secrets/${id}.webp`, import.meta.url).href;
   const source = id === "nightmarket" ? "market" : id;
   const suffix = id === "royal" ? "-real" : "-overhead";
@@ -41,6 +48,27 @@ export function drawMapArt(context, game) {
   }
   const image = images.get(game.mapId);
   if (!image.complete || !image.naturalWidth) return false;
+  if (game.mapId === "platform") {
+    const s = shaft(game),
+      sx = [0, 0.365, 0.638, 1].map((n) => n * image.naturalWidth),
+      sy = [0, 0.294, 0.633, 1].map((n) => n * image.naturalHeight);
+    const dx = [0, s.x - s.half, s.x + s.half, game.w],
+      dy = [0, s.y - s.half, s.y + s.half, game.h];
+    for (let y = 0; y < 3; y++)
+      for (let x = 0; x < 3; x++)
+        context.drawImage(
+          image,
+          sx[x],
+          sy[y],
+          sx[x + 1] - sx[x],
+          sy[y + 1] - sy[y],
+          dx[x],
+          dy[y],
+          dx[x + 1] - dx[x],
+          dy[y + 1] - dy[y],
+        );
+    return true;
+  }
   if (game.mapId === "royal") {
     if (!images.has("royal-rest")) {
       const rest = new Image();

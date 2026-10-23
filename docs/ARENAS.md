@@ -6,7 +6,7 @@ Aucune carte accessible avant cette mise à jour n'est retirée. Fête foraine e
 
 `ArenaMechanics` s'appuie sur les vrais corps Matter du jeu. Les intentions des IA et du joueur restent calculées avant tout déplacement. Les agents annoncent leur direction avant le tir et ne réagissent pas à la direction secrète du joueur. Un parcours de grille évite les rayons lors de la préparation de leur petite propulsion (vitesse 3,2 contre 17 maximum pour un gourmand avant coefficient de poids).
 
-Les cinq arènes modifiées utilisent quatre sous-pas physiques par image logique. Le même découpage s'active sur les autres cartes lorsqu'un piment brûle. Les trajectoires de feu sont vérifiées par distances entre segments réellement parcourus, et non par une trajectoire théorique. Les collisions secondaires des chariots sont résolues par Matter, avec une masse de 3,5, une faible friction et un plafond de vitesse 18. Les gourmands ne sont jamais déplacés directement par ces nouvelles mécaniques.
+Les cinq arènes modifiées utilisent quatre sous-pas physiques par image logique. Le même découpage s'active sur les autres cartes lorsqu'un piment brûle. Les trajectoires de feu sont vérifiées par distances entre segments réellement parcourus, et non par une trajectoire théorique. Les collisions secondaires des chariots sont résolues par Matter, avec une masse de 14, une faible friction et un plafond de vitesse 18. Les gourmands ne sont jamais déplacés directement par ces nouvelles mécaniques.
 
 Les bumpers restent fixes. Leur impulsion normale dépend de l'angle du contact, multiplie la vitesse incidente par 2,8, a un minimum de 23 et un plafond de 48. Un délai de 220 ms empêche les rebonds répétés sur un même contact.
 
@@ -21,7 +21,7 @@ La vague des manches multiples de trois parcourt la plage de bas en haut en 2,6 
 - Piment de l'Enfer : arme la prochaine propulsion. La traînée se crée pendant le déplacement et disparaît à la fin du tour ou de la partie. Son propriétaire peut mourir en la recroisant. La zone fraîche sous son propre corps est ignorée jusqu'à ce qu'il ait parcouru deux diamètres de sécurité environ : le personnage n'est pas tué instantanément par le feu qu'il vient de déposer.
 - Lampe nocturne : halo multiplié par 1,8. Le tour de ramassage est offert, puis l'effet couvre deux tirs complets.
 - Gant anti-sécurité : le tour de ramassage est offert, puis un tir complet. Les agents sont repoussés par une impulsion, sans déplacement instantané du gourmand. Ne protège pas contre les dévorations ou le feu.
-- Les deux objets nocturnes sont servis dès la première manche, puis réapprovisionnés toutes les deux manches s'ils manquent. Les exemplaires inutilisés restent au maximum quatre manches. Ces apparitions sont indépendantes du tirage global.
+- Trois lampes et un anti-sécurité sont servis dès la première manche, puis complétés au début de chaque manche s'ils manquent. Les exemplaires inutilisés restent au maximum quatre manches. Ces apparitions sont indépendantes du tirage global.
 - Les IA ramassent et utilisent les mêmes objets. Les effets sont dans la partie en cours, jamais dans les sauvegardes du profil.
 
 La fin secrète entre deux très gros gourmands reste disponible sur les autres cartes. Elle est suspendue dans les arènes du roi et des agents, ainsi que lorsqu'un piment est armé ou actif, pour ne pas annuler un danger mortel encore présent.
@@ -69,3 +69,14 @@ Les seize nouveaux fonds sont générés individuellement en vue strictement ver
 Hunger Games se trouve dans « En travaux ». Les 8, 24 ou 50 gourmands commencent à distance égale autour du centre, sur un cercle de rayon 16 % du petit côté. Douze burgers de Douggy garnissent un petit cercle central. Le rayon de la zone sûre est de 44 % du petit côté pendant les trois premières manches ; dès la quatrième, il est multiplié par 0,86 à chaque manche. La limite rouge est affichée dès la visée : il faut être entièrement dedans à la fin du mouvement, sans toucher la bordure. L’élimination se résout une seule fois par manche et déclenche immédiatement la victoire ou la défaite. Les IA menacées visent le centre. Les nouveaux aliments et objets apparaissent dans la zone sûre.
 
 Contrôles ajoutés : placement circulaire de 50 participants, festin central, absence d’élimination aux manches 1–3, élimination extérieure à la manche 4, résolution unique, victoire/défaite immédiates et rebonds renforcés.
+
+## Ajustements du 23 octobre 2026 — retours en partie
+
+- Classique à huit : terrains de 2 400 × 1 800, sauf Volcan Raclette qui garde 3 600 × 2 700. Grand Banquet / États-Unis conservent leurs grandes dimensions.
+- Le volcan reçoit une bordure montagneuse illustrée ; la collision suit son bord intérieur.
+- Banquet pirate : limites latérales évasées suivant bâbord / tribord, rangées de tonneaux et cordages en haut / bas ; suppression de l’ancien rail polygonal intérieur.
+- Supermarché de jour : huit clients avec caddie, masse des caddies augmentée de 3,5 à 14 et restitution à 0,86. Les impacts restent calculés par Matter.
+- Supermarché nocturne : six gardes et halos rouges radiaux visibles dans le noir. À partir de 500 kg, un garde ordinaire donne 55 kg et est remplacé par un soldat plus grand (coque ×1,8, masse 36), toujours inmangeable. Il arrive sur un point libre pour éviter une élimination instantanée à l’emplacement de la capture.
+- Trois lampes et un anti-sécurité sont disponibles au début de chaque tour s’ils manquent. Les exemplaires expirent toujours après quatre tours.
+- Sable : frottement ramené de 0,065 à 0,030, proche du sol normal à 0,024.
+- Le rot du roi reste le son synthétique discret existant. Aucun enregistrement authentique n’a été ajouté ; l’accès à la source audio externe testée est bloqué depuis cet environnement.

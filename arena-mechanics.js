@@ -1,5 +1,5 @@
 // Physics-only rules. All impulses run inside Matter substeps, never by moving a gourmand directly.
-import { hungerZone, insideHungerZone } from "./hunger-games.js?v=secrets-14";
+import { hungerZone, insideHungerZone } from "./hunger-games.js?v=filmovore-15";
 export const GLOBAL_SPECIAL_CHANCE = 0.01;
 export const GLOBAL_SPECIALS = ["armored", "inferno"];
 export function rollGlobalSpecial(random) {
@@ -48,7 +48,7 @@ export class ArenaMechanics {
       ["market", "nightmarket", "fair", "royal", "beach"].includes(game.mapId);
     if (["market", "nightmarket"].includes(game.mapId)) {
       const guard = game.mapId === "nightmarket";
-      for (let i = 0; i < (guard ? 2 : 3); i++) {
+      for (let i = 0; i < (guard ? 6 : 8); i++) {
         const spot = this.freePoint(guard ? 36 : 40);
         if (!spot) continue;
         const body = guard
@@ -61,10 +61,10 @@ export class ArenaMechanics {
               chamfer: { radius: 7 },
               frictionAir: 0.012,
               friction: 0.015,
-              restitution: 0.55,
+              restitution: 0.86,
               label: "cart",
             });
-        api.Body.setMass(body, guard ? 9 : 3.5);
+        api.Body.setMass(body, guard ? 9 : 14);
         const actor = {
           kind: guard ? "security" : "cart",
           body,
@@ -125,7 +125,7 @@ export class ArenaMechanics {
       if (p.securityUntil < g.round) p.securityUntil = 0;
     }
     g.secretRules?.beginRound();
-    if (g.mode === "platform") return;
+    if (["platform", "survival"].includes(g.mode)) return;
     // Exactly one global roll per round. Douggy's independent food roll is untouched.
     if (this.lastGlobalRollRound !== g.round) {
       this.lastGlobalRollRound = g.round;
@@ -138,12 +138,10 @@ export class ArenaMechanics {
           !["lamp", "securityShield"].includes(item.kind) ||
           g.round - item.born < 4,
       );
-      for (const kind of ["lamp", "securityShield"])
-        if (
-          !this.items.some((item) => item.kind === kind) &&
-          (g.round === 1 || g.round % 2 === 1)
-        )
-          this.spawnItem(kind);
+      while (this.items.filter((item) => item.kind === "lamp").length < 3)
+        if (!this.spawnItem("lamp")) break;
+      if (!this.items.some((item) => item.kind === "securityShield"))
+        this.spawnItem("securityShield");
       this.planGuards();
     }
   }
@@ -327,7 +325,28 @@ export class ArenaMechanics {
     }
   }
   guardContact(person, agent) {
-    if (!person.alive) return;
+    if (!person.alive || agent.replacing) return;
+    if (person.mass >= 500 && !agent.soldier) {
+      agent.replacing = true;
+      const spot = this.freePoint(48) || { ...agent.body.position };
+      this.api.Body.scale(agent.body, 1.8, 1.8);
+      this.api.Body.setMass(agent.body, 36);
+      this.api.Body.setPosition(agent.body, spot);
+      this.api.Body.setVelocity(agent.body, { x: 0, y: 0 });
+      agent.soldier = true;
+      agent.replacing = false;
+      agent.reactUntil = this.clock + 400;
+      agent.plan = { x: 0, y: 0 };
+      this.game.resize(person, person.mass + 55);
+      this.game.effects.push({
+        ...person.body.position,
+        text: "GARDE MANGÉ · UN SOLDAT ARRIVE",
+        life: 1.5,
+        color: "#fda899",
+      });
+      this.game.emit("food", person, { type: "security", size: "normal" });
+      return;
+    }
     if (person.securityUntil >= this.game.round) {
       if ((agent.lastShield || -1000) + 200 > this.clock) return;
       agent.lastShield = this.clock;
@@ -502,7 +521,7 @@ export class ArenaMechanics {
           if (
             p.alive &&
             distance(p.body.position, actor.body.position) <
-              p.body.circleRadius + 20
+              p.body.circleRadius + (actor.soldier ? 36 : 20)
           )
             this.guardContact(p, actor);
     }
@@ -617,6 +636,7 @@ export class ArenaMechanics {
         "nightmarket",
         "royal",
         "hunger",
+        "survival",
         "platform",
         "cannibal",
         "icecream",

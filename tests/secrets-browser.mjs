@@ -252,11 +252,14 @@ try {
         other.alive = false;
         World.remove(g.engine.world, other.body);
       }
-      Body.setPosition(p.body, { x: 400, y: 1040 });
-      Body.setPosition(q.body, { x: 1400, y: 1000 });
+      Body.setPosition(
+        p.body,
+        mode === "icecream" ? { x: 1200, y: 500 } : { x: 400, y: 1040 },
+      );
+      Body.setPosition(q.body, { x: 1500, y: 1200 });
       g.food = [500, 560, 620, 680, 740].map((x) => ({
-        x,
-        y: 1040,
+        x: mode === "icecream" ? 1200 : x,
+        y: mode === "icecream" ? x + 100 : 1040,
         type: mode === "cannibal" ? "victim" : "child",
         size: "normal",
       }));
@@ -264,7 +267,7 @@ try {
       g.foodCap = 0;
       g.plan = () => ({ x: 0, y: 0 });
       g.onEvent = (e, a, d) => trophyEvent(profile, e, a, d, g);
-      g.launch({ x: 17, y: 0 });
+      g.launch(mode === "icecream" ? { x: 0, y: 17 } : { x: 17, y: 0 });
       for (let i = 0; i < 100 && g.phase === "moving"; i++) g.step();
       check(
         mode + " five captures are physically achievable in one propulsion",
@@ -286,8 +289,8 @@ try {
       g.food = [];
       g.round = 3;
       g.secretRules.arrival = 0;
-      Body.setPosition(p.body, { x: 500, y: 600 });
-      Body.setPosition(q.body, { x: 560, y: 600 });
+      Body.setPosition(p.body, { x: 460, y: 600 });
+      Body.setPosition(q.body, { x: 520, y: 600 });
       Body.setVelocity(p.body, { x: 1.5, y: 0 });
       Body.setVelocity(q.body, { x: 0, y: 0 });
       g.phase = "moving";
@@ -401,7 +404,7 @@ try {
       await page
         .locator("#title-screen")
         .evaluate((node) => node.style.backgroundImage)
-    ).includes("secrets/burger.webp"),
+    ).includes("secrets/burger-bloody.webp"),
   );
   await page.screenshot({
     path: path.join(root, "test-results", "face-cachee-burger.png"),
@@ -436,6 +439,7 @@ try {
   uiChecks.push("39 separate trophies; sandbox never touches actual storage");
   for (const [slot, id] of [
     ["classic", "platform"],
+    ["classic", "survival"],
     ["gros", "cannibal"],
     ["menu-shop", "icecream"],
   ]) {
@@ -444,8 +448,13 @@ try {
     await page.locator(selector).focus();
     await page.keyboard.press("Enter");
     await page.locator('[data-group="available"] .book-cover').click();
-    assert.equal(await page.locator(".map-card:visible").count(), 1);
+    assert.equal(
+      await page.locator(".map-card:visible").count(),
+      ["platform", "survival"].includes(id) ? 2 : 1,
+    );
     assert.equal(await page.locator(`[data-map="${id}"]:visible`).count(), 1);
+    if (id === "survival")
+      await page.locator(`[data-map="${id}"]:visible`).click();
     await page.locator("#start-game").click();
     await page.locator("#close-briefing").click();
     await page.waitForTimeout(350);
@@ -545,6 +554,7 @@ try {
   });
   for (const [slot, id] of [
     ["classic", "platform"],
+    ["classic", "survival"],
     ["gros", "cannibal"],
     ["menu-shop", "icecream"],
   ]) {
@@ -553,6 +563,8 @@ try {
     await mobile.locator(selector).focus();
     await mobile.keyboard.press("Enter");
     await mobile.locator('[data-group="available"] .book-cover').tap();
+    if (id === "survival")
+      await mobile.locator('[data-map="survival"]:visible').tap();
     await mobile.locator("#start-game").tap();
     await mobile.locator("#close-briefing").tap();
     const aim = await mobile.evaluate(() => {

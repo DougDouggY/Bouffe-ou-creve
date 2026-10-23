@@ -1,5 +1,5 @@
-import { isVisible } from "./visibility.js?v=secrets-14";
-import { hungerZone } from "./hunger-games.js?v=secrets-14";
+import { isVisible } from "./visibility.js?v=filmovore-15";
+import { hungerZone } from "./hunger-games.js?v=filmovore-15";
 const images = new Map();
 function asset(id) {
   if (!images.has(id)) {
@@ -44,6 +44,19 @@ export function drawArenaFloor(ctx, g, time) {
   const rules = g.mechanics;
   if (!rules) return;
   ctx.save();
+  if (g.mapId === "volcan") {
+    const id = "volcano-border";
+    if (!images.has(id)) {
+      const im = new Image();
+      im.src = new URL(
+        "./assets/maps/volcano-border.webp",
+        import.meta.url,
+      ).href;
+      images.set(id, im);
+    }
+    const im = images.get(id);
+    if (im.complete && im.naturalWidth) ctx.drawImage(im, 0, 0, g.w, g.h);
+  }
   if (g.mapId === "hunger") {
     const zone = hungerZone(g.w, g.h, g.round);
     ctx.beginPath();
@@ -253,7 +266,16 @@ export function drawArenaActors(ctx, g, time) {
     } else {
       const bob = g.phase === "moving" ? Math.sin(time * 0.015) * 2 : 0;
       ellipse(ctx, p.x, p.y + 17, 20, 8, "#11172566");
-      sprite(ctx, "security", p.x, p.y - 6 + bob, 49, 52);
+      sprite(
+        ctx,
+        actor.soldier ? "soldier" : "security",
+        p.x,
+        p.y - 6 + bob,
+        actor.soldier ? 88 : 49,
+        actor.soldier ? 94 : 52,
+      );
+      if (actor.soldier)
+        label(ctx, "SOLDAT · INMANGEABLE", p.x, p.y - 58, "#ffa39b");
       if (g.phase === "aim") {
         const plan = actor.plan;
         ctx.strokeStyle = "#efb465";
