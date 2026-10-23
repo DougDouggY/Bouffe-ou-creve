@@ -188,6 +188,10 @@ try {
       },
     );
     await context.addInitScript(() => {
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => window.__forceHidden === true,
+      });
       if (!localStorage.getItem("cosmetic-test-seeded")) {
         localStorage.setItem(
           "bouffe-profile-v1",
@@ -244,10 +248,10 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=restaurant-lobby-27"));
-  assert(resources.has("style.css?v=restaurant-lobby-27"));
-  assert(resources.has("multiplayer-client.js?v=restaurant-lobby-27"));
-  assert(resources.has("multiplayer-protocol.js?v=lobby-26"));
+  assert(resources.has("game.js?v=social-28"));
+  assert(resources.has("style.css?v=social-28"));
+  assert(resources.has("multiplayer-client.js?v=social-28"));
+  assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
     await page.keyboard.press("Enter");
@@ -300,6 +304,10 @@ try {
     );
   }
   for (const [i, page] of pages.entries()) {
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#multiplayer-players canvas").length === 4,
+    );
     const left = await page.locator(".lobby-guests").boundingBox();
     const right = await page.locator(".lobby-order").boundingBox();
     const portrait = await page.locator(".lobby-avatar").first().boundingBox();
@@ -314,13 +322,26 @@ try {
         .locator("#multiplayer-dialog")
         .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
     );
-    await page
-      .locator("#multiplayer-dialog")
-      .screenshot({
-        path: path.join(output, `restaurant-lobby-${sizes[i].width}.png`),
-      });
+    await page.locator("#multiplayer-dialog").screenshot({
+      path: path.join(output, `restaurant-lobby-${sizes[i].width}.png`),
+    });
   }
   const host = pages[0];
+  const lobbyChat = host.locator("#multiplayer-lobby [data-chat-panel]");
+  await lobbyChat.locator("summary").click();
+  const greeting = "Salut les gourmands <img src=x onerror=alert(1)>";
+  await lobbyChat.locator("[data-chat-input]").fill(greeting);
+  await lobbyChat.locator("button[type=submit]").click();
+  for (const page of pages) {
+    await page.waitForFunction(
+      (text) =>
+        document
+          .querySelector("#multiplayer-lobby [data-chat-messages]")
+          .textContent.includes(text),
+      greeting,
+    );
+    assert.equal(await page.locator("[data-chat-messages] img").count(), 0);
+  }
   for (const count of [8, 50, 24]) {
     await host.locator("#multiplayer-size").selectOption(String(count));
     for (const page of pages)
@@ -394,6 +415,19 @@ try {
     );
     assert(await page.locator("#multiplayer-entry").isHidden());
   }
+  const gameChat = host.locator("#game-shell > [data-chat-panel]");
+  await gameChat.locator("summary").click();
+  await gameChat
+    .locator("[data-chat-input]")
+    .fill("Bon appétit depuis la partie !");
+  await gameChat.locator("button[type=submit]").click();
+  for (const page of pages)
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#game-shell [data-chat-messages]")
+        .textContent.includes("Bon appétit depuis la partie !"),
+    );
+  await gameChat.locator("summary").click();
   const start = wires[0].find((p) => p.type === "state").state;
   assert.equal(start.count, 24);
   assert.equal(start.mapId, "nightmarket");
@@ -579,11 +613,64 @@ try {
     await host.locator("#multiplayer-code").textContent()
   ).replaceAll("-", "");
   assert.equal(
+    (await fetch(`http://127.0.0.1:${port}/__test__/spectator/${roomCode}`))
+      .status,
+    200,
+  );
+  await host.locator("#spectator-panel").waitFor({ state: "visible" });
+  assert.equal(
+    await host.locator("#online-death").textContent(),
+    "Dévoré par " + names[1],
+  );
+  await host.locator("#continue-spectating").click();
+  assert(await host.locator("#overlay").isHidden());
+  for (const page of pages)
+    await page.waitForFunction(
+      (name) =>
+        document
+          .querySelector("#kill-feed")
+          .textContent.includes("a été dévoré par " + name),
+      names[1],
+    );
+  for (const page of pages.slice(1))
+    assert(await page.locator("#overlay").isHidden());
+  const choices = await host
+    .locator("#spectator-target option")
+    .evaluateAll((options) => options.map((o) => o.value));
+  assert(choices.length > 1);
+  await host.locator("#spectator-target").selectOption(choices.at(-1));
+  await host.waitForFunction(
+    (seat) => window.__game.spectatorSeat === Number(seat),
+    choices.at(-1),
+  );
+  await host.locator("#spectator-next").click();
+  assert.notEqual(
+    await host.locator("#spectator-target").inputValue(),
+    choices.at(-1),
+  );
+  await host.reload();
+  await host.locator("#spectator-panel").waitFor({ state: "visible" });
+  assert.equal(
+    await host.locator("#online-death").textContent(),
+    "Dévoré par " + names[1],
+  );
+  assert(
+    (
+      await host.locator("#game-shell [data-chat-messages]").textContent()
+    ).includes("Bon appétit depuis la partie !"),
+  );
+  await host.locator("#continue-spectating").click();
+  await host.screenshot({ path: path.join(output, "social-spectator.png") });
+  await pages[1].evaluate(() => (window.__forceHidden = true));
+  assert.equal(
     (await fetch(`http://127.0.0.1:${port}/__test__/end/${roomCode}`)).status,
     200,
   );
-  for (const page of pages)
+  for (const page of pages) {
     await page.locator("#multiplayer-rematch").waitFor({ state: "visible" });
+    assert(await page.locator("#overlay").isVisible());
+  }
+  await pages[1].evaluate(() => (window.__forceHidden = false));
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-rematch").click();
     if (i < 3) {

@@ -1,6 +1,6 @@
 import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
-import { setupMultiplayer } from "./multiplayer-client.js?v=restaurant-lobby-27";
+import { setupMultiplayer } from "./multiplayer-client.js?v=social-28";
 import {
   CA,
   Ee,
@@ -1890,11 +1890,64 @@ function at(e, g, o) {
   }
   return u;
 }
+function followedPerson(game) {
+  if (!online?.active || game.people[0].alive) return game.people[0];
+  const person =
+    game.people.find((p) => p.alive && p.networkSeat === game.spectatorSeat) ||
+    game.people.find((p) => p.alive) ||
+    game.people[0];
+  game.spectatorSeat = person.networkSeat;
+  return person;
+}
+function spectatorScene(game) {
+  const person = followedPerson(game);
+  if (person === game.people[0]) return game;
+  const view = Object.create(game);
+  view.people = [person, ...game.people.filter((p) => p !== person)];
+  return view;
+}
+function updateSpectator() {
+  const panel = w("#spectator-panel");
+  panel.hidden = !online?.active || !K || K.people[0].alive;
+  if (panel.hidden) return;
+  const meNow = K.people[0];
+  if (!K.onlineDeathSeen) {
+    K.onlineDeathSeen = true;
+    w("#result-icon").textContent = "🍽️";
+    w("#result-title").textContent = "TU AS FINI AU MENU.";
+    w("#result-text").textContent = meNow.eliminatedBy
+      ? `Dévoré par ${meNow.eliminatedBy.name}.`
+      : "Tu as été éliminé.";
+    w("#continue-spectating").hidden =
+      !K.people.some((p) => p.alive) || K.phase === "ended";
+    w("#overlay").hidden = false;
+  }
+  const me = K.people[0],
+    followed = followedPerson(K),
+    select = w("#spectator-target"),
+    alive = K.people.filter((p) => p.alive);
+  w("#online-death").textContent = me.eliminatedBy
+    ? `Dévoré par ${me.eliminatedBy.name}`
+    : "Tu as été éliminé.";
+  const key = alive.map((p) => p.networkSeat + ":" + p.name).join("|");
+  if (select.dataset.roster !== key) {
+    select.replaceChildren(
+      ...alive.map((p) => {
+        const option = document.createElement("option");
+        option.value = p.networkSeat;
+        option.textContent = p.name;
+        return option;
+      }),
+    );
+    select.dataset.roster = key;
+  }
+  select.value = String(followed.networkSeat);
+  select.disabled = !alive.length;
+  w("#spectator-prev").disabled = w("#spectator-next").disabled =
+    alive.length < 2;
+}
 function mI(e, g, o) {
-  const focus =
-    online?.active && !e.people[0].alive
-      ? e.people.find((person) => person.alive) || e.people[0]
-      : e.people[0];
+  const focus = followedPerson(e);
   const u = focus.body.position;
   return e.count > 8 && !SECRET_MAP_MODE(e.mode)
     ? { x: u.x - g / 2, y: u.y - o / 2 }
@@ -2745,7 +2798,8 @@ function OA() {
 }
 function pe(e) {
   return (
-    e.id === 0 || xA(K.mapId, NA(K.people[0]), e.body.position, K.obstacles)
+    e.id === 0 ||
+    xA(K.mapId, NA(followedPerson(K)), e.body.position, K.obstacles)
   );
 }
 function ze() {
@@ -2854,7 +2908,7 @@ function Dt() {
       (Q.style.transform = `translate(${I.x}px,${I.y}px)`),
       (Q.style.opacity = lightOpacity(
         K.mapId,
-        NA(K.people[0]),
+        NA(followedPerson(K)),
         C.body.position,
       )),
       (Q.style.width = `${I.w}px`));
@@ -3110,10 +3164,10 @@ function bt(e) {
     (x.fillStyle = "#586c5c"),
     x.fillRect(uA, aA, gA, sA),
     x.translate(uA - QA.x, aA - QA.y),
-    dt(x, K, CA[$], e));
-  drawArenaActors(x, K, e);
+    dt(x, spectatorScene(K), CA[$], e));
+  drawArenaActors(x, spectatorScene(K), e);
   for (const u of K.food)
-    xA(K.mapId, NA(K.people[0]), u, K.obstacles) &&
+    xA(K.mapId, NA(followedPerson(K)), u, K.obstacles) &&
       u.x >= QA.x - 40 &&
       u.x <= QA.x + gA + 40 &&
       u.y >= QA.y - 40 &&
@@ -3126,7 +3180,7 @@ function bt(e) {
     .sort((E, A) => E.body.position.y - A.body.position.y))
     kI(u, e);
   drawSecretFalls(x, K, e, Se);
-  drawArenaPowers(x, K, e);
+  drawArenaPowers(x, spectatorScene(K), e);
   if (q?.kind === "shot") {
     const u = K.people[0].body.position,
       E = Math.hypot(q.dx, q.dy);
@@ -3154,14 +3208,14 @@ function bt(e) {
     }
   }
   for (const u of K.effects)
-    xA(K.mapId, NA(K.people[0]), u, K.obstacles) &&
+    xA(K.mapId, NA(followedPerson(K)), u, K.obstacles) &&
       ((x.globalAlpha = Math.min(1, u.life * 2)),
       (x.font = '800 16px "Barlow Condensed",sans-serif'),
       (x.textAlign = "center"),
       (x.fillStyle = u.color),
       x.fillText(u.text, u.x, u.y - (1.4 - u.life) * 25));
   ((x.globalAlpha = 1),
-    nt(x, K),
+    nt(x, spectatorScene(K)),
     x.restore(),
     x.save(),
     x.setTransform(oA.width / o.width, 0, 0, oA.height / o.height, 0, 0));
@@ -3273,6 +3327,16 @@ online = setupMultiplayer({
     K?.destroy();
     document.body.classList.add("online-playing");
     onlineSeat = seat;
+    w("#kill-feed").replaceChildren();
+    w("#spectator-panel").hidden = true;
+    w("#continue-spectating").hidden = true;
+    for (const id of [
+      "#run-summary",
+      "#result-reward",
+      "#run-trophies",
+      ".result-trophies-title",
+    ])
+      w(id).hidden = true;
     nA = state.mode;
     $ = state.mapId;
     K = new zt(state.w, state.h, Math.random, {
@@ -3332,14 +3396,26 @@ online = setupMultiplayer({
       K[key] = state[key];
     if (state.obstacles) K.obstacles = state.obstacles;
     Object.assign(K.mechanics, state.mechanics);
+    updateSpectator();
   },
   onLeave() {
     document.body.classList.remove("online-playing");
     w("#again").hidden = false;
+    w("#spectator-panel").hidden = true;
+    w("#continue-spectating").hidden = true;
+    for (const id of [
+      "#run-summary",
+      "#result-reward",
+      "#run-trophies",
+      ".result-trophies-title",
+    ])
+      w(id).hidden = false;
     q = null;
     WA.backToMenu();
   },
   onEnd(state) {
+    w("#continue-spectating").hidden =
+      state.phase === "ended" || !state.people.some((p) => p.alive);
     const winner =
       state.phase === "ended" ? state.people.find((p) => p.alive) : null;
     w("#result-icon").textContent = winner?.id === onlineSeat ? "👑" : "🍽️";
@@ -3356,6 +3432,18 @@ online = setupMultiplayer({
     w("#overlay").hidden = false;
   },
   onEvent(event) {
+    if (event.kind === "elimination") {
+      const row = document.createElement("li");
+      row.dataset.human = String(event.human);
+      row.textContent = event.eliminatedBy
+        ? `${event.name} a été dévoré par ${event.eliminatedBy.name}.`
+        : `${event.name} a été éliminé.`;
+      const feed = w("#kill-feed");
+      feed.append(row);
+      while (feed.children.length > 3) feed.firstElementChild.remove();
+      setTimeout(() => row.remove(), 8000);
+      return;
+    }
     const mapId = (id) => (id === onlineSeat ? 0 : id === 0 ? onlineSeat : id);
     gameAudio.event(
       event.kind,
@@ -3364,6 +3452,32 @@ online = setupMultiplayer({
     );
   },
 });
+w("#spectator-results").onclick = () => {
+  if (online.active && !K.people[0].alive) w("#overlay").hidden = false;
+};
+w("#continue-spectating").onclick = () => {
+  if (!online.active) return;
+  w("#overlay").hidden = true;
+  updateSpectator();
+  w("#spectator-target").focus({ preventScroll: true });
+};
+w("#spectator-target").onchange = (event) => {
+  if (online.active && !K.people[0].alive) {
+    K.spectatorSeat = Number(event.target.value);
+    updateSpectator();
+  }
+};
+function cycleSpectator(delta) {
+  if (!online.active || K.people[0].alive) return;
+  const alive = K.people.filter((p) => p.alive);
+  if (!alive.length) return;
+  const index = alive.indexOf(followedPerson(K));
+  K.spectatorSeat =
+    alive[(index + delta + alive.length) % alive.length].networkSeat;
+  updateSpectator();
+}
+w("#spectator-prev").onclick = () => cycleSpectator(-1);
+w("#spectator-next").onclick = () => cycleSpectator(1);
 for (const id of ["#back-menu", "#end-menu"]) {
   const prior = w(id).onclick;
   w(id).onclick = () => {

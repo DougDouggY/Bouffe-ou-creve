@@ -147,6 +147,25 @@ test("server physics determines growth, collision and elimination; eliminated hu
   assert.equal(replay.final.people[1].alive, false);
   assert.equal(replay.final.people[0].mass, 233);
   assert(replay.events.some((e) => e.kind === "eat"));
+  assert(
+    replay.events.some(
+      (e) =>
+        e.kind === "elimination" &&
+        e.name === "Tony" &&
+        e.eliminatedBy?.name === "Doug",
+    ),
+  );
+  assert.deepEqual(replay.final.people[1].eliminatedBy, {
+    id: 0,
+    name: "Doug",
+  });
+  const restored = restoreSimulation(
+    checkpoint(r.game),
+    r.data.seed,
+    r.data.members,
+  );
+  assert.deepEqual(restored.people[1].eliminatedBy, { id: 0, name: "Doug" });
+  restored.destroy();
   assert.equal(r.publicState().members.find((m) => m.id === b.id).alive, false);
 });
 test("seat zero dying does not end a match with surviving humans and AI", () => {
@@ -415,5 +434,46 @@ test("unanimous rematch retains room identities and map; votes survive checkpoin
   r.action(a, { version, type: "start" });
   assert.equal(r.game.round, 1);
   assert(r.game.people.slice(0, 2).every((p) => p.alive));
+  r.game.destroy();
+});
+
+test("shared chat validates messages, uses the real sender, rate-limits and survives reconnect", () => {
+  const { r, a, b, advance } = fixture(8);
+  assert.throws(() => r.action(a, { version, type: "chat", text: "  " }), {
+    code: "CHAT",
+  });
+  assert.throws(() => r.action(a, { version, type: "chat", text: 123 }), {
+    code: "CHAT",
+  });
+  assert.throws(
+    () => r.action(a, { version, type: "chat", text: "a".repeat(201) }),
+    { code: "CHAT" },
+  );
+  r.action(a, {
+    version,
+    type: "chat",
+    name: "Fake",
+    memberId: b.id,
+    text: "<img src=x onerror=alert(1)> Bonjour\nTony",
+  });
+  assert.equal(r.publicState().chat[0].name, "Doug");
+  assert.equal(r.publicState().chat[0].memberId, a.id);
+  assert.equal(
+    r.publicState().chat[0].text,
+    "<img src=x onerror=alert(1)> Bonjour Tony",
+  );
+  assert.throws(() => r.action(a, { version, type: "chat", text: "spam" }), {
+    code: "CHAT_RATE",
+  });
+  r.action(b, { version, type: "chat", text: "Salut !" });
+  for (let i = 0; i < 45; i++) {
+    advance(1001);
+    r.action(a, { version, type: "chat", text: "Message " + i });
+  }
+  assert.equal(r.publicState().chat.length, 40);
+  assert.equal(r.publicState().chat.at(-1).text, "Message 44");
+  const restored = new Room(structuredClone(r.data), () => r.now());
+  assert.deepEqual(restored.publicState().chat, r.publicState().chat);
+  restored.game.destroy();
   r.game.destroy();
 });

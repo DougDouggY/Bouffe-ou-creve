@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=restaurant-lobby-27"></script>
+    <script type="module" src="./game.js?v=social-28"></script>
 
-    <link rel="stylesheet" href="./style.css?v=restaurant-lobby-27" />
+    <link rel="stylesheet" href="./style.css?v=social-28" />
   </head>
   <body>
     <div id="app">
@@ -286,6 +286,27 @@
               </p>
               <ul id="multiplayer-players"></ul>
               <button id="multiplayer-shop">Le Dressing du Glouton</button>
+              <details class="online-chat" data-chat-panel hidden>
+                <summary>
+                  À la table · Chat <span data-chat-count></span>
+                </summary>
+                <ol
+                  data-chat-messages
+                  aria-label="Messages du salon"
+                  aria-live="polite"
+                  aria-relevant="additions"
+                ></ol>
+                <form data-chat-form>
+                  <label
+                    >Ton message<input
+                      data-chat-input
+                      maxlength="200"
+                      autocomplete="off"
+                      placeholder="Un mot aux gourmands…" /></label
+                  ><button type="submit">Envoyer</button>
+                </form>
+                <p data-chat-status role="status"></p>
+              </details>
               <p class="multiplayer-help">
                 Change de tenue sans quitter la table. Tes amis verront ton
                 nouvel équipement.
@@ -592,6 +613,54 @@
             </div>
           </section>
           <section class="game-shell" id="game-shell">
+            <details class="online-chat" data-chat-panel hidden>
+              <summary>À la table · Chat <span data-chat-count></span></summary>
+              <ol
+                data-chat-messages
+                aria-label="Messages du salon"
+                aria-live="polite"
+                aria-relevant="additions"
+              ></ol>
+              <form data-chat-form>
+                <label
+                  >Ton message<input
+                    data-chat-input
+                    maxlength="200"
+                    autocomplete="off"
+                    placeholder="Un mot aux gourmands…" /></label
+                ><button type="submit">Envoyer</button>
+              </form>
+              <p data-chat-status role="status"></p>
+            </details>
+            <ol
+              id="kill-feed"
+              aria-live="polite"
+              aria-label="Éliminations"
+            ></ol>
+            <section id="spectator-panel" hidden aria-label="Mode spectateur">
+              <p id="online-death"></p>
+              <button id="spectator-results" type="button">
+                Récapitulatif · Rejouer
+              </button>
+              <div>
+                <button
+                  id="spectator-prev"
+                  type="button"
+                  aria-label="Gourmand précédent"
+                >
+                  ←</button
+                ><label
+                  >Suivre
+                  <select id="spectator-target"></select></label
+                ><button
+                  id="spectator-next"
+                  type="button"
+                  aria-label="Gourmand suivant"
+                >
+                  →
+                </button>
+              </div>
+            </section>
             <p id="multiplayer-hud" hidden aria-live="polite"></p>
             <nav class="game-nav">
               <button id="tournament-open" hidden>Tableau du tournoi</button
@@ -721,6 +790,9 @@
                   <p id="multiplayer-rematch-status" hidden role="status"></p>
                   <button id="multiplayer-rematch" hidden>
                     Voter pour rejouer
+                  </button>
+                  <button id="continue-spectating" hidden type="button">
+                    Continuer en spectateur
                   </button>
                   <button id="end-menu">MENU PRINCIPAL</button
                   ><button id="again">REJOUER</button>

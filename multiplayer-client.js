@@ -3,7 +3,7 @@ import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
 } from "./cosmetic-catalog.js?v=identity-22";
-import { decodeFrame } from "./multiplayer-protocol.js?v=lobby-26";
+import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
 const VERSION = "multi-20";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
   ? "http://127.0.0.1:8787"
@@ -36,7 +36,9 @@ export function setupMultiplayer({
     ended = false,
     frameIndex = 0,
     eventIndex = 0,
-    healthy = false;
+    healthy = false,
+    lastChatKey = "",
+    lastRosterKey = "";
   const dialog = $("#multiplayer-dialog");
   function openDialog() {
     dialog.showModal();
@@ -69,7 +71,51 @@ export function setupMultiplayer({
     ws.send(JSON.stringify({ ...data, version: VERSION }));
     return true;
   }
+  const chatPanels = [...document.querySelectorAll("[data-chat-panel]")];
+  function renderChat() {
+    chatPanels.forEach((panel) => (panel.hidden = !ticket || !room));
+    const messages = room?.chat || [];
+    const key = JSON.stringify(messages.map((m) => m.id));
+    if (key === lastChatKey) return;
+    lastChatKey = key;
+    for (const panel of chatPanels) {
+      const list = panel.querySelector("[data-chat-messages]");
+      const atBottom =
+        list.scrollHeight - list.scrollTop - list.clientHeight < 30;
+      list.replaceChildren(
+        ...messages.map((m) => {
+          const row = document.createElement("li"),
+            name = document.createElement("strong"),
+            text = document.createElement("span");
+          name.textContent = m.name + " : ";
+          text.textContent = m.text;
+          row.append(name, text);
+          return row;
+        }),
+      );
+      panel.querySelector("[data-chat-count]").textContent = messages.length
+        ? `(${messages.length})`
+        : "";
+      if (atBottom) list.scrollTop = list.scrollHeight;
+    }
+  }
+  chatPanels.forEach((panel) =>
+    panel
+      .querySelector("[data-chat-form]")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        const input = panel.querySelector("[data-chat-input]");
+        if (
+          input.value.trim() &&
+          send({ type: "chat", text: input.value.trim() })
+        ) {
+          input.value = "";
+          panel.querySelector("[data-chat-status]").textContent = "";
+        }
+      }),
+  );
   function update() {
+    renderChat();
     const self = room?.members.find((m) => m.id === ticket?.memberId);
     $("#multiplayer-connect").hidden = !!ticket;
     $("#multiplayer-lobby").hidden = !ticket;
@@ -107,35 +153,44 @@ export function setupMultiplayer({
     $("#multiplayer-fill").textContent = room
       ? `${room.members.length} humain${room.members.length > 1 ? "s" : ""} + ${room.aiCount} IA · ${MULTIPLAYER_MAPS.find((m) => m.id === room.mapId)?.name || "Cantine du chaos"}`
       : "";
-    $("#multiplayer-players").replaceChildren(
-      ...(room?.members || []).map((m) => {
-        const li = document.createElement("li");
-        const cosmetics = normalizeCosmetics(m.cosmetics);
-        li.dataset.member = m.id;
-        li.dataset.hat = cosmetics.hat;
-        li.dataset.outfit = cosmetics.outfit;
-        li.title = [cosmetics.hat, cosmetics.outfit]
-          .map((id) => COSMETIC_CATALOG.find((item) => item.id === id)?.name)
-          .join(" · ");
-        li.dataset.self = String(m.id === ticket.memberId);
-        li.dataset.ready = String(m.ready);
-        const label = document.createElement("span");
-        label.className = "lobby-identity";
-        const name = document.createElement("strong");
-        name.textContent = m.name;
-        const status = document.createElement("small");
-        status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
-        label.append(name, status);
-        const avatar = document.createElement("canvas");
-        avatar.width = 288;
-        avatar.height = 360;
-        avatar.className = "lobby-avatar";
-        avatar.setAttribute("aria-label", "Apparence de " + m.name);
-        li.append(avatar, label);
-        renderAvatar(avatar, { ...m, cosmetics });
-        return li;
-      }),
-    );
+    const rosterKey = JSON.stringify([
+      room?.phase,
+      room?.host,
+      ticket?.memberId,
+      room?.members,
+    ]);
+    if (rosterKey !== lastRosterKey) {
+      lastRosterKey = rosterKey;
+      $("#multiplayer-players").replaceChildren(
+        ...(room?.members || []).map((m) => {
+          const li = document.createElement("li");
+          const cosmetics = normalizeCosmetics(m.cosmetics);
+          li.dataset.member = m.id;
+          li.dataset.hat = cosmetics.hat;
+          li.dataset.outfit = cosmetics.outfit;
+          li.title = [cosmetics.hat, cosmetics.outfit]
+            .map((id) => COSMETIC_CATALOG.find((item) => item.id === id)?.name)
+            .join(" · ");
+          li.dataset.self = String(m.id === ticket.memberId);
+          li.dataset.ready = String(m.ready);
+          const label = document.createElement("span");
+          label.className = "lobby-identity";
+          const name = document.createElement("strong");
+          name.textContent = m.name;
+          const status = document.createElement("small");
+          status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
+          label.append(name, status);
+          const avatar = document.createElement("canvas");
+          avatar.width = 288;
+          avatar.height = 360;
+          avatar.className = "lobby-avatar";
+          avatar.setAttribute("aria-label", "Apparence de " + m.name);
+          li.append(avatar, label);
+          renderAvatar(avatar, { ...m, cosmetics });
+          return li;
+        }),
+      );
+    }
     hud.hidden = !active;
     if (!active) return;
     if (ws?.readyState !== WebSocket.OPEN)
@@ -234,6 +289,11 @@ export function setupMultiplayer({
         return;
       }
       if (packet.type === "welcome") {
+        // A reconnect supersedes a possibly incomplete recording from the old socket.
+        replay = null;
+        frameIndex = 0;
+        eventIndex = 0;
+        pendingTurn = null;
         acceptRoom(packet.room);
         if (packet.state) enter(packet.state);
         else syncAppearance();
@@ -252,6 +312,12 @@ export function setupMultiplayer({
         replay.complete = packet.last;
       } else if (packet.type === "error") {
         message(packet.message);
+        if (["CHAT", "CHAT_RATE"].includes(packet.error))
+          chatPanels.forEach(
+            (panel) =>
+              (panel.querySelector("[data-chat-status]").textContent =
+                packet.message),
+          );
         if (active) hud.textContent = packet.message;
         if (packet.error !== "LOCKED") pendingTurn = null;
       } else if (packet.type === "expired") {
@@ -393,7 +459,7 @@ export function setupMultiplayer({
       }
     }
     if (
-      room.canRematch &&
+      (room.canRematch || room.phase === "ended") &&
       !replay &&
       lastState &&
       !ended &&
@@ -465,7 +531,14 @@ export function setupMultiplayer({
       message("Code à transmettre : " + formatted(room.code));
     }
   };
-  setInterval(update, 500);
+  setInterval(() => {
+    tick();
+    update();
+  }, 500);
+  document.addEventListener("visibilitychange", () => {
+    tick();
+    update();
+  });
   try {
     const saved = JSON.parse(sessionStorage.getItem(TICKET_KEY));
     if (

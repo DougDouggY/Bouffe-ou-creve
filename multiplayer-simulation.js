@@ -192,7 +192,26 @@ export function resolveTurn(game, shots) {
   const turn = game.round;
   const events = [];
   let time = 0;
+  const aliveAtStart = new Set(
+    game.people.filter((p) => p.alive).map((p) => p.id),
+  );
+  function recordEliminations() {
+    for (const person of game.people)
+      if (aliveAtStart.has(person.id) && !person.alive) {
+        aliveAtStart.delete(person.id);
+        events.push({
+          t: time,
+          kind: "elimination",
+          person: person.id,
+          name: person.name,
+          human: person.human === true,
+          eliminatedBy: person.eliminatedBy || null,
+        });
+      }
+  }
   game.onEvent = (kind, person, food) => {
+    if (kind === "eat" && food && person)
+      food.eliminatedBy = { id: person.id, name: person.name };
     if (["food", "eat", "burn", "power", "end"].includes(kind))
       events.push({
         t: time,
@@ -202,11 +221,13 @@ export function resolveTurn(game, shots) {
       });
   };
   if (!game.launch(null, shots)) throw new Error("Cannot resolve turn");
+  recordEliminations();
   const frames = [{ t: 0, state: clone(snapshot(game)) }];
   // Fixed 60 Hz, exactly the same Matter/rules as solo; render at 10 Hz + interpolation.
   for (let i = 0; i < 720 && game.phase === "moving"; i++) {
     time += 1000 / 60;
     game.step(1000 / 60);
+    recordEliminations();
     if ((i + 1) % 6 === 0 || game.phase !== "moving")
       frames.push({ t: Math.round(time), state: clone(snapshot(game)) });
   }

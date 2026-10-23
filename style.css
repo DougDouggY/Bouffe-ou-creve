@@ -3756,3 +3756,150 @@ body.online-playing .character-badge[data-human="true"][data-player="true"] {
     height: 225px;
   }
 }
+
+.online-chat {
+  margin-top: 18px;
+  border: 1px solid #b49b72;
+  border-radius: 6px;
+  background: #fff5df;
+  color: #523e2d;
+  font:
+    14px Georgia,
+    serif;
+}
+.online-chat summary {
+  padding: 10px;
+  cursor: pointer;
+}
+.online-chat ol {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.online-chat li {
+  padding: 4px 0;
+  border-bottom: 1px solid #b49b7222;
+}
+.online-chat strong {
+  color: #476b82;
+}
+.online-chat form {
+  display: flex;
+  align-items: end;
+  gap: 6px;
+  padding: 8px;
+}
+.online-chat label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+.online-chat input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px;
+  font-size: 16px;
+}
+.online-chat button {
+  min-height: 38px;
+  padding: 8px;
+}
+.online-chat [data-chat-status] {
+  margin: 0 8px 8px;
+  font-size: 12px;
+}
+#multiplayer-dialog .online-chat button {
+  width: auto;
+}
+#game-shell > .online-chat {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 12;
+  width: 300px;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  background: #fff5dfee;
+}
+#game-shell > .online-chat:not([open]) {
+  width: auto;
+}
+#spectator-panel {
+  position: absolute;
+  top: 85px;
+  left: 12px;
+  z-index: 11;
+  max-width: calc(100% - 24px);
+  padding: 10px;
+  border: 1px solid #ddc79566;
+  border-radius: 8px;
+  background: #263b35e8;
+  color: #fff2d5;
+  font-size: 13px;
+}
+#spectator-panel p {
+  margin: 0 0 8px;
+}
+#spectator-panel div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#spectator-panel button,
+#spectator-panel select {
+  min-height: 36px;
+  max-width: 180px;
+  font-size: 14px;
+}
+#spectator-panel button {
+  min-width: 36px;
+}
+#kill-feed {
+  position: absolute;
+  right: 12px;
+  bottom: 78px;
+  z-index: 10;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: min(330px, calc(100% - 24px));
+  pointer-events: none;
+}
+#kill-feed li {
+  margin-top: 5px;
+  padding: 8px 12px;
+  border-left: 3px solid #d7b775;
+  border-radius: 4px;
+  background: #24382fe8;
+  color: #fff1d4;
+  font-size: 13px;
+  box-shadow: 0 2px 8px #0003;
+  animation: kill-notice 8s ease forwards;
+}
+#kill-feed li[data-human="true"] {
+  border-color: #a6dfff;
+}
+@keyframes kill-notice {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  8%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kill-feed li {
+    animation: none;
+  }
+}

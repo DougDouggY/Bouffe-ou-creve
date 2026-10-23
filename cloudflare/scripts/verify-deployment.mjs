@@ -214,6 +214,12 @@ export async function verifyDeployment(
     console.log(
       "OK : salon SQLite, deux invités et deux WebSockets authentifiés.",
     );
+    a.send({ type: "chat", text: "Le chat de la table fonctionne." });
+    await b.wait(
+      (p) =>
+        p.type === "room" &&
+        p.room.chat?.at(-1)?.text === "Le chat de la table fonctionne.",
+    );
     a.send({ type: "map", mapId: "cold" });
     await b.wait((p) => p.type === "room" && p.room.mapId === "cold");
     a.send({ type: "ready", ready: true });

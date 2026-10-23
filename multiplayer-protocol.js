@@ -42,6 +42,7 @@ export function encodeFrames(frames) {
         round(p.pop, 1000),
         p.armored ? 1 : 0,
         p.infernoReady ? 1 : 0,
+        p.eliminatedBy || null,
       ]),
     };
     previous = state;
@@ -62,8 +63,19 @@ export function decodeFrame(frame, previous) {
       elapsed: frame.elapsed,
       mechanics: { ...previous.mechanics, ...frame.mechanics },
       people: previous.people.map((p, i) => {
-        const [x, y, vx, vy, mass, alive, heading, pop, armored, infernoReady] =
-          frame.p[i];
+        const [
+          x,
+          y,
+          vx,
+          vy,
+          mass,
+          alive,
+          heading,
+          pop,
+          armored,
+          infernoReady,
+          eliminatedBy,
+        ] = frame.p[i];
         return {
           ...p,
           x,
@@ -76,6 +88,7 @@ export function decodeFrame(frame, previous) {
           pop,
           armored: !!armored,
           infernoReady: !!infernoReady,
+          ...(eliminatedBy ? { eliminatedBy } : {}),
         };
       }),
     },

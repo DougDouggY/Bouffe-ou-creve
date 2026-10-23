@@ -97,6 +97,7 @@ export class Room {
       phase: "lobby",
       count: 24,
       mapId: "cantine",
+      chat: [],
       members: [],
       host: null,
       revision: 0,
@@ -171,6 +172,7 @@ export class Room {
       phase: d.phase,
       count: d.count,
       mapId: d.mapId || "cantine",
+      chat: d.chat || [],
       canRematch: this.canRematch(),
       rematchVotes: d.members.filter((m) => m.rematch).length,
       aiCount: d.count - d.members.length,
@@ -201,7 +203,30 @@ export class Room {
     if (!message || message.version !== SIMULATION_VERSION)
       fail("VERSION", "Recharge le jeu pour utiliser la même version.");
     const d = this.data;
-    if (message.type === "appearance") {
+    if (message.type === "chat") {
+      if (typeof message.text !== "string") fail("CHAT", "Message invalide.");
+      const text = message.text
+        .normalize("NFC")
+        .replace(/[\p{Cc}\p{Cf}]/gu, " ")
+        .replace(/\s+/gu, " ")
+        .trim();
+      if (!text || Array.from(text).length > 200)
+        fail("CHAT", "Ton message doit contenir entre 1 et 200 caractères.");
+      if (
+        member.lastChatAt !== undefined &&
+        this.now() - member.lastChatAt < 1000
+      )
+        fail("CHAT_RATE", "Attends une seconde entre deux messages.");
+      member.lastChatAt = this.now();
+      (d.chat ||= []).push({
+        id: crypto.randomUUID(),
+        memberId: member.id,
+        name: member.name,
+        text,
+        at: this.now(),
+      });
+      d.chat = d.chat.slice(-40);
+    } else if (message.type === "appearance") {
       if (d.phase !== "lobby")
         fail(
           "APPEARANCE_LOCKED",
