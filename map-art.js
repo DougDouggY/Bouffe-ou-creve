@@ -1,3 +1,4 @@
+import { survivalLayout } from "./survival.js?v=hunger-18";
 import { shaft, secretSprite } from "./secret-modes.js?v=arena-17";
 export const ILLUSTRATED_MAPS = [
   "survival",
@@ -57,18 +58,33 @@ export function drawMapArt(context, game) {
     let pattern = survivalPatterns.get(game);
     if (!pattern) {
       pattern = context.createPattern(image, "repeat");
-      pattern.setTransform(
-        new DOMMatrix().scale(Math.min(game.w, game.h) / 18000),
-      );
+      pattern.setTransform(new DOMMatrix().scale(0.5));
       survivalPatterns.set(game, pattern);
     }
     context.fillStyle = pattern;
     context.fillRect(0, 0, game.w, game.h);
     context.fillStyle = "rgba(43,58,34,.20)";
     context.fillRect(0, 0, game.w, game.h);
+    const layout = survivalLayout(game.w, game.h),
+      outer = layout.foodRadii[2] + 65 * layout.unit;
+    const clearing = context.createRadialGradient(
+      layout.x,
+      layout.y,
+      0,
+      layout.x,
+      layout.y,
+      outer,
+    );
+    clearing.addColorStop(0, "rgba(154,123,67,.05)");
+    clearing.addColorStop(0.56, "rgba(154,123,67,.05)");
+    clearing.addColorStop(0.64, "rgba(154,123,67,.24)");
+    clearing.addColorStop(0.94, "rgba(154,123,67,.24)");
+    clearing.addColorStop(1, "rgba(154,123,67,0)");
+    context.fillStyle = clearing;
+    context.fillRect(layout.x - outer, layout.y - outer, outer * 2, outer * 2);
     for (const o of game.obstacles) {
-      if (o.scenery === "cornucopia")
-        secretSprite(context, "cornucopia", o.artX, o.artY, o.artW, o.artH);
+      if (o.scenery === "cornucopia-circle")
+        secretSprite(context, "cornucopia-circle", o.x, o.y, o.artW, o.artH);
       else if (o.scenery === "forest-grove")
         secretSprite(
           context,

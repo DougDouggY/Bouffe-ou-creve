@@ -146,7 +146,7 @@ export function createRestaurantMenu(catalog, onSelect) {
               : "LE FESTIN DU JOUR";
       const figure = item.page.querySelector("figure");
       figure.replaceChildren();
-      const url = `./assets/previews/${selected}.webp?v=filmovore-15`;
+      const url = `./assets/previews/${selected}.webp?v=hunger-18`;
       const img = new Image();
       img.className = "map-preview";
       img.alt = `Aperçu de ${map.name}`;

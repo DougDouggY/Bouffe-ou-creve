@@ -1,14 +1,26 @@
-import { survivalWaypoint } from "./survival-navigation.js?v=arena-17";
+import { survivalWaypoint } from "./survival-navigation.js?v=hunger-18";
 // Secret FILMOVORE survival mode. Its finite food supply never calls Game.addFood.
+export function survivalLayout(w, h) {
+  const unit = Math.min(1, Math.min(w, h) / 9000);
+  return {
+    unit,
+    x: w / 2,
+    y: h / 2,
+    coreRadius: 420 * unit,
+    foodRadii: [620, 740, 860].map((r) => r * unit),
+    spawnRadius: 2500 * unit,
+  };
+}
 export function survivalStart(w, h, index, count) {
   const a = -Math.PI / 2 + (index * Math.PI * 2) / count,
-    r = Math.min(w, h) * (2500 / 9000);
+    r = survivalLayout(w, h).spawnRadius;
   return { x: w / 2 + Math.cos(a) * r, y: h / 2 + Math.sin(a) * r };
 }
 export function survivalObstacles(w, h) {
-  const u = Math.min(w, h) / 9000,
-    cx = w / 2,
-    cy = h / 2;
+  const layout = survivalLayout(w, h),
+    u = layout.unit,
+    cx = layout.x,
+    cy = layout.y;
   const block = (dx, dy, bw, bh, angle = 0, extra = {}) => ({
     x: cx + dx * u,
     y: cy + dy * u,
@@ -18,21 +30,21 @@ export function survivalObstacles(w, h) {
     ...extra,
   });
   const objects = [
-    block(0, 100, 500, 280, 0, {
-      scenery: "cornucopia",
-      artX: cx,
-      artY: cy,
-      artW: 760 * u,
-      artH: 720 * u,
-    }),
-    block(-285, -65, 130, 570, -0.12, { sceneryPart: true }),
-    block(285, -65, 130, 570, 0.12, { sceneryPart: true }),
-    block(0, -255, 450, 75, 0, { sceneryPart: true }),
+    {
+      x: cx,
+      y: cy,
+      r: layout.coreRadius,
+      angle: 0,
+      scenery: "cornucopia-circle",
+      artW: layout.coreRadius * 2,
+      artH: layout.coreRadius * 2,
+    },
   ];
   for (let ring = 0; ring < 2; ring++)
     for (let i = 0; i < (ring ? 16 : 12); i++) {
       const a = (i * Math.PI * 2) / (ring ? 16 : 12) + ring * 0.14,
-        r = (ring ? 4200 : 3150) + Math.sin(i * 2.3) * 110;
+        r =
+          (ring ? (Math.min(w, h) * 0.43) / u : 3150) + Math.sin(i * 2.3) * 110;
       objects.push(
         block(
           Math.cos(a) * r,
@@ -85,12 +97,12 @@ export class SurvivalRules {
       "small",
       "small",
     ];
-    const unit = Math.min(g.w, g.h) / 9000;
+    const layout = survivalLayout(g.w, g.h);
     // Three complete accessible food rings, outside the central sculpture.
     for (let ring = 0; ring < 3; ring++)
       for (let i = 0; i < 32; i++) {
         const angle = -Math.PI / 2 + (i * Math.PI) / 16,
-          r = (1900 + ring * 120) * unit;
+          r = layout.foodRadii[ring];
         const point = {
           x: g.w / 2 + Math.cos(angle) * r,
           y: g.h / 2 + Math.sin(angle) * r,
@@ -99,6 +111,7 @@ export class SurvivalRules {
           g.food.push({
             ...point,
             type: "burger",
+            initialFeast: true,
             size: types[(i + ring * 4) % types.length],
           });
       }
@@ -193,7 +206,8 @@ export class SurvivalRules {
     const food = g.food
       .filter(
         (f) =>
-          dist(p, f) < (g.round <= 2 ? 1000 : 650) && dist(f, z) < z.r - 45,
+          dist(p, f) < (f.initialFeast && g.round <= 5 ? 3000 : 650) &&
+          dist(f, z) < z.r - 45,
       )
       .sort((a, b) => dist(p, a) - dist(p, b));
     let target;
@@ -230,7 +244,10 @@ export class SurvivalRules {
       person.intent = "search";
     }
     if (g.obstacles.some((o) => this.api.intersects(target, radius + 8, o)))
-      target = { x: z.x, y: z.y + Math.min(z.r * 0.55, g.h * 0.1) };
+      target = {
+        x: z.x,
+        y: z.y + survivalLayout(g.w, g.h).coreRadius + radius + 30,
+      };
     const waypoint = survivalWaypoint(g, p, target, radius + 8),
       base = Math.atan2(waypoint.y - p.y, waypoint.x - p.x);
     let best = { score: -Infinity, x: 0, y: 0 };
@@ -291,6 +308,41 @@ export function drawSurvivalFloor(ctx, g, time) {
     zone.x,
     zone.y - zone.r + 40,
   );
+  const player = g.people[0];
+  if (player?.alive && g.food.some((f) => f.initialFeast)) {
+    const p = player.body.position,
+      foods = g.food
+        .filter((f) => f.initialFeast)
+        .sort((a, b) => dist(p, a) - dist(p, b));
+    if (foods[0] && dist(p, foods[0]) > 550) {
+      const a = Math.atan2(foods[0].y - p.y, foods[0].x - p.x),
+        r = player.body.circleRadius + 85;
+      ctx.save();
+      ctx.translate(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+      ctx.rotate(a);
+      ctx.strokeStyle = "#f2cd83";
+      ctx.fillStyle = "#f2cd83";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-25, 0);
+      ctx.lineTo(17, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(25, 0);
+      ctx.lineTo(10, -8);
+      ctx.lineTo(10, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.font = "bold 13px sans-serif";
+      ctx.fillStyle = "#ffe4aa";
+      ctx.fillText(
+        "FESTIN",
+        p.x + Math.cos(a) * (r + 40),
+        p.y + Math.sin(a) * (r + 40) + 5,
+      );
+    }
+  }
   for (const d of rules.drops) {
     const t = Math.min(1, (rules.clock - d.at) / 2600),
       bob = Math.sin(time * 0.005) * 3;

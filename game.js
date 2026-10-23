@@ -3,7 +3,7 @@ import {
   drawSurvivalFloor,
   survivalStart,
   survivalObstacles,
-} from "./survival.js?v=arena-17";
+} from "./survival.js?v=hunger-18";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
   SecretRules,
@@ -30,12 +30,12 @@ import {
   arenaSize,
   arenaBorderBodies,
   drawArenaBorders,
-} from "./arena-bounds.js?v=arena-17";
+} from "./arena-bounds.js?v=hunger-18";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=burger-16";
+} from "./restaurant-menu.js?v=hunger-18";
 import { ArenaMechanics } from "./arena-mechanics.js?v=filmovore-15";
 import {
   drawArenaFloor,
@@ -48,7 +48,7 @@ import {
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=filmovore-15";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-17";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=hunger-18";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
@@ -1136,7 +1136,7 @@ for (const [id, mode] of Object.entries(SECRET_GAME_MODES))
         : id === "cannibal"
           ? "Les victimes sont des adultes fictifs de 40 kg. Elles préparent de courtes fuites avant les propulsions simultanées, paniquent et trébuchent parfois. Les gourmands peuvent toujours se dévorer. Dernier survivant : même règle que le Classique."
           : id === "survival"
-            ? "24 gourmands à 60 kg, un festin initial limité et une forêt à explorer. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
+            ? "24 gourmands à 60 kg sur un cercle de départ. Le monument circulaire central est infranchissable ; les burgers sont accessibles en anneau autour. Suis la flèche du festin pour le rejoindre, puis explore la grande forêt. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
             : "Une grande rue, des camions de glaces vus du dessus et une course-poursuite de comédie horrifique. Capture les enfants pour grossir, évite les camions plus imposants et reste le dernier gourmand en piste.",
   };
 CA.royal = {
@@ -9472,8 +9472,8 @@ class zt {
         i.r
           ? yA.circle(i.x, i.y, i.r, {
               isStatic: !0,
-              restitution: 1.5,
-              label: "bumper",
+              restitution: i.scenery === "cornucopia-circle" ? 0.3 : 1.5,
+              label: i.scenery === "cornucopia-circle" ? "obstacle" : "bumper",
             })
           : i.vertices
             ? yA.fromVertices(i.x, i.y, [i.vertices], {

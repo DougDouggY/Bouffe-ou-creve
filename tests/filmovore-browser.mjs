@@ -60,8 +60,9 @@ try {
     const { Game, Body, World, Engine, overlaps } = window.__arenaTest;
     const { shaft, overShaft } =
       await import("/secret-modes.js?v=filmovore-15");
-    const { survivalZone } = await import("/survival.js?v=filmovore-15");
-    const { clearRoute } = await import("/survival-navigation.js?v=arena-17");
+    const { survivalZone } = await import("/survival.js?v=hunger-18");
+    const { clearRoute, survivalWaypoint } =
+      await import("/survival-navigation.js?v=hunger-18");
     const result = [];
     const check = (name, ok, data) => {
       if (!ok) throw Error(name + ": " + JSON.stringify(data));
@@ -184,7 +185,7 @@ try {
       g.destroy();
     }
     {
-      const g = new Game(12000, 9000, seeded(17), {
+      const g = new Game(18000, 13500, seeded(17), {
         mode: "survival",
         mapId: "survival",
         count: 24,
@@ -196,7 +197,7 @@ try {
       check(
         "large arena, spaced ring and final original size",
         separation > 650 &&
-          survivalZone(g, 1).r === 3960 &&
+          survivalZone(g, 1).r === 5940 &&
           survivalZone(g, 60).r === 990,
         {
           separation,
@@ -210,23 +211,63 @@ try {
           g.food.some(
             (f) =>
               Math.hypot(f.x - p.body.position.x, f.y - p.body.position.y) <
-                650 && clearRoute(p.body.position, f, g.obstacles, 30),
+                1800 && clearRoute(p.body.position, f, g.obstacles, 30),
           ),
         ),
       );
       g.plan = () => ({ x: 0, y: 0 });
-      g.launch({ x: 0, y: 17 });
-      for (let i = 0; i < 120 && g.phase === "moving"; i++) g.step();
+      for (let shot = 0; shot < 3 && g.people[0].mass === 60; shot++) {
+        g.launch({ x: 0, y: 17 });
+        for (let i = 0; i < 240 && g.phase === "moving"; i++) g.step();
+      }
       check(
-        "real first shot reaches and eats central ring food",
+        "real approach from spawn reaches and eats the central feast",
         g.people[0].mass > 60,
         { mass: g.people[0].mass, remaining: g.food.length },
+      );
+      const core = g.obstacles.find((o) => o.scenery === "cornucopia-circle"),
+        p = g.people[0];
+      check(
+        "central decoration is one closed circular body",
+        core.r === 420 &&
+          g.obstacleBodies[g.obstacles.indexOf(core)].circleRadius === 420,
+      );
+      const start = { x: core.x - 800, y: core.y },
+        target = { x: core.x + 800, y: core.y };
+      check(
+        "circle blocks straight navigation",
+        !clearRoute(start, target, [core], 19),
+      );
+      const around = survivalWaypoint(g, start, target, 19);
+      check(
+        "AI finds a clear route around the circular monument",
+        Math.abs(around.y - core.y) > 10 &&
+          clearRoute(start, around, g.obstacles, 21),
+        around,
+      );
+      g.food = [];
+      g.phase = "aim";
+      g.resize(p, 60);
+      Body.setPosition(p.body, { x: core.x - 650, y: core.y });
+      g.launch({ x: 17, y: 0 });
+      let nearest = Infinity;
+      for (let i = 0; i < 100 && g.phase === "moving"; i++) {
+        g.step();
+        nearest = Math.min(
+          nearest,
+          Math.hypot(p.body.position.x - core.x, p.body.position.y - core.y),
+        );
+      }
+      check(
+        "real physics never enters the central disk",
+        nearest > core.r + p.body.circleRadius - 7,
+        { nearest, radius: core.r },
       );
       g.destroy();
     }
     for (const seed of [17, 71, 190]) {
       const started = performance.now(),
-        g = new Game(12000, 9000, seeded(seed), {
+        g = new Game(18000, 13500, seeded(seed), {
           mode: "survival",
           mapId: "survival",
           count: 24,

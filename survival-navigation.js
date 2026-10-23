@@ -2,6 +2,20 @@
 const caches = new WeakMap();
 export function clearRoute(a, b, obstacles, radius = 0) {
   return !obstacles.some((o) => {
+    if (o.r) {
+      const dx = b.x - a.x,
+        dy = b.y - a.y,
+        length = dx * dx + dy * dy;
+      const t = length
+        ? Math.max(
+            0,
+            Math.min(1, ((o.x - a.x) * dx + (o.y - a.y) * dy) / length),
+          )
+        : 0;
+      return (
+        Math.hypot(a.x + dx * t - o.x, a.y + dy * t - o.y) < o.r + radius - 1e-6
+      );
+    }
     const c = Math.cos(o.angle || 0),
       s = Math.sin(o.angle || 0),
       dx = b.x - a.x,
@@ -35,6 +49,24 @@ export function survivalWaypoint(g, from, target, radius) {
   if (!graph) {
     const nodes = [];
     for (const o of g.obstacles.filter((o) => !o.boundary)) {
+      if (o.r) {
+        const count = 20,
+          r = (o.r + bucket + 16) / Math.cos(Math.PI / count);
+        for (let i = 0; i < count; i++) {
+          const a = (i * Math.PI * 2) / count,
+            p = { x: o.x + Math.cos(a) * r, y: o.y + Math.sin(a) * r };
+          if (
+            clearRoute(
+              p,
+              { x: p.x + 0.001, y: p.y + 0.001 },
+              g.obstacles,
+              bucket,
+            )
+          )
+            nodes.push(p);
+        }
+        continue;
+      }
       const c = Math.cos(o.angle || 0),
         s = Math.sin(o.angle || 0);
       for (const sx of [-1, 1])

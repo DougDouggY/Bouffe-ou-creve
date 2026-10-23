@@ -75,8 +75,11 @@ try {
   for (const id of ids) {
     const data = await page.evaluate(async (id) => {
       const { Game, renderFloor, catalog } = window.__gameTest;
-      const game = new Game(2400, 1800, Math.random, {
+      const size =
+        id === "survival" ? { w: 18000, h: 13500 } : { w: 2400, h: 1800 };
+      const game = new Game(size.w, size.h, Math.random, {
         mapId: id,
+        count: id === "survival" ? 24 : undefined,
         chef: true,
         mode: ["platform", "cannibal", "icecream", "survival"].includes(id)
           ? id
@@ -88,10 +91,30 @@ try {
       canvas.width = 960;
       canvas.height = 720;
       const ctx = canvas.getContext("2d");
-      ctx.scale(0.4, 0.4);
+      ctx.scale(960 / size.w, 720 / size.h);
       for (let i = 0; i < 4; i++) {
         renderFloor(ctx, game, catalog[id], 0);
         await new Promise((r) => setTimeout(r, 140));
+      }
+      if (id === "survival") {
+        for (const f of game.food) {
+          ctx.fillStyle = f.size === "chef" ? "#ffe073" : "#dcab39";
+          ctx.strokeStyle = "#34270d";
+          ctx.lineWidth = 12;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.size === "chef" ? 30 : 21, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        for (const p of game.people) {
+          ctx.fillStyle = "#e3c9e7";
+          ctx.strokeStyle = "#4d314e";
+          ctx.lineWidth = 15;
+          ctx.beginPath();
+          ctx.arc(p.body.position.x, p.body.position.y, 45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
       }
       if (id === "nightmarket") {
         ctx.fillStyle = "rgba(5,10,24,.62)";

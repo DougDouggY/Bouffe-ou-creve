@@ -1,6 +1,6 @@
 // One layout drives physical walls, safe spawning and the visible rails / room edges.
 export function arenaSize(mode, mapId) {
-  if (mode === "survival") return { w: 12000, h: 9000 };
+  if (mode === "survival") return { w: 18000, h: 13500 };
   if (mode === "classic" && mapId !== "volcan") return { w: 2400, h: 1800 };
   if (mode === "platform") return { w: 1600, h: 1200 };
   if (mode === "cannibal") return { w: 2000, h: 1500 };

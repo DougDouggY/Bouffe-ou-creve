@@ -26,11 +26,11 @@ Les déplacements mesurés comprennent le choc et sa décélération, pas une t�
 
 ## Hunger Games secret — 24 gourmands
 
-| Graine | Survivants après les tirs 1 / 2 / 3 | Tour final | Parachutages                        | Résolution physique simulée | Temps CPU | Issue       |
-| ------ | ----------------------------------- | ---------: | ----------------------------------- | --------------------------: | --------: | ----------- |
-| 17     | 24 / 23 / 22                        |         49 | Tours 5, 13, 25, 29, 33, 37, 45, 49 |                       128 s |   3122 ms | 1 survivant |
-| 71     | 24 / 23 / 22                        |         38 | Tours 5, 9, 13, 17, 21, 25, 37      |                       101 s |   2775 ms | 1 survivant |
-| 190    | 24 / 23 / 22                        |         32 | Tours 5, 9, 13, 17, 25, 29          |                        87 s |   2642 ms | 1 survivant |
+| Graine | Survivants après les tirs 1 / 2 / 3 | Tour final | Parachutages                                               | Résolution physique simulée | Temps CPU | Issue       |
+| ------ | ----------------------------------- | ---------: | ---------------------------------------------------------- | --------------------------: | --------: | ----------- |
+| 17     | 24 / 24 / 24                        |         64 | Tours 5, 9, 13, 17, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61 |                       162 s |   3427 ms | 1 survivant |
+| 71     | 24 / 24 / 24                        |         57 | Tours 5, 13, 17, 21, 25, 29, 33, 41, 49, 53                |                       141 s |   2722 ms | 1 survivant |
+| 190    | 24 / 24 / 24                        |         39 | Tours 5, 9, 17, 21, 25, 29, 33, 37                         |                       100 s |   2564 ms | 1 survivant |
 
 Chaque partie commence avec 96 aliments accessibles en trois anneaux, puis le moteur refuse `addFood`. Les baisses de stock, les colis et les effectifs sont enregistrés à chaque tour. Les contrôles retrouvent des comportements de recherche de nourriture, chasse, fuite, recherche de territoire et repli dans la zone. Des approches de colis sont également observées selon les parties. Aucun tir futur du joueur n’est accessible aux IA.
 
@@ -50,12 +50,20 @@ La dissimulation sous les arbres n’est pas ajoutée. Le rot reste synthétique
 
 ## Retours du joueur — grande arène et fluidité
 
-Hunger Games utilise désormais un monde de 12 000 × 9 000, avec rayon de départ des gourmands de 2 500 (espacement voisin mesuré : 652,63) et 96 aliments sur trois anneaux de rayons 1 900 / 2 020 / 2 140. Chaque gourmand a une route directe sans obstacle vers le festin. Un vrai tir du joueur attrape les trois aliments en face de lui : poids de 60 à 235 kg, stock de 96 à 93.
+Hunger Games utilise désormais un monde de 18 000 × 13 500, avec rayon de départ des gourmands de 2 500 (espacement voisin mesuré : 652,63) et 96 aliments sur trois anneaux de rayons 620 / 740 / 860. Chaque gourmand a une route directe sans obstacle vers le festin. Une approche de trois tirs du joueur attrape les trois aliments en face de lui : poids de 60 à 235 kg, stock de 96 à 93.
 
-Le cercle sûr part d’un rayon de 3 960 et termine à 990, sans réduction supplémentaire : le duel final conserve la taille de l’ancienne zone initiale. Les trois parties complètes ci-dessus terminent avec un vainqueur. Le sol, les groupes d’arbres et la structure centrale sont rendus séparément pour préserver leur détail et éviter d’étirer un fond sur toute la nouvelle étendue.
+Le cercle sûr part d’un rayon de 5 940 et termine à 990, sans réduction supplémentaire : le duel final conserve la taille de l’ancienne zone initiale. Les trois parties complètes ci-dessus terminent avec un vainqueur. Le sol, les groupes d’arbres et la structure centrale sont rendus séparément pour préserver leur détail et éviter d’étirer un fond sur toute la nouvelle étendue.
 
 La Plateforme réutilise son décor rasterisé : une image par rendu, au lieu de recalculer neuf morceaux. Pendant un mouvement, un seul duel hors écran avance ; la visée et le tableau permettent le rattrapage, sous budget. Les sous-pas physiques restent bornés à 8,34 ms.
 
 Mesure comparative `node tests/platform-performance.mjs`, 1 800 pas dans le même Chromium, graine 17 : temps de calcul cumulé de 252,6 à 179,5 ms ; 95e percentile de 0,4 à 0,2 ms ; maximum de 10,3 à 9,2 ms. Aucun dépassement de 16 ms dans ces mesures. Ce sont des durées de calcul dans cet environnement, sans simulation d’un téléphone ni mesure de rendu GPU : elles ne permettent pas de promettre l’absence de ralentissements sur tous les appareils.
 
 Le Marchand emploie maintenant un camion de glaces décoré sur le toit et vu verticalement ; sa coque et sa rotation sont conservées. Les captures ordinateur et mobile vérifient le nouveau visuel.
+
+## Disposition suivant le schéma du joueur
+
+Le décor central est désormais un disque circulaire plein de rayon 420, avec sa propre illustration vue du dessus. Ses anciennes parois rectangulaires et ses fausses ouvertures sont retirées. Les 96 aliments sont disposés sur les trois anneaux de rayons 620 / 740 / 860 ; les 24 départs restent sur le cercle de rayon 2 500. La surface initiale agrandie laisse beaucoup de terrain au-delà des départs.
+
+La navigation traite ce décor comme un vrai cercle : une ligne passant par son centre est refusée, et le graphe trouve un contournement sans collision. Dans le test de propulsion contre le monument, la plus courte distance du centre du gourmand au centre du décor est de 435,65, pour un monument de rayon 420 et un gourmand de rayon 19 : le corps ne traverse pas le disque. Les bumpers du jeu normal ne sont pas modifiés ; le disque n’est pas un bumper.
+
+Le festin est plus éloigné des départs pour suivre le schéma : il s’atteint après l’approche, et non en une seule propulsion. Une petite indication « FESTIN » pointe vers les aliments initiaux lorsqu’ils sont hors de vue. La miniature est générée aux vraies dimensions du niveau, avec les aliments et départs repérés à leurs positions réelles.
