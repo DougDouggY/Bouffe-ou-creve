@@ -15,7 +15,7 @@ Options → La face cachée du burger → mot de passe **Pologne**. Le retour au
 
 Le dressing ne s’ouvre pas depuis l’univers caché. Les illustrations originales du burger normal et des trophées classiques sont conservées ; les nouvelles illustrations sont des fichiers séparés dans `assets/secrets/`.
 
-La génération d’images, bloquée lors de la première tentative, a fonctionné à la reprise du 23 octobre 2026. Le burger secret conserve les silhouettes des six aliments et utilise ses propres textures d’interaction. Les personnages autour deviennent démoniaques ; les masques alpha et les contrôles clavier / tactiles restent ceux du menu existant.
+La génération d’images, bloquée lors de la première tentative, a fonctionné à la reprise du 23 octobre 2026. Le burger secret conserve les silhouettes des six aliments et utilise ses propres textures d’interaction. Les personnages autour sont des convives humains vicieux, dans un décor gris-bleu plus sobre ; les masques alpha et les contrôles clavier / tactiles restent ceux du menu existant. Le burger sanglant approuvé est recomposé avec ses pixels originaux à travers ces masques, sur le nouveau décor : ses aliments restent identiques. Les compteurs utilisent la même petite police sous tous les titres ; FILMOVORE affiche « 16 ou 24 gourmands ».
 
 ## La Plateforme
 

@@ -151,13 +151,39 @@ export async function setupBurgerMenu() {
     }),
   );
   svg.prepend(defs);
-  const secretIllustration = await loadImage(
-    new URL("./assets/secrets/burger-bloody.webp", import.meta.url).href,
-  );
+  const [secretBurger, secretBackdrop] = await Promise.all([
+    loadImage(
+      new URL("./assets/secrets/burger-bloody.webp", import.meta.url).href,
+    ),
+    loadImage(
+      new URL("./assets/secrets/burger-sober-backdrop.webp", import.meta.url)
+        .href,
+    ),
+  ]);
+  // Keep the approved ingredient pixels intact while changing only their surroundings.
+  const secretIllustration = document.createElement("canvas");
+  secretIllustration.width = WIDTH;
+  secretIllustration.height = HEIGHT;
+  const scene = secretIllustration.getContext("2d");
+  scene.drawImage(secretBackdrop, 0, 0, WIDTH, HEIGHT);
+  const ingredientMask = document.createElement("canvas");
+  ingredientMask.width = WIDTH;
+  ingredientMask.height = HEIGHT;
+  const maskContext = ingredientMask.getContext("2d");
+  for (const layer of layers) maskContext.drawImage(layer.image, 0, 0);
+  const approvedFood = document.createElement("canvas");
+  approvedFood.width = WIDTH;
+  approvedFood.height = HEIGHT;
+  const foodContext = approvedFood.getContext("2d");
+  foodContext.drawImage(secretBurger, 0, 0, WIDTH, HEIGHT);
+  foodContext.globalCompositeOperation = "destination-in";
+  foodContext.drawImage(ingredientMask, 0, 0);
+  scene.drawImage(approvedFood, 0, 0);
+  const secretBackground = secretIllustration.toDataURL();
   function applyTheme() {
     const secret = document.body.classList.contains("shadow-realm");
     document.querySelector("#title-screen").style.backgroundImage =
-      `url("${secret ? secretIllustration.src : illustration.src}")`;
+      `url("${secret ? secretBackground : illustration.src}")`;
     for (const layer of layers) {
       const canvas = document.createElement("canvas");
       canvas.width = WIDTH;

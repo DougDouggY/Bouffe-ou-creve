@@ -30,7 +30,7 @@ import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=filmovore-15";
+} from "./restaurant-menu.js?v=burger-16";
 import { ArenaMechanics } from "./arena-mechanics.js?v=filmovore-15";
 import {
   drawArenaFloor,
@@ -54,7 +54,7 @@ import {
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=filmovore-15";
+import { setupBurgerMenu } from "./burger-menu.js?v=burger-16";
 import { createGameAudio } from "./audio.js?v=filmovore-15";
 import { setupMusicControls } from "./music.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";

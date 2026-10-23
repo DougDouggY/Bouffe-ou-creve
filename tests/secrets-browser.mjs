@@ -404,7 +404,7 @@ try {
       await page
         .locator("#title-screen")
         .evaluate((node) => node.style.backgroundImage)
-    ).includes("secrets/burger-bloody.webp"),
+    ).startsWith('url("data:image/png;base64,'),
   );
   await page.screenshot({
     path: path.join(root, "test-results", "face-cachee-burger.png"),

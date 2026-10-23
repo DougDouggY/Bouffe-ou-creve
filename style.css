@@ -1726,7 +1726,7 @@ svg.burger-menu {
   stroke-width: 3px;
   letter-spacing: 1px;
 }
-#menu-shop text {
+#menu-shop text:not(.ingredient-subtitle) {
   font-size: 37px;
 }
 #pirate-direction {
@@ -1748,7 +1748,7 @@ svg.burger-menu {
   .ingredient-button text.ingredient-subtitle {
     font-size: 19px;
   }
-  #menu-shop text {
+  #menu-shop text:not(.ingredient-subtitle) {
     font-size: 35px;
   }
   #pirate-direction {
@@ -1790,7 +1790,7 @@ svg.burger-menu {
   font-size: 21px;
   letter-spacing: 4px;
 }
-#menu-shop text {
+#menu-shop text:not(.ingredient-subtitle) {
   font-size: 34px;
 }
 #trophies-dialog {
@@ -3092,7 +3092,7 @@ body.shadow-realm .ingredient-button text {
   stroke: #35131b;
   stroke-width: 3px;
 }
-body.shadow-realm #menu-shop text {
+body.shadow-realm #menu-shop text:not(.ingredient-subtitle) {
   font-size: 39px;
 }
 body.shadow-realm #mode-unlock-note {

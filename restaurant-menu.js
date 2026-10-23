@@ -202,6 +202,7 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
   );
   const steakText = slots[3].querySelector("text");
   subtitle.setAttribute("class", "ingredient-subtitle");
+  subtitle.setAttribute("text-anchor", "middle");
   subtitle.setAttribute("x", steakText.getAttribute("x"));
   subtitle.setAttribute("y", String(Number(steakText.getAttribute("y")) + 28));
   slots[3].append(subtitle);
@@ -217,12 +218,7 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
       ? ["SOMALIE", "FILMOVORE", "LE FESTIN CANNIBALE", "LE MARCHAND DE GLACES"]
       : ["ÉTATS-UNIS", "CLASSIQUE", "GRAND BANQUET", "LE DRESSING DU GLOUTON"];
     const counts = secret
-      ? [
-          "50 gourmands",
-          "2 jeux · 16 / 24 gourmands",
-          "16 gourmands",
-          "16 gourmands",
-        ]
+      ? ["50 gourmands", "16 ou 24 gourmands", "16 gourmands", "16 gourmands"]
       : ["50 gourmands", "8 gourmands", "24 gourmands", "DU GLOUTON"];
     subtitle.style.display = secret ? "" : "none";
     slots.forEach((slot, i) => {
