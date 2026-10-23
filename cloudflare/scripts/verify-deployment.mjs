@@ -214,6 +214,8 @@ export async function verifyDeployment(
     console.log(
       "OK : salon SQLite, deux invités et deux WebSockets authentifiés.",
     );
+    a.send({ type: "map", mapId: "cold" });
+    await b.wait((p) => p.type === "room" && p.room.mapId === "cold");
     a.send({ type: "ready", ready: true });
     b.send({ type: "ready", ready: true });
     await a.wait(
@@ -227,6 +229,7 @@ export async function verifyDeployment(
     const startB = (await b.wait((p) => p.type === "state")).state;
     assert.deepEqual(startA, startB);
     assert.equal(startA.people.length, 24);
+    assert.equal(startA.mapId, "cold");
     for (const [ticket, name, cosmetics] of [
       [first, "Test déploiement A", { hat: "chef", outfit: "cook" }],
       [

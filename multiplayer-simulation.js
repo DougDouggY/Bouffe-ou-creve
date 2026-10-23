@@ -1,3 +1,5 @@
+import { validMultiplayerMap } from "./multiplayer-maps.js?v=lobby-26";
+import { arenaSize } from "./arena-bounds.js?v=filmovore-15";
 import { normalizeCosmetics } from "./cosmetic-catalog.js?v=identity-22";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
@@ -5,6 +7,7 @@ import {
   eA as Body,
   XA as World,
   he as Engine,
+  yA as Bodies,
 } from "./simulation-core.js?v=multi-20";
 
 export const SIMULATION_VERSION = "multi-20";
@@ -24,19 +27,17 @@ export function seededRandom(seed) {
   return random;
 }
 const clone = (value) => JSON.parse(JSON.stringify(value));
-export function createSimulation(count, seed, humans) {
+export function createSimulation(count, seed, humans, mapId = "cantine") {
   if (![8, 24, 50].includes(count)) throw new Error("Unsupported size");
+  if (!validMultiplayerMap(mapId)) throw new Error("Unsupported map");
+  const mode = count === 8 ? "classic" : count === 24 ? "gros" : "usa";
+  const size = arenaSize(mode, mapId);
   const random = seededRandom(seed);
-  const game = new Game(
-    count === 8 ? 2400 : 3600,
-    count === 8 ? 1800 : 2700,
-    random,
-    {
-      mode: count === 8 ? "classic" : count === 24 ? "gros" : "usa",
-      mapId: "cantine",
-      count,
-    },
-  );
+  const game = new Game(size.w, size.h, random, {
+    mode,
+    mapId,
+    count,
+  });
   game.spectate = true;
   // This is an online last-survivor match, including after seat zero dies.
   game.checkTruce = () => false;
@@ -71,16 +72,29 @@ export function snapshot(game) {
         angle: body.angle,
       };
     }),
+    obstacles: game.obstacles,
     food: game.food,
     zones: game.zones,
     effects: game.effects,
     announcement: game.announcement,
     mechanics: {
-      items: game.mechanics.items,
-      trails: game.mechanics.trails,
-      pulses: game.mechanics.pulses,
-      clock: game.mechanics.clock,
-      lastGlobalRollRound: game.mechanics.lastGlobalRollRound,
+      ...Object.fromEntries(
+        Object.entries(game.mechanics).filter(
+          ([key]) =>
+            !["game", "api", "actors", "bumperImpulses", "waveHit"].includes(
+              key,
+            ),
+        ),
+      ),
+      actors: game.mechanics.actors.map(({ body, ...actor }) => ({
+        ...actor,
+        body: {
+          position: { ...body.position },
+          velocity: { ...body.velocity },
+          angle: body.angle,
+          angularVelocity: body.angularVelocity,
+        },
+      })),
     },
   };
 }
@@ -93,7 +107,12 @@ export function checkpoint(game) {
   });
 }
 export function restoreSimulation(saved, seed, humans) {
-  const game = createSimulation(saved.state.count, seed, humans);
+  const game = createSimulation(
+    saved.state.count,
+    seed,
+    humans,
+    saved.state.mapId,
+  );
   const s = saved.state;
   for (const data of s.people) {
     const p = game.people[data.id];
@@ -103,6 +122,8 @@ export function restoreSimulation(saved, seed, humans) {
     Body.setPosition(p.body, { x, y });
     Body.setAngle(p.body, angle);
     Body.setVelocity(p.body, { x: vx, y: vy });
+    Object.assign(p.body.position, { x, y });
+    Object.assign(p.body.velocity, { x: vx, y: vy });
     if (!p.alive) World.remove(game.engine.world, p.body);
   }
   for (const field of [
@@ -116,7 +137,52 @@ export function restoreSimulation(saved, seed, humans) {
     "announcement",
   ])
     game[field] = clone(s[field]);
-  Object.assign(game.mechanics, clone(s.mechanics));
+  const { actors, ...mechanics } = clone(s.mechanics);
+  Object.assign(game.mechanics, mechanics);
+  if (actors)
+    actors.forEach((saved, i) => {
+      const actor = game.mechanics.actors[i];
+      if (!actor) return;
+      const { body, ...attributes } = saved;
+      if (attributes.soldier && !actor.soldier) {
+        Body.scale(actor.body, 1.8, 1.8);
+        Body.setMass(actor.body, 36);
+      }
+      Object.assign(actor, attributes);
+      Body.setPosition(actor.body, body.position);
+      Body.setAngle(actor.body, body.angle);
+      Body.setVelocity(actor.body, body.velocity);
+      Body.setAngularVelocity(actor.body, body.angularVelocity || 0);
+      Object.assign(actor.body.position, body.position);
+      Object.assign(actor.body.velocity, body.velocity);
+    });
+  if (s.obstacles) {
+    game.obstacleBodies.forEach((body) =>
+      World.remove(game.engine.world, body),
+    );
+    game.obstacles = clone(s.obstacles);
+    game.obstacleBodies = game.obstacles.map((o) =>
+      o.r
+        ? Bodies.circle(o.x, o.y, o.r, {
+            isStatic: true,
+            restitution: o.scenery === "cornucopia-circle" ? 0.3 : 1.5,
+            label: o.scenery === "cornucopia-circle" ? "obstacle" : "bumper",
+          })
+        : o.vertices
+          ? Bodies.fromVertices(o.x, o.y, [o.vertices], {
+              isStatic: true,
+              restitution: 0.83,
+              label: "crater",
+            })
+          : Bodies.rectangle(o.x, o.y, o.w, o.h, {
+              isStatic: true,
+              angle: o.angle,
+              restitution: o.bumper ? 1.5 : 0.83,
+              label: "obstacle",
+            }),
+    );
+    World.add(game.engine.world, game.obstacleBodies);
+  }
   game.random.setState(saved.randomState);
   game.spawnClock = saved.spawnClock;
   game.stats = clone(saved.stats);

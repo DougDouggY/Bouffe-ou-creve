@@ -3464,3 +3464,39 @@ body.online-playing .character-badge[data-human="true"][data-player="true"] {
   border-color: #b5ebff;
   box-shadow: 0 0 0 1px #b5ebff66;
 }
+
+#multiplayer-players {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+#multiplayer-players li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+  background: #f4e8d3;
+  border-radius: 8px;
+  font-size: 12px;
+}
+#multiplayer-players li span {
+  overflow-wrap: anywhere;
+}
+.lobby-avatar {
+  width: 64px;
+  height: 80px;
+  flex-shrink: 0;
+}
+#multiplayer-rematch-status {
+  max-width: 420px;
+  margin: 12px auto;
+  font-size: 14px;
+}
+@media (max-width: 420px) {
+  #multiplayer-players {
+    grid-template-columns: 1fr;
+  }
+}

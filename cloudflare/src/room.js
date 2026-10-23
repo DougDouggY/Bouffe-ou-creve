@@ -1,3 +1,4 @@
+import { validMultiplayerMap } from "../../multiplayer-maps.js?v=lobby-26";
 import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
 import {
   createSimulation,
@@ -95,6 +96,7 @@ export class Room {
       expiresAt: now + IDLE_MS,
       phase: "lobby",
       count: 24,
+      mapId: "cantine",
       members: [],
       host: null,
       revision: 0,
@@ -146,6 +148,7 @@ export class Room {
     member.connected = false;
     member.disconnectedAt = this.now();
     member.ready = false;
+    member.rematch = false;
     this.data.revision++;
   }
   touch() {
@@ -167,6 +170,9 @@ export class Room {
       code: d.code,
       phase: d.phase,
       count: d.count,
+      mapId: d.mapId || "cantine",
+      canRematch: this.canRematch(),
+      rematchVotes: d.members.filter((m) => m.rematch).length,
       aiCount: d.count - d.members.length,
       host: d.host,
       revision: d.revision,
@@ -176,10 +182,11 @@ export class Room {
       serverTime: this.now(),
       expiresAt: d.expiresAt,
       members: d.members.map(
-        ({ id, name, connected, ready, seat, cosmetics }) => ({
+        ({ id, name, connected, ready, seat, cosmetics, rematch }) => ({
           id,
           name,
           cosmetics: normalizeCosmetics(cosmetics),
+          rematch: rematch === true,
           connected,
           ready,
           seat,
@@ -205,6 +212,23 @@ export class Room {
         member.cosmetics = cosmetics;
         member.ready = false;
       }
+    } else if (message.type === "rematch") {
+      if (!this.canRematch())
+        fail(
+          "PHASE",
+          "Le vote est disponible à la fin de la partie ou quand tous les humains sont éliminés.",
+        );
+      member.rematch = message.vote === true;
+      this.tryRematch();
+    } else if (message.type === "map") {
+      if (d.host !== member.id || d.phase !== "lobby")
+        fail("HOST", "Seul l’hôte choisit la carte au salon.", 403);
+      if (!validMultiplayerMap(message.mapId))
+        fail("MAP", "Carte multijoueur indisponible.");
+      d.mapId = message.mapId;
+      d.members.forEach((m) => {
+        m.ready = false;
+      });
     } else if (message.type === "ready") {
       if (d.phase !== "lobby") fail("STARTED", "La partie a commencé.");
       member.ready = message.ready === true;
@@ -233,7 +257,12 @@ export class Room {
       d.members.forEach((m, i) => {
         m.seat = i;
       });
-      this.game = createSimulation(d.count, d.seed, d.members);
+      this.game = createSimulation(
+        d.count,
+        d.seed,
+        d.members,
+        d.mapId || "cantine",
+      );
       d.phase = "playing";
       d.readyAt = this.now();
       d.deadline = this.now() + TURN_MS;
@@ -265,6 +294,39 @@ export class Room {
     } else fail("MESSAGE", "Commande inconnue.");
     this.touch();
     return this.canResolve() ? this.resolve() : null;
+  }
+  canRematch() {
+    return (
+      !!this.game &&
+      (this.data.phase === "ended" ||
+        (this.data.phase === "playing" &&
+          !this.data.members.some(
+            (m) => m.seat !== null && this.game.people[m.seat]?.alive,
+          )))
+    );
+  }
+  tryRematch() {
+    const d = this.data;
+    if (
+      !this.canRematch() ||
+      !d.members.length ||
+      !d.members.every((m) => m.connected && m.rematch)
+    )
+      return;
+    this.game.destroy();
+    this.game = null;
+    this.replay = null;
+    d.phase = "lobby";
+    d.checkpoint = null;
+    d.shots = {};
+    d.readyAt = 0;
+    d.deadline = 0;
+    d.seed = crypto.getRandomValues(new Uint32Array(1))[0];
+    d.members.forEach((m) => {
+      m.seat = null;
+      m.ready = false;
+      m.rematch = false;
+    });
   }
   canResolve() {
     if (this.data.phase !== "playing" || this.now() < this.data.readyAt)
@@ -304,6 +366,7 @@ export class Room {
         this.data.members[0]?.id ||
         null;
     if (!this.data.members.length) this.data.expiresAt = this.now();
+    else this.tryRematch();
   }
   maintenance() {
     this.exists();

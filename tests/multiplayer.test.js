@@ -267,7 +267,7 @@ test("real Dressing IDs, slot validation, human seats and cosmetics survive chec
       }),
     { code: "APPEARANCE_LOCKED" },
   );
-  const restored = new Room(structuredClone(r.data));
+  const restored = new Room(structuredClone(r.data), () => 1000000);
   assert.deepEqual(snapshot(restored.game), snapshot(r.game));
   restored.leave(restored.data.members[0]);
   const again = new Room(structuredClone(restored.data));
@@ -326,4 +326,94 @@ test("cosmetics and human labels do not affect propulsion, AI or physical outcom
   }
   plain.destroy();
   dressed.destroy();
+});
+
+test("host map selection is validated, shared and restored with dynamic actors", async () => {
+  const { MULTIPLAYER_MAPS } = await import("../multiplayer-maps.js");
+  for (const map of MULTIPLAYER_MAPS) {
+    const r = new Room(),
+      a = r.create(randomCode(), "Doug", 19),
+      b = r.join("Tony");
+    r.connect(a);
+    r.connect(b);
+    assert.throws(() => r.action(b, { version, type: "map", mapId: map.id }), {
+      code: "HOST",
+    });
+    r.action(a, { version, type: "ready", ready: true });
+    r.action(a, { version, type: "map", mapId: map.id });
+    assert.equal(a.ready, false);
+    assert.equal(r.publicState().mapId, map.id);
+    for (const m of [a, b])
+      r.action(m, { version, type: "ready", ready: true });
+    r.action(a, { version, type: "start" });
+    assert.equal(r.game.mapId, map.id);
+    const replay = resolveTurn(
+      r.game,
+      new Map([
+        [0, { x: 0, y: 0 }],
+        [1, { x: 0, y: 0 }],
+      ]),
+    );
+    const restored = restoreSimulation(checkpoint(r.game), 19, r.data.members);
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(snapshot(restored))),
+      JSON.parse(JSON.stringify(snapshot(r.game))),
+      map.id + " checkpoint",
+    );
+    assert.doesNotThrow(() => JSON.stringify(replay));
+    r.game.destroy();
+    restored.destroy();
+  }
+  const r = new Room(),
+    a = r.create(randomCode(), "Doug", 19);
+  r.connect(a);
+  assert.throws(() => r.action(a, { version, type: "map", mapId: "somalia" }), {
+    code: "MAP",
+  });
+  assert.throws(() => r.action(a, { version, type: "map", mapId: "<img>" }), {
+    code: "MAP",
+  });
+});
+test("unanimous rematch retains room identities and map; votes survive checkpoint and clear on disconnect", () => {
+  const { r, a, b } = fixture(8);
+  const code = r.data.code,
+    seed = r.data.seed;
+  assert.throws(() => r.action(a, { version, type: "rematch", vote: true }), {
+    code: "PHASE",
+  });
+  for (const member of [a, b]) {
+    r.game.people[member.seat].alive = false;
+    World.remove(r.game.engine.world, r.game.people[member.seat].body);
+  }
+  assert.equal(r.publicState().canRematch, true);
+  r.action(a, { version, type: "rematch", vote: true });
+  assert.equal(r.data.phase, "playing");
+  assert.equal(r.publicState().rematchVotes, 1);
+  r.data.checkpoint = checkpoint(r.game);
+  const restored = new Room(structuredClone(r.data), () => 1000000);
+  assert.equal(restored.publicState().rematchVotes, 1);
+  restored.disconnect(restored.data.members[0]);
+  assert.equal(restored.publicState().rematchVotes, 0);
+  restored.game.destroy();
+  r.action(a, { version, type: "rematch", vote: false });
+  assert.equal(r.publicState().rematchVotes, 0);
+  r.action(a, { version, type: "rematch", vote: true });
+  r.action(b, { version, type: "rematch", vote: true });
+  assert.equal(r.data.phase, "lobby");
+  assert.equal(r.game, null);
+  assert.equal(r.data.code, code);
+  assert.notEqual(r.data.seed, seed);
+  assert.equal(r.data.checkpoint, null);
+  assert.deepEqual(
+    r.data.members.map((m) => [m.id, m.name, m.seat, m.ready, m.rematch]),
+    [
+      [a.id, "Doug", null, false, false],
+      [b.id, "Tony", null, false, false],
+    ],
+  );
+  for (const m of [a, b]) r.action(m, { version, type: "ready", ready: true });
+  r.action(a, { version, type: "start" });
+  assert.equal(r.game.round, 1);
+  assert(r.game.people.slice(0, 2).every((p) => p.alive));
+  r.game.destroy();
 });

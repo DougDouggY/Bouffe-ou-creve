@@ -1,8 +1,9 @@
+import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=lobby-26";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
 } from "./cosmetic-catalog.js?v=identity-22";
-import { decodeFrame } from "./multiplayer-protocol.js?v=multi-20";
+import { decodeFrame } from "./multiplayer-protocol.js?v=lobby-26";
 const VERSION = "multi-20";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
   ? "http://127.0.0.1:8787"
@@ -18,6 +19,8 @@ export function setupMultiplayer({
   onEvent,
   getCosmetics = () => ({ hat: "none", outfit: "plain" }),
   onRoster = () => {},
+  renderAvatar = () => {},
+  openShop = () => {},
 }) {
   let ticket = null,
     ws = null,
@@ -36,6 +39,12 @@ export function setupMultiplayer({
     healthy = false;
   const dialog = $("#multiplayer-dialog");
   const status = $("#multiplayer-status");
+  for (const map of MULTIPLAYER_MAPS) {
+    const option = document.createElement("option");
+    option.value = map.id;
+    option.textContent = map.name;
+    $("#multiplayer-map").append(option);
+  }
   const hud = $("#multiplayer-hud");
   const message = (text) => {
     status.textContent = text;
@@ -68,6 +77,19 @@ export function setupMultiplayer({
     $("#multiplayer-size").disabled =
       room?.host !== self?.id || room?.phase !== "lobby";
     $("#multiplayer-size").value = String(room?.count || 24);
+    $("#multiplayer-map").value = room?.mapId || "cantine";
+    $("#multiplayer-map").disabled =
+      room?.host !== self?.id || room?.phase !== "lobby";
+    $("#multiplayer-shop").hidden = room?.phase !== "lobby";
+    const canRematch = active && !!room?.canRematch;
+    $("#multiplayer-rematch").hidden = !canRematch;
+    $("#multiplayer-rematch-status").hidden = !canRematch;
+    $("#multiplayer-rematch").textContent = self?.rematch
+      ? "Annuler mon vote"
+      : "Voter pour rejouer";
+    $("#multiplayer-rematch-status").textContent = canRematch
+      ? `${room.rematchVotes}/${room.members.length} votes · Tous les gourmands doivent voter pour retourner au salon.`
+      : "";
     $("#multiplayer-ready").disabled =
       !self?.connected || room?.phase !== "lobby";
     $("#multiplayer-ready").textContent = self?.ready
@@ -78,7 +100,7 @@ export function setupMultiplayer({
       room?.phase !== "lobby" ||
       !room?.members.every((m) => m.connected && m.ready);
     $("#multiplayer-fill").textContent = room
-      ? `${room.members.length} humain${room.members.length > 1 ? "s" : ""} + ${room.aiCount} IA · Cantine du chaos`
+      ? `${room.members.length} humain${room.members.length > 1 ? "s" : ""} + ${room.aiCount} IA · ${MULTIPLAYER_MAPS.find((m) => m.id === room.mapId)?.name || "Cantine du chaos"}`
       : "";
     $("#multiplayer-players").replaceChildren(
       ...(room?.members || []).map((m) => {
@@ -90,7 +112,15 @@ export function setupMultiplayer({
         li.title = [cosmetics.hat, cosmetics.outfit]
           .map((id) => COSMETIC_CATALOG.find((item) => item.id === id)?.name)
           .join(" · ");
-        li.textContent = `${m.name}${m.id === room.host ? " · hôte" : ""}${m.id === ticket.memberId ? " · toi" : ""} — ${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
+        const label = document.createElement("span");
+        label.textContent = `${m.name}${m.id === room.host ? " · hôte" : ""}${m.id === ticket.memberId ? " · toi" : ""} — ${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
+        const avatar = document.createElement("canvas");
+        avatar.width = 144;
+        avatar.height = 180;
+        avatar.className = "lobby-avatar";
+        avatar.setAttribute("aria-label", "Apparence de " + m.name);
+        li.append(avatar, label);
+        renderAvatar(avatar, { ...m, cosmetics });
         return li;
       }),
     );
@@ -116,6 +146,16 @@ export function setupMultiplayer({
   function acceptRoom(data) {
     if (room && data.revision < room.revision) return;
     room = data;
+    if (active && data.phase === "lobby") {
+      active = false;
+      replay = null;
+      lastState = null;
+      pendingTurn = null;
+      ended = false;
+      onLeave();
+      dialog.showModal();
+      syncAppearance();
+    }
     onRoster(data.members);
     offset = data.serverTime - Date.now();
     if (pendingTurn !== room.turn) pendingTurn = null;
@@ -341,7 +381,7 @@ export function setupMultiplayer({
       }
     }
     if (
-      room.phase === "ended" &&
+      room.canRematch &&
       !replay &&
       lastState &&
       !ended &&
@@ -356,6 +396,15 @@ export function setupMultiplayer({
     update();
     if (!ticket) health();
   };
+  $("#multiplayer-map").onchange = () =>
+    send({ type: "map", mapId: $("#multiplayer-map").value });
+  $("#multiplayer-rematch").onclick = () =>
+    send({
+      type: "rematch",
+      vote: !room?.members.find((m) => m.id === ticket?.memberId)?.rematch,
+    });
+  $("#multiplayer-shop").onclick = () => openShop();
+  $("#shop-dialog").addEventListener("close", syncAppearance);
   $("#multiplayer-create").onclick = () => join(true);
   $("#multiplayer-join").onclick = () => join(false);
   $("#multiplayer-join-code").addEventListener("keydown", (e) => {

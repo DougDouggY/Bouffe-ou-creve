@@ -1,6 +1,6 @@
 import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
-import { setupMultiplayer } from "./multiplayer-client.js?v=identity-22";
+import { setupMultiplayer } from "./multiplayer-client.js?v=lobby-26";
 import {
   CA,
   Ee,
@@ -1660,6 +1660,16 @@ function Qt({ start: e, appearance: g }) {
     }),
     a(),
     {
+      openLobbyShop() {
+        I = false;
+        C = null;
+        i = true;
+        Object.assign(o, storedProfile(o));
+        savedProfile = structuredClone(o);
+        L("#shop-dialog").showModal();
+        r();
+        k();
+      },
       startOnline() {
         i = false;
         I = false;
@@ -3214,6 +3224,32 @@ WA = Qt({
   },
 });
 online = setupMultiplayer({
+  openShop: () => WA.openLobbyShop(),
+  renderAvatar(canvas, member) {
+    const draw = () => {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, 144, 180);
+      Se(
+        ctx,
+        {
+          id: -1,
+          mass: 60,
+          cosmetics: member.cosmetics,
+          body: { position: { x: 72, y: 118 }, circleRadius: 32, speed: 0 },
+        },
+        0,
+        member.cosmetics,
+      );
+    };
+    draw();
+    for (const id of [member.cosmetics.hat, member.cosmetics.outfit]) {
+      const image = extraCosmeticImage(id);
+      if (image && !image.complete)
+        image.addEventListener("load", draw, { once: true });
+    }
+    for (const image of [lA, DA])
+      if (!image.complete) image.addEventListener("load", draw, { once: true });
+  },
   getCosmetics: () => {
     try {
       const raw = localStorage.getItem(Oe);
@@ -3255,6 +3291,7 @@ online = setupMultiplayer({
     PA.clear();
     w("#character-labels").replaceChildren();
     w("#overlay").hidden = true;
+    w("#again").hidden = true;
     w("#map-briefing").hidden = true;
     w("#truce-panel").hidden = true;
     w("#chef-tools").hidden = true;
@@ -3292,22 +3329,29 @@ online = setupMultiplayer({
       "announcement",
     ])
       K[key] = state[key];
+    if (state.obstacles) K.obstacles = state.obstacles;
     Object.assign(K.mechanics, state.mechanics);
   },
   onLeave() {
     document.body.classList.remove("online-playing");
+    w("#again").hidden = false;
     q = null;
     WA.backToMenu();
   },
   onEnd(state) {
-    const winner = state.people.find((p) => p.alive);
+    const winner =
+      state.phase === "ended" ? state.people.find((p) => p.alive) : null;
     w("#result-icon").textContent = winner?.id === onlineSeat ? "👑" : "🍽️";
     w("#result-title").textContent = winner
       ? `${winner.name} remporte le festin !`
-      : "FIN DU FESTIN";
+      : state.phase === "ended"
+        ? "FIN DU FESTIN"
+        : "TOUS LES HUMAINS SONT ÉLIMINÉS";
     w("#result-text").textContent = winner
       ? `${Math.round(winner.mass)} kg · ${state.round} tours. Merci aux gourmands !`
-      : "Égalité entre les derniers gourmands.";
+      : state.phase === "ended"
+        ? "Égalité entre les derniers gourmands."
+        : "Les IA continuent. Votez tous pour rejouer ensemble.";
     w("#overlay").hidden = false;
   },
   onEvent(event) {

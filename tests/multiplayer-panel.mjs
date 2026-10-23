@@ -16,13 +16,27 @@ const port = 8793;
 const output = path.join(project, "test-results");
 await mkdir(output, { recursive: true });
 const state = await mkdtemp("/tmp/bouffe-panel-worker-");
+const testConfig = path.join(state, "wrangler.json");
+await writeFile(
+  testConfig,
+  JSON.stringify({
+    name: "bouffe-lobby-tests",
+    main: path.join(root, "tests/fixtures/multiplayer-test-worker.js"),
+    compatibility_date: "2026-10-23",
+    durable_objects: {
+      bindings: [{ name: "ROOMS", class_name: "PrivateRoom" }],
+    },
+    migrations: [{ tag: "v1", new_sqlite_classes: ["PrivateRoom"] }],
+    vars: { ALLOWED_ORIGINS: ORIGIN },
+  }),
+);
 let workerLog = "";
 const worker = spawn(
   path.join(project, "cloudflare/node_modules/.bin/wrangler"),
   [
     "dev",
     "--config",
-    path.join(root, "wrangler.jsonc"),
+    testConfig,
     "--local",
     "--ip",
     "127.0.0.1",
@@ -193,7 +207,7 @@ try {
       if (req.url().startsWith(SITE))
         failures.push(new URL(req.url()).pathname);
     });
-    await page.goto(SITE + "?v=identity-22");
+    await page.goto(SITE + "?v=lobby-26");
     await page.waitForFunction(
       () =>
         typeof document.querySelector("#multiplayer-entry").onclick ===
@@ -230,10 +244,10 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=identity-22"));
-  assert(resources.has("style.css?v=identity-22"));
-  assert(resources.has("multiplayer-client.js?v=identity-22"));
-  assert(resources.has("multiplayer-protocol.js?v=multi-20"));
+  assert(resources.has("game.js?v=lobby-26"));
+  assert(resources.has("style.css?v=lobby-26"));
+  assert(resources.has("multiplayer-client.js?v=lobby-26"));
+  assert(resources.has("multiplayer-protocol.js?v=lobby-26"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
     await page.keyboard.press("Enter");
@@ -313,15 +327,10 @@ try {
       .querySelector("#multiplayer-ready")
       .textContent.includes("plus prêt"),
   );
-  const wardrobe = await host.context().newPage();
-  wardrobe.on("pageerror", (e) => errors.push(e.message));
-  await wardrobe.goto(SITE + "?v=identity-22");
-  await wardrobe.waitForFunction(
-    () =>
-      window.__cosmeticTest &&
-      document.querySelector(".burger-menu").dataset.masksReady === "true",
-  );
-  await dress(wardrobe, "crown", "sport");
+  await host.locator("#multiplayer-shop").click();
+  await host.locator("#shop-dialog").waitFor({ state: "visible" });
+  await host.locator('[data-item="crown"]').click();
+  await host.locator("#close-shop").click();
   outfits[0] = { hat: "crown", outfit: "sport" };
   for (const page of pages)
     await page.locator('#multiplayer-players li[data-hat="crown"]').waitFor();
@@ -329,7 +338,26 @@ try {
     await host.locator("#multiplayer-ready").textContent(),
     "Je suis prêt",
   );
-  await wardrobe.close();
+
+  for (const page of pages) {
+    assert.equal(await page.locator("#multiplayer-players canvas").count(), 4);
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll("#multiplayer-players canvas")].every((c) =>
+        c
+          .getContext("2d")
+          .getImageData(0, 0, c.width, c.height)
+          .data.some((n, i) => i % 4 === 3 && n > 0),
+      ),
+    );
+  }
+  await host.locator("#multiplayer-map").selectOption("nightmarket");
+  for (const page of pages) {
+    await page.waitForFunction(
+      () => document.querySelector("#multiplayer-map").value === "nightmarket",
+    );
+    if (page !== host)
+      assert(await page.locator("#multiplayer-map").isDisabled());
+  }
   for (const page of pages) await page.locator("#multiplayer-ready").click();
   await host.waitForFunction(
     () => !document.querySelector("#multiplayer-start").disabled,
@@ -347,6 +375,7 @@ try {
   }
   const start = wires[0].find((p) => p.type === "state").state;
   assert.equal(start.count, 24);
+  assert.equal(start.mapId, "nightmarket");
   assert.equal(start.people.filter((p) => p.human).length, 4);
   for (let i = 0; i < 4; i++) {
     assert.equal(start.people[i].name, names[i]);
@@ -508,7 +537,7 @@ try {
   // A changed Dressing during the match applies only to the next lobby.
   const nextLook = await host.context().newPage();
   nextLook.on("pageerror", (e) => errors.push(e.message));
-  await nextLook.goto(SITE + "?v=identity-22");
+  await nextLook.goto(SITE + "?v=lobby-26");
   await nextLook.waitForFunction(
     () =>
       window.__cosmeticTest &&
@@ -525,6 +554,57 @@ try {
     );
   }
   await verifyIdentityRendering();
+  const roomCode = (
+    await host.locator("#multiplayer-code").textContent()
+  ).replaceAll("-", "");
+  assert.equal(
+    (await fetch(`http://127.0.0.1:${port}/__test__/end/${roomCode}`)).status,
+    200,
+  );
+  for (const page of pages)
+    await page.locator("#multiplayer-rematch").waitFor({ state: "visible" });
+  for (const [i, page] of pages.entries()) {
+    await page.locator("#multiplayer-rematch").click();
+    if (i < 3) {
+      await host.waitForFunction(
+        (n) =>
+          document
+            .querySelector("#multiplayer-rematch-status")
+            .textContent.startsWith(n + "/"),
+        i + 1,
+      );
+      assert(!(await host.locator("#multiplayer-dialog").isVisible()));
+    }
+  }
+  for (const page of pages) {
+    await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
+    assert.equal(
+      (await page.locator("#multiplayer-code").textContent()).replaceAll(
+        "-",
+        "",
+      ),
+      roomCode,
+    );
+    assert.equal(
+      await page.locator("#multiplayer-map").inputValue(),
+      "nightmarket",
+    );
+    assert.equal(await page.locator("#multiplayer-players canvas").count(), 4);
+    assert.equal(
+      await page.locator("#multiplayer-ready").textContent(),
+      "Je suis prêt",
+    );
+  }
+  await host.locator("#multiplayer-map").selectOption("volcan");
+  for (const page of pages) await page.locator("#multiplayer-ready").click();
+  await host.locator("#multiplayer-start").click();
+  for (const page of pages)
+    await page.waitForFunction(
+      () =>
+        document.body.classList.contains("online-playing") &&
+        window.__game.mapId === "volcan" &&
+        window.__game.round === 1,
+    );
   for (const page of pages) {
     await page.locator("#back-menu").click();
     assert(await page.locator("#multiplayer-entry").isVisible());

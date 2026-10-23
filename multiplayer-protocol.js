@@ -1,7 +1,7 @@
 // Network-only compression: intermediate positions use 0.01 px, endpoints stay exact.
 // No client simulation, AI or random decisions live in this module.
 const round = (n, scale = 100) => Math.round((n || 0) * scale) / scale;
-const fields = ["food", "zones", "effects", "announcement"];
+const fields = ["food", "zones", "effects", "announcement", "obstacles"];
 export function encodeFrames(frames) {
   let previous;
   return frames.map((frame, i) => {

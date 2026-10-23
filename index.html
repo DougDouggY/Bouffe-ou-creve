@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=hat-mask-25"></script>
+    <script type="module" src="./game.js?v=lobby-26"></script>
 
-    <link rel="stylesheet" href="./style.css?v=identity-22" />
+    <link rel="stylesheet" href="./style.css?v=lobby-26" />
   </head>
   <body>
     <div id="app">
@@ -279,6 +279,9 @@
             <strong id="multiplayer-code"></strong>
             <button id="multiplayer-copy">Copier le code</button>
             <ul id="multiplayer-players"></ul>
+            <button id="multiplayer-shop">🧢 Le Dressing du Glouton</button>
+            <label for="multiplayer-map">Carte</label>
+            <select id="multiplayer-map"></select>
             <label for="multiplayer-size">Nombre de gourmands</label>
             <select id="multiplayer-size">
               <option value="8">8 gourmands</option>
@@ -686,6 +689,10 @@
                     LES TROPHÉES DE CE REPAS
                   </h3>
                   <div id="run-trophies"></div>
+                  <p id="multiplayer-rematch-status" hidden role="status"></p>
+                  <button id="multiplayer-rematch" hidden>
+                    Voter pour rejouer
+                  </button>
                   <button id="end-menu">MENU PRINCIPAL</button
                   ><button id="again">REJOUER</button>
                 </div>
