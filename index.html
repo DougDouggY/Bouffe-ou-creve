@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js?v=wild-arenas-13"></script>
+    <script type="module" src="./game.js?v=secrets-14"></script>
 
-    <link rel="stylesheet" href="./style.css?v=preview-fit-12" />
+    <link rel="stylesheet" href="./style.css?v=secrets-14" />
   </head>
   <body>
     <div id="app">
@@ -352,7 +352,34 @@
             Chaque assiette raconte un exploit. Certaines recettes restent
             secrètes…
           </p>
+          <button id="trophy-lab-open" type="button" hidden>
+            Laboratoire des trophées · sans sauvegarde
+          </button>
           <div id="trophy-grid"></div>
+        </dialog>
+        <dialog id="tournament-dialog">
+          <header>
+            <h2>La Plateforme · le tournoi</h2>
+            <button id="close-tournament">Fermer</button>
+          </header>
+          <p id="tournament-stage"></p>
+          <div id="tournament-matches"></div>
+          <button id="refresh-tournament">Actualiser le tableau</button>
+        </dialog>
+        <dialog id="trophy-lab">
+          <header>
+            <h2>Laboratoire de La Face Cachée</h2>
+            <button id="close-trophy-lab">Fermer</button>
+          </header>
+          <p>
+            Ces essais utilisent une progression isolée. Ils ne donnent ni
+            points ni trophées à ta sauvegarde. Ils testent les déclenchements,
+            sans remplacer les tests de jeu.
+          </p>
+          <label for="trophy-lab-select">Trophée à essayer</label
+          ><select id="trophy-lab-select"></select>
+          <button id="trophy-lab-run">Simuler la condition</button>
+          <div id="trophy-lab-result" aria-live="polite"></div>
         </dialog>
         <dialog id="shop-dialog">
           <div class="shop-heading">
@@ -445,7 +472,8 @@
           </section>
           <section class="game-shell" id="game-shell">
             <nav class="game-nav">
-              <button id="back-menu">← Menu</button
+              <button id="tournament-open" hidden>Tableau du tournoi</button
+              ><button id="back-menu">← Menu</button
               ><span
                 >🧈 <strong data-wallet>0</strong> · Partie +<b id="run-points"
                   >0</b

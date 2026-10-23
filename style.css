@@ -3058,3 +3058,117 @@ body.playing #map-briefing > div {
   overflow: auto;
   box-sizing: border-box;
 }
+
+/* La Face Cachée has a separate illustration, room and four playable ingredients. */
+body.shadow-realm {
+  background: #120c12;
+  color: #ecd9c9;
+}
+body.shadow-realm #app > header {
+  background: #21131c;
+  border-color: #6f3237;
+  color: #f4d9be;
+}
+body.shadow-realm .brand {
+  color: #f4d9be;
+}
+body.shadow-realm #title-screen {
+  box-shadow:
+    0 18px 65px #000b,
+    0 0 30px #b0372229;
+}
+body.shadow-realm .title-copy {
+  background: linear-gradient(#13060fe8, transparent);
+}
+body.shadow-realm .title-copy h1 {
+  color: #ffe1ae;
+  text-shadow:
+    0 3px #521e19,
+    0 0 22px #b64122;
+}
+body.shadow-realm .ingredient-button text {
+  fill: #ffebc2;
+  paint-order: stroke;
+  stroke: #35131b;
+  stroke-width: 3px;
+}
+body.shadow-realm #menu-shop text {
+  font-size: 39px;
+}
+body.shadow-realm #mode-unlock-note {
+  color: #f5bd8d;
+}
+body.shadow-realm #map-screen {
+  background: #241923;
+  border-color: #7a423f;
+}
+body.shadow-realm #map-mode-title {
+  color: #f2cba8;
+}
+body.shadow-realm dialog {
+  background: #241b25;
+  color: #ead8c2;
+  border-color: #875741;
+}
+body.shadow-realm dialog header {
+  background: #241b25;
+  color: #f3d6af;
+}
+body.shadow-realm .trophy-card {
+  background: #31242d;
+  border-color: #73513e;
+}
+body.shadow-realm .trophy-card h3 {
+  color: #f8dca6;
+}
+body.shadow-realm .trophy-card p {
+  color: #d5c0b3;
+}
+#trophy-lab {
+  max-width: 780px;
+  width: calc(100% - 36px);
+}
+#trophy-lab-select {
+  max-width: 100%;
+  margin: 14px 0;
+}
+#trophy-lab-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#trophy-lab-result > p {
+  width: 100%;
+}
+#trophy-lab-result .trophy-card {
+  max-width: 180px;
+}
+
+#tournament-dialog {
+  max-width: 820px;
+  width: calc(100% - 32px);
+}
+body.playing #tournament-open {
+  position: fixed;
+  left: 100px;
+  top: 12px;
+  z-index: 6;
+  font-size: 11px;
+  padding: 8px 12px;
+  background: #241b25d9;
+  color: #f3d4b0;
+  border: 1px solid #a67b4b;
+  border-radius: 24px;
+}
+
+html:has(body.shadow-realm) {
+  background: #120c12;
+}
+body.shadow-realm {
+  min-height: 100dvh;
+}
+body.shadow-realm #sound {
+  color: #f5d4ad;
+  border-color: #8a6151;
+  background: #241b25;
+}

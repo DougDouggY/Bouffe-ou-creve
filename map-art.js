@@ -1,4 +1,7 @@
 export const ILLUSTRATED_MAPS = [
+  "platform",
+  "cannibal",
+  "icecream",
   "hunger",
   "cantine",
   "cold",
@@ -21,6 +24,8 @@ export const ILLUSTRATED_MAPS = [
 const images = new Map();
 export function mapArtURL(id) {
   if (!ILLUSTRATED_MAPS.includes(id)) return null;
+  if (["platform", "cannibal", "icecream"].includes(id))
+    return new URL(`./assets/secrets/${id}.webp`, import.meta.url).href;
   const source = id === "nightmarket" ? "market" : id;
   const suffix = id === "royal" ? "-real" : "-overhead";
   return new URL(`./assets/maps/${source}${suffix}.webp`, import.meta.url).href;

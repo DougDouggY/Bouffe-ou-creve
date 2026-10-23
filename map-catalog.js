@@ -26,9 +26,10 @@ export const WORK_IN_PROGRESS_MAPS = new Set([
   "mirror",
 ]);
 
+export const SECRET_MAPS = new Set(["platform", "cannibal", "icecream"]);
 export function mapGroups(catalog) {
   const entries = Object.entries(catalog).filter(
-    ([id]) => !REMOVED_MAPS.has(id),
+    ([id]) => !REMOVED_MAPS.has(id) && !SECRET_MAPS.has(id),
   );
   return [
     {

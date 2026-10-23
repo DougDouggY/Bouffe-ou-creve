@@ -1,44 +1,60 @@
+import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=secrets-14";
+import {
+  SecretRules,
+  SECRET_GAME_MODES,
+  physicalMass,
+  drawSecretFloor,
+  drawSecretPerson,
+  drawSecretFood,
+  drawSecretFalls,
+} from "./secret-modes.js?v=secrets-14";
+import {
+  SECRET_MODES,
+  SECRET_TROPHIES,
+  secretProfile,
+  secretTrophyEvent,
+} from "./secret-trophies.js?v=secrets-14";
 import {
   hungerStart,
   hungerZone,
   insideHungerZone,
-} from "./hunger-games.js?v=wild-arenas-13";
+} from "./hunger-games.js?v=secrets-14";
 import {
   arenaSize,
   arenaBorderBodies,
   drawArenaBorders,
-} from "./arena-bounds.js?v=wild-arenas-13";
+} from "./arena-bounds.js?v=secrets-14";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=wild-arenas-13";
-import { ArenaMechanics } from "./arena-mechanics.js?v=wild-arenas-13";
+} from "./restaurant-menu.js?v=secrets-14";
+import { ArenaMechanics } from "./arena-mechanics.js?v=secrets-14";
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=wild-arenas-13";
+} from "./arena-render.js?v=secrets-14";
 import {
   EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=wild-arenas-13";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=wild-arenas-13";
+} from "./cosmetics.js?v=secrets-14";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=secrets-14";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
-} from "./map-catalog.js?v=wild-arenas-13";
+} from "./map-catalog.js?v=secrets-14";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
-} from "./visibility.js?v=wild-arenas-13";
-import { setupBurgerMenu } from "./burger-menu.js?v=small-halo-menu-3";
-import { createGameAudio } from "./audio.js?v=wild-arenas-13";
-import { setupMusicControls } from "./music.js?v=wild-arenas-13";
+} from "./visibility.js?v=secrets-14";
+import { setupBurgerMenu } from "./burger-menu.js?v=secrets-14";
+import { createGameAudio } from "./audio.js?v=secrets-14";
+import { setupMusicControls } from "./music.js?v=secrets-14";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 
 (function () {
@@ -98,7 +114,9 @@ async function fI(e) {
     }
   }
 }
+const SECRET_MAP_MODE = (mode) => Object.hasOwn(SECRET_GAME_MODES, mode);
 const me = {
+  ...SECRET_GAME_MODES,
   classic: { name: "Classique", count: 8 },
   gros: { name: "Grand Banquet", count: 24 },
   usa: { name: "États-Unis", count: 50 },
@@ -320,6 +338,7 @@ const GA = [
   MI = ["burgers", "salads", "douggy", "fondue", "eaten"];
 function UI(e, g, o, u, E) {
   if (E.chef) return [];
+  if (SECRET_MODES.has(E.mode)) return secretTrophyEvent(e, g, o, u, E);
   const A = E.stats.people[0],
     n = e.trophyTotals,
     i = {};
@@ -343,7 +362,9 @@ function UI(e, g, o, u, E) {
     (i["somalia-win"] = e.modeWins.somalia > 0),
     (i["classic-win"] = e.modeWins.classic > 0),
     (i["us-win"] = e.modeWins.usa > 0),
-    (i["all-modes"] = Object.values(e.modeWins).every((Q) => Q > 0)),
+    (i["all-modes"] = ["classic", "gros", "usa"].every(
+      (mode) => e.modeWins[mode] > 0,
+    )),
     (i.wins50 = e.wins >= 50));
   for (const Q of [10, 7, 5]) i["express" + Q] = I && E.round <= Q;
   for (const Q of [1, 10, 100, 1e3])
@@ -367,7 +388,8 @@ function UI(e, g, o, u, E) {
   });
   const C = [];
   for (const Q of GA)
-    i[Q.id] &&
+    Q.id !== "somalia-win" &&
+      i[Q.id] &&
       !e.trophies[Q.id] &&
       ((e.trophies[Q.id] = Date.now()), C.push(Q.id));
   return C;
@@ -467,6 +489,7 @@ const Oe = "bouffe-profile-v1",
 function Te() {
   return {
     trophies: {},
+    shadow: secretProfile(),
     trophyTotals: Object.fromEntries(MI.map((e) => [e, 0])),
     modeWins: { classic: 0, gros: 0, usa: 0, somalia: 0 },
     points: 0,
@@ -495,6 +518,17 @@ function Xe(e) {
       Number.isSafeInteger(g.modeWins?.[u]) &&
         g.modeWins[u] >= 0 &&
         (o.modeWins[u] = g.modeWins[u]);
+    o.shadow = secretProfile(g.shadow);
+    o.shadow.wins.somalia = Math.max(o.shadow.wins.somalia, o.modeWins.somalia);
+    if (o.trophies["somalia-win"]) {
+      o.shadow.legacy.somaliaWin = o.trophies["somalia-win"];
+      delete o.trophies["somalia-win"];
+    }
+    if (
+      o.shadow.wins.somalia >= 10 &&
+      !o.shadow.trophies["shadow-somalia-wins10"]
+    )
+      o.shadow.trophies["shadow-somalia-wins10"] = Date.now();
     o.owned = [
       ...new Set([
         ...o.owned,
@@ -1082,6 +1116,20 @@ CA.hunger = {
   description:
     "Tous les gourmands démarrent en cercle autour d’un festin de burgers de Douggy. Dès la manche 4, la zone sûre rétrécit à chaque tour. À la fin du mouvement, toucher la bordure ou rester dehors élimine le gourmand. Le cercle rouge annonce la limite à rejoindre avant la fin du tour.",
 };
+for (const [id, mode] of Object.entries(SECRET_GAME_MODES))
+  CA[id] = {
+    name: mode.name,
+    floor: "#36313a",
+    meal: "burger",
+    mealName: "Burgers",
+    experimental: true,
+    description:
+      id === "platform"
+        ? "Tournoi physique à 16 participants. Chaque duel commence par trois tours de festin. Quitte la plateforme avant sa descente à la fin du troisième tour ! Ensuite, pousse ton adversaire dans le puits. Les gourmands ne se dévorent pas ; le poids gagné est conservé entre les duels. Les autres duels se jouent simultanément, hors écran."
+        : id === "cannibal"
+          ? "Les victimes sont des adultes fictifs de 40 kg. Elles préparent de courtes fuites avant les propulsions simultanées, paniquent et trébuchent parfois. Les gourmands peuvent toujours se dévorer. Dernier survivant : même règle que le Classique."
+          : "Comédie horrifique fantastique : les enfants représentés sont des petits monstres non humains. Dirige une camionnette vivante, avale-les pour grossir et engloutis les camionnettes plus petites. Leurs courtes fuites sont préparées avant chaque propulsion.",
+  };
 CA.royal = {
   name: "Le Buffet du Roi",
   icon: "♛",
@@ -1106,6 +1154,18 @@ function _e(e, g, o, u = 1) {
     angle: C,
     ...Q,
   });
+  if (e === "icecream")
+    return [
+      E(0.345, 0.265, 0.06, 0.09),
+      E(0.52, 0.25, 0.075, 0.09),
+      E(0.735, 0.277, 0.1, 0.07),
+      E(0.265, 0.47, 0.075, 0.09),
+      E(0.52, 0.46, 0.05, 0.05),
+      E(0.77, 0.49, 0.07, 0.08),
+      E(0.32, 0.685, 0.055, 0.09),
+      E(0.52, 0.685, 0.08, 0.08),
+      E(0.71, 0.69, 0.045, 0.1),
+    ];
   if (e === "cuisine")
     return [
       E(0.3, 0.44, 0.25, 24 / o, 0.58),
@@ -1189,6 +1249,7 @@ function Ee(e, g, o, u = 1) {
       y: Q * o,
       r: Math.min(g, o) * B,
     });
+  if (["platform", "cannibal", "icecream"].includes(e)) return [];
   if (e === "cuisine")
     return [
       A(0.5, 0.24, 0.38, 60 / o, 0.13),
@@ -1764,9 +1825,14 @@ function VI(e, g, o, u, E, A) {
 }
 const _I = "./assets/trophies.webp",
   eI = new Map(),
-  FA = new Image();
+  FA = new Image(),
+  SHADOW_TROPHY_IMAGE = new Image();
+setupSecretTrophyLab(xe);
 FA.src = _I;
+SHADOW_TROPHY_IMAGE.src = "./assets/secrets/trophies.webp";
+const trophyById = (id) => [...GA, ...SECRET_TROPHIES].find((t) => t.id === id);
 function xe(e, g = !1, o = !1) {
+  const source = e.shadow ? SHADOW_TROPHY_IMAGE : FA;
   const u = document.createElement("canvas");
   ((u.width = u.height = 180),
     (u.className = "trophy-medal"),
@@ -1774,17 +1840,18 @@ function xe(e, g = !1, o = !1) {
   const E = () => {
     const A = u.getContext("2d");
     A.clearRect(0, 0, 180, 180);
-    const n = FA.naturalWidth / 7,
-      i = FA.naturalHeight / 6;
-    let I = eI.get(e.art);
+    const n = source.naturalWidth / 7,
+      i = source.naturalHeight / 6;
+    const cacheKey = `${e.shadow ? "shadow" : "normal"}-${e.art}`;
+    let I = eI.get(cacheKey);
     (I ||
-      ((I = Be(FA, [
+      ((I = Be(source, [
         Math.round((e.art % 7) * n),
         Math.round(Math.floor(e.art / 7) * i),
         Math.round(((e.art % 7) + 1) * n),
         Math.round((Math.floor(e.art / 7) + 1) * i),
       ])),
-      eI.set(e.art, I)),
+      eI.set(cacheKey, I)),
       A.drawImage(I, 6, 6, 168, 168),
       o &&
         ((A.globalCompositeOperation = "source-in"),
@@ -1793,9 +1860,9 @@ function xe(e, g = !1, o = !1) {
         (A.globalCompositeOperation = "source-over")));
   };
   return (
-    FA.complete && FA.naturalWidth
+    source.complete && source.naturalWidth
       ? E()
-      : FA.addEventListener("load", E, { once: !0 }),
+      : source.addEventListener("load", E, { once: !0 }),
     g && u.classList.add("locked-medal"),
     u
   );
@@ -1803,6 +1870,8 @@ function xe(e, g = !1, o = !1) {
 function At(e, g) {
   const o = document.createElement("article");
   o.className = "trophy-card" + (g ? " unlocked" : "");
+  o.title = e.secret && !g ? e.name : `${e.name} — ${e.condition}`;
+  o.dataset.trophy = e.id;
   const u = e.secret && !g;
   o.append(xe(e, !g, u));
   const E = document.createElement("h3");
@@ -1817,14 +1886,27 @@ function At(e, g) {
   );
 }
 function et(e) {
+  const shadow = document.body.classList.contains("shadow-realm");
+  const catalog = shadow
+    ? SECRET_TROPHIES
+    : GA.filter((t) => t.id !== "somalia-win");
+  const unlocked = shadow ? e.shadow.trophies : e.trophies;
+  document.querySelector("#trophies-dialog h2").textContent = shadow
+    ? "LES TROPHÉES DE LA FACE CACHÉE"
+    : "LES TROPHÉES DU GOURMAND";
+  document.querySelector("#trophies-dialog .trophy-intro").textContent = shadow
+    ? "Quatre modes, une autre faim. Les recettes masquées se révèlent après leur déblocage."
+    : "Chaque assiette raconte un exploit. Certaines recettes restent secrètes…";
   document
     .querySelector("#trophy-grid")
-    .replaceChildren(...GA.map((E) => At(E, !!e.trophies[E.id])));
-  const o = GA.filter((E) => e.trophies[E.id]).length;
+    .replaceChildren(...catalog.map((t) => At(t, !!unlocked[t.id])));
+  const count = catalog.filter((t) => unlocked[t.id]).length;
   document.querySelector("#trophy-count").textContent =
-    `Trophées débloqués : ${o} / ${GA.length}`;
-  const u = document.querySelector("#trophy-progress");
-  ((u.max = GA.length), (u.value = o));
+    `Trophées débloqués : ${count} / ${catalog.length}`;
+  const progress = document.querySelector("#trophy-progress");
+  progress.max = catalog.length;
+  progress.value = count;
+  document.querySelector("#trophy-lab-open").hidden = !shadow;
 }
 function It(e, g) {
   if ((e.replaceChildren(), !g.length)) {
@@ -1836,7 +1918,7 @@ function It(e, g) {
     return;
   }
   g.forEach((o, u) => {
-    const E = GA.find((i) => i.id === o),
+    const E = trophyById(o),
       A = document.createElement("button");
     ((A.className = "earned-medal"),
       (A.style.animationDelay = `${Math.min(u, 5) * 0.09}s`),
@@ -1852,7 +1934,7 @@ function It(e, g) {
 let Ye;
 function tt(e) {
   if (!e.length) return;
-  const g = GA.find((n) => n.id === e[0]),
+  const g = trophyById(e[0]),
     o = document.querySelector("#trophy-toast");
   o.replaceChildren(xe(g));
   const u = document.createElement("div"),
@@ -1876,30 +1958,34 @@ const VA = 2e3,
   it = 3e3,
   ke = (e) => Math.max(0.38, Math.min(1.2, Math.sqrt(60 / e))),
   zA = (e) =>
-    e.type === "mosquito"
-      ? 6
-      : e.size === "chef"
-        ? 24
-        : e.size === "xl"
-          ? 16
-          : 9;
+    ["victim", "child"].includes(e.type)
+      ? 16
+      : e.type === "mosquito"
+        ? 6
+        : e.size === "chef"
+          ? 24
+          : e.size === "xl"
+            ? 16
+            : 9;
 function Et(e, g, o) {
   return o === "chef" || (e !== "salad" && g() < 0.03)
     ? "chef"
     : o || (g() < 0.25 ? "xl" : "normal");
 }
 const ZA = (e) =>
-    e.type === "mosquito"
-      ? 2
-      : e.type === "salad"
-        ? e.size === "xl"
-          ? -45
-          : -18
-        : e.size === "chef"
-          ? 120
-          : e.size === "xl"
-            ? 40
-            : 15,
+    ["victim", "child"].includes(e.type)
+      ? 40
+      : e.type === "mosquito"
+        ? 2
+        : e.type === "salad"
+          ? e.size === "xl"
+            ? -45
+            : -18
+          : e.size === "chef"
+            ? 120
+            : e.size === "xl"
+              ? 40
+              : 15,
   ne = (e) => 19 * Math.sqrt(e / 60),
   Fe = (e) => e.type !== "salad",
   L = (e) => document.querySelector(e);
@@ -2060,7 +2146,11 @@ function Qt({ start: e, appearance: g }) {
   function S(l) {
     if (!modeUnlocked(l, o)) return;
     ((E = l),
-      (u = E === "somalia" ? "savanna" : u === "savanna" ? "cantine" : u),
+      (u =
+        me[E].onlyMap ||
+        (["savanna", "platform", "cannibal", "icecream"].includes(u)
+          ? "cantine"
+          : u)),
       (L("#map-search").value = ""),
       (L("#map-search").disabled = E === "somalia"),
       restaurant.show(E, u),
@@ -2069,7 +2159,9 @@ function Qt({ start: e, appearance: g }) {
       (L("#map-mode-title").textContent =
         E === "chef"
           ? "MODE CHEF · ATELIER SOLO"
-          : `${me[E].name.toUpperCase()} · ${me[E].count} GOURMANDS`),
+          : E === "platform"
+            ? "LA PLATEFORME · 16 PARTICIPANTS · DUELS À 2"
+            : `${me[E].name.toUpperCase()} · ${me[E].count} ${E === "icecream" ? "CAMIONNETTES" : "GOURMANDS"}`),
       L("#map-screen").scrollIntoView({ block: "start" }));
   }
   (document.querySelectorAll(".ingredient-button").forEach((l) =>
@@ -2155,7 +2247,8 @@ function Qt({ start: e, appearance: g }) {
     document.querySelectorAll("[data-open-shop]").forEach(
       (l) =>
         (l.onclick = () => {
-          (!L("#play-area").hidden && !I) ||
+          journey?.secret ||
+            (!L("#play-area").hidden && !I) ||
             ((i = !0),
             L("#shop-dialog").showModal(),
             r(),
@@ -2209,7 +2302,9 @@ function Qt({ start: e, appearance: g }) {
                   ? "gros"
                   : "classic",
             )),
-            ["win", "truce"].includes(c.outcome) && o.wins++),
+            ["win", "truce"].includes(c.outcome) &&
+              !SECRET_MODES.has(c.mode) &&
+              o.wins++),
           m && ((A += m), wI(o, m)));
         const Y = UI(o, l, R, h, c);
         if (
@@ -2226,12 +2321,19 @@ function Qt({ start: e, appearance: g }) {
             `Cette partie : +${A} points de graisse · Solde : ${o.points}`;
           const J = c.stats.people[0],
             Z = [
-              ["Tours joués", c.round],
+              [
+                "Tours joués",
+                c.secretRules?.tournament?.playerTurns || c.round,
+              ],
               ["Burgers mangés", J.burgers],
               ["Salades mangées", J.salads],
               ["Gourmands dévorés", J.eaten],
             ];
-          (c.savanna && Z.push(["Steaks de moustiques", J.mosquito]),
+          (c.mode === "cannibal" &&
+            Z.push(["Victimes dévorées", c.secretTrophyRun?.food || 0]),
+            c.mode === "icecream" &&
+              Z.push(["Enfants avalés", c.secretTrophyRun?.food || 0]),
+            c.savanna && Z.push(["Steaks de moustiques", J.mosquito]),
             J.fondue && Z.push(["Raclettes avalées", J.fondue]),
             Z.push(["Poids maximal", Math.round(J.maxMass) + " kg"]),
             L("#run-summary").replaceChildren(
@@ -2392,7 +2494,7 @@ function at(e, g, o) {
 }
 function mI(e, g, o) {
   const u = e.people[0].body.position;
-  return e.count > 8
+  return e.count > 8 && !SECRET_MAP_MODE(e.mode)
     ? { x: u.x - g / 2, y: u.y - o / 2 }
     : {
         x: Math.max(0, Math.min(e.w - g, u.x - g / 2)),
@@ -2856,6 +2958,7 @@ function dt(e, g, o, u = 0) {
     }
     e.restore();
   }
+  drawSecretFloor(e, g, u);
   drawArenaBorders(e, g);
   e.restore();
 }
@@ -9299,7 +9402,12 @@ class zt {
     ((this.mode = E.mode || "classic"),
       (this.mapId = this.mode === "somalia" ? "savanna" : E.mapId || "cantine"),
       (this.savanna = this.mapId === "savanna"),
-      (this.count = this.mode === "somalia" ? 50 : E.count || 8),
+      (this.count =
+        this.mode === "platform"
+          ? 2
+          : this.mode === "somalia"
+            ? 50
+            : E.count || 8),
       (this.chef = !!E.chef),
       (this.minMass = this.savanna || this.chef ? 8 : 42),
       (this.fondueDiscovered = !1),
@@ -9432,13 +9540,22 @@ class zt {
     }
     (n.forEach((i, I) => {
       const C = this.savanna ? 8 : 60,
-        Q = yA.circle(i.x, i.y, ne(C), {
-          frictionAir: 0.024,
-          friction: 0,
-          restitution: 0.83,
-          slop: 0.03,
-        });
-      (eA.setMass(Q, C / 10), (Q.label = "person"));
+        Q =
+          this.mode === "icecream"
+            ? yA.rectangle(i.x, i.y, ne(C) * 1.8, ne(C) * 2.4, {
+                chamfer: { radius: ne(C) * 0.4 },
+                frictionAir: 0.024,
+                friction: 0,
+                restitution: 0.83,
+                slop: 0.03,
+              })
+            : yA.circle(i.x, i.y, ne(C), {
+                frictionAir: 0.024,
+                friction: 0,
+                restitution: 0.83,
+                slop: 0.03,
+              });
+      ((Q.circleRadius = ne(C)), eA.setMass(Q, C / 10), (Q.label = "person"));
       const B = {
         id: I,
         name:
@@ -9494,6 +9611,7 @@ class zt {
         for (const I of i.pairs) {
           if (this.phase === "cinematic") break;
           this.mechanics?.collision(I);
+          this.secretRules?.collision(I);
           const C = I.bodyA.person,
             Q = I.bodyB.person,
             B = C || Q,
@@ -9519,7 +9637,8 @@ class zt {
                 text: "Le distributeur a lâché un burger !",
               }));
           }
-          if (!C || !Q || !C.alive || !Q.alive) continue;
+          if (this.mode === "platform" || !C || !Q || !C.alive || !Q.alive)
+            continue;
           let a, s;
           (aI(C, Q) ? ((a = C), (s = Q)) : aI(Q, C) && ((a = Q), (s = C)),
             a ? this.eat(a, s) : this.emit("bounce", C));
@@ -9531,11 +9650,33 @@ class zt {
       World: XA,
       intersects: RA,
     });
+    if (SECRET_MAP_MODE(this.mode))
+      this.secretRules = new SecretRules(
+        this,
+        {
+          Body: eA,
+          World: XA,
+          Engine: he,
+          intersects: RA,
+          makeGame: (options) => new zt(this.w, this.h, this.random, options),
+        },
+        E,
+      );
   }
   emit(g, o, u) {
+    if (g === "end" && this.secretRules?.onEnd()) return;
     (Rt(this.stats, g, o, u, this), this.onEvent(g, o, u));
   }
   addFood(g, o) {
+    if (this.mode === "platform") return false;
+    if (this.mode === "cannibal") {
+      g = "victim";
+      o = "normal";
+    }
+    if (this.mode === "icecream") {
+      g = "child";
+      o = "normal";
+    }
     (this.savanna && ((g = "mosquito"), (o = "normal")),
       this.mapId === "garden" &&
         g === "burger" &&
@@ -9543,7 +9684,10 @@ class zt {
         (g = "salad"));
     const u =
         g === "burger" ? (this.count > 8 ? "burger" : CA[this.mapId].meal) : g,
-      E = this.savanna ? "normal" : Et(u, this.random, o);
+      E =
+        this.savanna || ["victim", "child"].includes(u)
+          ? "normal"
+          : Et(u, this.random, o);
     g = E === "chef" ? "burger" : u;
     for (let A = 0; A < 50; A++) {
       const n = {
@@ -9604,7 +9748,8 @@ class zt {
     }
   }
   spawnCheese(g = 2) {
-    if (this.savanna || this.mapId === "hunger") return 0;
+    if (this.savanna || this.mapId === "hunger" || SECRET_MAP_MODE(this.mode))
+      return 0;
     let o = 0;
     for (let u = 0; u < g; u++)
       for (let E = 0; E < 50; E++) {
@@ -9692,7 +9837,7 @@ class zt {
     const u = g.body.circleRadius,
       E = ne(g.mass);
     eA.scale(g.body, E / u, E / u);
-    eA.setMass(g.body, g.mass / 10);
+    eA.setMass(g.body, physicalMass(g.mass, this.mode));
     const eaten = this.consumeNearbyShelves(g);
     if (eaten) return this.resize(g, g.mass + eaten * SHELF_MASS_GAIN);
     (eA.setPosition(
@@ -9712,6 +9857,7 @@ class zt {
     });
   }
   eat(g, o) {
+    if (this.mode === "platform") return;
     if (!g.alive || !o.alive || this.mechanics?.protect(o, g)) return;
     ((o.alive = !1),
       XA.remove(this.engine.world, o.body),
@@ -9729,6 +9875,8 @@ class zt {
       this.checkTruce());
   }
   plan(g, o = CI(this)) {
+    if (this.mode === "platform" && this.secretRules)
+      return this.secretRules.plan(g);
     if (this.mapId === "hunger" && this.round >= 4) {
       const zone = hungerZone(this.w, this.h, this.round),
         pos = g.body.position;
@@ -9828,6 +9976,8 @@ class zt {
         .map((E) => [E, E.id === 0 ? g : this.plan(E, o)]);
     for (const [E, A] of u) {
       ((E.heading = Math.atan2(A.y, A.x)),
+        this.mode === "icecream" &&
+          eA.setAngle(E.body, E.heading - Math.PI / 2),
         (E.roundStart = { ...E.body.position }));
       const n = Math.hypot(A.x, A.y),
         i = (n > 17 ? 17 / n : 1) * ke(E.mass);
@@ -9844,6 +9994,9 @@ class zt {
     );
   }
   step(g = 1e3 / 60) {
+    if (this.phase === "ended") return;
+    this.secretRules?.tick(g);
+    if (["lift", "bracket", "fall"].includes(this.phase)) return;
     if (this.phase !== "ended") {
       if (this.phase === "cinematic") {
         this.stepTruce(g);
@@ -9899,6 +10052,7 @@ class zt {
                 Math.hypot(o.body.position.x - E.x, o.body.position.y - E.y) <
                   o.body.circleRadius + zA(E) &&
                 (this.food.splice(u, 1),
+                this.secretRules?.onFood(o, E),
                 this.resize(o, o.mass + ZA(E)),
                 this.effects.push({
                   x: E.x,
@@ -10113,6 +10267,7 @@ class zt {
         this.addFood("burger", this.mapId === "palace" ? "xl" : "normal");
   }
   destroy() {
+    this.secretRules?.tournament?.destroy();
     (BI.off(this.engine),
       XA.clear(this.engine.world, !1),
       he.clear(this.engine));
@@ -10197,12 +10352,13 @@ function OA() {
     (K.floorSkin = ve),
     (w("#chef-weight").value = String(K.people[0].mass)),
     (w("#chef-tools").hidden = nA !== "chef"),
+    (w("#tournament-open").hidden = nA !== "platform"),
     (w("#briefing-title").textContent =
       (WORK_IN_PROGRESS_MAPS.has($) ? "🚧 En travaux · " : "") + CA[$].name),
     (w("#briefing-text").textContent = CA[$].description),
     (w("#map-briefing").hidden = !1),
     (w("#floor-picker").hidden = $ !== "foodcourt"),
-    (QA = mI(K, gA, sA)),
+    (be(), (QA = mI(K, gA, sA))),
     PA.clear(),
     w("#character-labels").replaceChildren(),
     (window.__game = K),
@@ -10256,6 +10412,14 @@ function OA() {
             ? `Dernier survivant en ${K.round} manches. Le chef te félicite.`
             : `Éliminé à la manche ${K.round}. La prochaine fois, prends un supplément de vengeance.`),
           (w("#overlay").hidden = !1));
+        if (K.mode === "platform") {
+          w("#result-title").textContent = E
+            ? "LE DERNIER ÉTAGE EST À TOI."
+            : "LE VIDE A EU FAIM.";
+          w("#result-text").textContent = E
+            ? `Tournoi remporté : quatre duels, seize participants. Poids final : ${Math.round(K.people[0].mass)} kg.`
+            : `Éliminé en ${["huitième de finale", "quart de finale", "demi-finale", "finale"][K.secretRules.duel - 1]}. Les poids étaient conservés d’un duel à l’autre.`;
+        }
       }
     }),
     ze());
@@ -10469,9 +10633,11 @@ function BA(e, g, o, u, E) {
     x.fill());
 }
 function kI(e, g) {
+  if (drawSecretPerson(x, K, e, g)) return;
   Se(x, e, g, e.id === 0 ? WA.equipped : { hat: "none", outfit: "plain" });
 }
 function uI(e) {
+  if (drawSecretFood(x, K, e, performance.now())) return;
   if ((x.save(), x.translate(e.x, e.y), e.type === "mosquito")) {
     (BA(1, 5, 8, 2, "#76572244"),
       BA(-5, -4, 4, 2, "#e9ecc9cc"),
@@ -10629,6 +10795,7 @@ function bt(e) {
     .filter((E) => E.alive && pe(E) && Je(E, QA, gA, sA))
     .sort((E, A) => E.body.position.y - A.body.position.y))
     kI(u, e);
+  drawSecretFalls(x, K, e, Se);
   drawArenaPowers(x, K, e);
   if (q?.kind === "shot") {
     const u = K.people[0].body.position,
@@ -10729,8 +10896,11 @@ function ae() {
 }
 function be() {
   if (w("#play-area").hidden) return;
-  const width = Math.max(320, innerWidth),
-    height = Math.max(320, innerHeight);
+  const scale = SECRET_MAP_MODE(K.mode)
+    ? Math.max(1, innerWidth / K.w, innerHeight / K.h)
+    : 1;
+  const width = Math.max(320, innerWidth) / scale,
+    height = Math.max(320, innerHeight) / scale;
   if (gA !== width || sA !== height) {
     gA = width;
     sA = height;
@@ -10786,3 +10956,24 @@ document.addEventListener("keydown", (e) => {
 });
 OA();
 requestAnimationFrame(Ge);
+
+function refreshTournament() {
+  if (!K?.secretRules?.tournament) return;
+  const tournament = K.secretRules.tournament;
+  w("#tournament-stage").textContent =
+    `${["Huitièmes de finale", "Quarts de finale", "Demi-finales", "Finale"][tournament.stage - 1]} · ${tournament.matches.length} duel(s). Les duels hors écran utilisent le même moteur physique.`;
+  w("#tournament-matches").replaceChildren(
+    ...tournament.matches.map((match, i) => {
+      const row = document.createElement("p"),
+        r = match.secretRules;
+      row.textContent = `${i === 0 ? "TON DUEL · " : ""}${match.people.map((p) => `${p.name} (${Math.round(p.mass)} kg)`).join(" contre ")} · ${r.lastResult ? `Victoire : ${r.lastResult.winner.name}` : `Tour ${match.round} · ${match.round <= 3 ? "festin" : "combat"}`}`;
+      return row;
+    }),
+  );
+}
+w("#tournament-open").onclick = () => {
+  refreshTournament();
+  w("#tournament-dialog").showModal();
+};
+w("#refresh-tournament").onclick = refreshTournament;
+w("#close-tournament").onclick = () => w("#tournament-dialog").close();

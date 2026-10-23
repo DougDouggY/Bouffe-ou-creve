@@ -1,8 +1,5 @@
 // Physics-only rules. All impulses run inside Matter substeps, never by moving a gourmand directly.
-import {
-  hungerZone,
-  insideHungerZone,
-} from "./hunger-games.js?v=wild-arenas-13";
+import { hungerZone, insideHungerZone } from "./hunger-games.js?v=secrets-14";
 export const GLOBAL_SPECIAL_CHANCE = 0.01;
 export const GLOBAL_SPECIALS = ["armored", "inferno"];
 export function rollGlobalSpecial(random) {
@@ -46,13 +43,9 @@ export class ArenaMechanics {
     this.clock = 0;
     this.pulses = [];
     this.bumperImpulses = [];
-    this.dynamicMap = [
-      "market",
-      "nightmarket",
-      "fair",
-      "royal",
-      "beach",
-    ].includes(game.mapId);
+    this.dynamicMap =
+      game.mode === "platform" ||
+      ["market", "nightmarket", "fair", "royal", "beach"].includes(game.mapId);
     if (["market", "nightmarket"].includes(game.mapId)) {
       const guard = game.mapId === "nightmarket";
       for (let i = 0; i < (guard ? 2 : 3); i++) {
@@ -131,6 +124,8 @@ export class ArenaMechanics {
       p.lightBoost = p.lampUntil >= g.round ? 1.8 : 1;
       if (p.securityUntil < g.round) p.securityUntil = 0;
     }
+    g.secretRules?.beginRound();
+    if (g.mode === "platform") return;
     // Exactly one global roll per round. Douggy's independent food roll is untouched.
     if (this.lastGlobalRollRound !== g.round) {
       this.lastGlobalRollRound = g.round;
@@ -232,6 +227,7 @@ export class ArenaMechanics {
     }
   }
   launch() {
+    this.game.secretRules?.launch();
     this.environment = null;
     this.environmentDone = false;
     this.waveHit.clear();
@@ -485,6 +481,7 @@ export class ArenaMechanics {
   }
   after(ms, previous) {
     const g = this.game;
+    g.secretRules?.substep(ms);
     for (const impulse of this.bumperImpulses)
       if (impulse.person.alive)
         this.api.Body.setVelocity(impulse.person.body, impulse.velocity);
@@ -577,6 +574,7 @@ export class ArenaMechanics {
   }
   finishReady() {
     const g = this.game;
+    if (g.secretRules && !g.secretRules.finishReady()) return false;
     if (
       g.mapId === "hunger" &&
       g.round >= 4 &&
@@ -615,7 +613,14 @@ export class ArenaMechanics {
   }
   blocksTruce() {
     return (
-      ["nightmarket", "royal", "hunger"].includes(this.game.mapId) ||
+      [
+        "nightmarket",
+        "royal",
+        "hunger",
+        "platform",
+        "cannibal",
+        "icecream",
+      ].includes(this.game.mapId) ||
       this.game.people.some((p) => p.alive && (p.fireActive || p.infernoReady))
     );
   }

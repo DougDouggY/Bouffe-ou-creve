@@ -502,7 +502,7 @@ try {
       g.destroy();
     }
     const { arenaOutline, containsArenaPoint, arenaSize } =
-      await import("/arena-bounds.js?v=wild-arenas-13");
+      await import("/arena-bounds.js?v=secrets-14");
     for (const id of [
       "market",
       "nightmarket",
@@ -575,7 +575,7 @@ try {
       g.destroy();
     }
     {
-      const { hungerZone } = await import("/hunger-games.js?v=wild-arenas-13");
+      const { hungerZone } = await import("/hunger-games.js?v=secrets-14");
       const g = new Game(3600, 2700, seeded(), { mapId: "hunger", count: 50 });
       check(
         "Hunger Games starts 50 evenly spaced gourmands around the central feast",
@@ -659,7 +659,7 @@ try {
   });
   await mkdir(path.join(root, "test-results"), { recursive: true });
   const kingFrames = await page.evaluate(async () => {
-    const { drawMapArt } = await import("/map-art.js?v=wild-arenas-13");
+    const { drawMapArt } = await import("/map-art.js?v=secrets-14");
     const g = new window.__arenaTest.Game(1000, 600, Math.random, {
       mapId: "royal",
       chef: true,

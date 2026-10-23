@@ -1,5 +1,5 @@
-import { isVisible } from "./visibility.js?v=wild-arenas-13";
-import { hungerZone } from "./hunger-games.js?v=wild-arenas-13";
+import { isVisible } from "./visibility.js?v=secrets-14";
+import { hungerZone } from "./hunger-games.js?v=secrets-14";
 const images = new Map();
 function asset(id) {
   if (!images.has(id)) {

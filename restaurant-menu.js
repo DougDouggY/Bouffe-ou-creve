@@ -1,5 +1,5 @@
-import { mapGroups } from "./map-catalog.js?v=wild-arenas-13";
-import { mapArtURL } from "./map-art.js?v=wild-arenas-13";
+import { mapGroups } from "./map-catalog.js?v=secrets-14";
+import { mapArtURL } from "./map-art.js?v=secrets-14";
 export function modeUnlocked(mode, profile) {
   return (
     !["gros", "usa"].includes(mode) ||
@@ -18,6 +18,11 @@ export function createRestaurantMenu(catalog, onSelect) {
     selected = "cantine";
   const groups = mapGroups(catalog),
     books = [];
+  groups[0].maps.push(
+    ...Object.entries(catalog).filter(([id]) =>
+      ["platform", "cannibal", "icecream"].includes(id),
+    ),
+  );
   const back = document.createElement("button");
   back.id = "book-back";
   back.textContent = "← Les deux cartes";
@@ -74,9 +79,12 @@ export function createRestaurantMenu(catalog, onSelect) {
   function visibleEntries(group) {
     return group.maps.filter(
       ([id, map]) =>
-        (mode === "somalia"
-          ? id === "savanna"
-          : mode === "chef" || id !== "savanna") &&
+        (["platform", "cannibal", "icecream"].includes(mode)
+          ? id === mode
+          : mode === "somalia"
+            ? id === "savanna"
+            : !["platform", "cannibal", "icecream"].includes(id) &&
+              (mode === "chef" || id !== "savanna")) &&
         map.name
           .toLocaleLowerCase("fr")
           .includes(search.value.toLocaleLowerCase("fr")),
@@ -126,7 +134,7 @@ export function createRestaurantMenu(catalog, onSelect) {
       item.page.querySelector("h3").textContent = map.name;
       const figure = item.page.querySelector("figure");
       figure.replaceChildren();
-      const url = `./assets/previews/${selected}.webp?v=wild-arenas-13`;
+      const url = `./assets/previews/${selected}.webp?v=secrets-14`;
       const img = new Image();
       img.className = "map-preview";
       img.alt = `Aperçu de ${map.name}`;
@@ -174,24 +182,37 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
   const slots = ["somalia", "classic", "gros"].map((id) =>
     document.querySelector(`[data-menu-mode="${id}"]`),
   );
+  slots.push(document.querySelector("#menu-shop"));
+  const shopClick = slots[3].onclick;
   const notice = document.createElement("p");
   notice.id = "mode-unlock-note";
   notice.setAttribute("role", "status");
   document.querySelector("#title-screen").append(notice);
   function refresh() {
     const modes = secret
-      ? ["work", "somalia", "work"]
-      : ["usa", "classic", "gros"];
+      ? ["somalia", "platform", "cannibal", "icecream"]
+      : ["usa", "classic", "gros", "shop"];
     const titles = secret
-      ? ["EN TRAVAUX", "SOMALIE", "EN TRAVAUX"]
-      : ["ÉTATS-UNIS", "CLASSIQUE", "GRAND BANQUET"];
+      ? [
+          "SOMALIE",
+          "LA PLATEFORME",
+          "LE FESTIN CANNIBALE",
+          "LE MARCHAND DE GLACES",
+        ]
+      : ["ÉTATS-UNIS", "CLASSIQUE", "GRAND BANQUET", "LE DRESSING DU GLOUTON"];
     const counts = secret
-      ? ["Bientôt", "50 gourmands", "Bientôt"]
-      : ["50 gourmands", "8 gourmands", "24 gourmands"];
+      ? [
+          "50 gourmands",
+          "Tournoi · 16 participants",
+          "16 gourmands",
+          "16 camionnettes",
+        ]
+      : ["50 gourmands", "8 gourmands", "24 gourmands", "DU GLOUTON"];
     slots.forEach((slot, i) => {
       slot.querySelector("text:not(.ingredient-subtitle)").textContent =
         titles[i];
-      slot.querySelector(".ingredient-subtitle").textContent = counts[i];
+      if (slot.querySelector(".ingredient-subtitle"))
+        slot.querySelector(".ingredient-subtitle").textContent = counts[i];
       slot.setAttribute("aria-label", titles[i] + " · " + counts[i]);
       slot.dataset.actualMode = modes[i];
       slot.setAttribute(
@@ -199,12 +220,28 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
         String(modes[i] === "work" || !modeUnlocked(modes[i], profile)),
       );
     });
+    document.body.classList.toggle("shadow-realm", secret);
+    document.dispatchEvent(
+      new CustomEvent("shadowchange", { detail: { secret } }),
+    );
+    document.querySelector("#trophies-entry .ingredient-subtitle").textContent =
+      secret ? "DE LA FACE CACHÉE" : "DU GOURMAND";
+    document
+      .querySelector("#trophies-entry")
+      .setAttribute(
+        "aria-label",
+        secret ? "Trophées de La Face Cachée" : "Les Trophées du Gourmand",
+      );
     document.querySelector("#return-classic").hidden = !secret;
     document.querySelector("#shadow-entry").hidden = secret;
   }
   for (const slot of slots)
     slot.onclick = () => {
       const mode = slot.dataset.actualMode;
+      if (mode === "shop") {
+        shopClick?.call(slot);
+        return;
+      }
       if (mode === "work") {
         notice.textContent = "Cette face du burger est encore en travaux.";
         return;
@@ -253,7 +290,7 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
     dialog.close();
     backToMenu();
     refresh();
-    notice.textContent = "La face cachée du burger. Ça reste entre nous.";
+    notice.textContent = "";
   };
   document.querySelector("#return-classic").onclick = () => {
     secret = false;

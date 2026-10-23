@@ -1,9 +1,29 @@
 // One layout drives physical walls, safe spawning and the visible rails / room edges.
 export function arenaSize(mode) {
+  if (mode === "platform") return { w: 1600, h: 1200 };
+  if (mode === "cannibal") return { w: 2000, h: 1500 };
+  if (mode === "icecream") return { w: 2400, h: 1800 };
   return mode === "somalia" ? { w: 3200, h: 2200 } : { w: 3600, h: 2700 };
 }
 
 export function arenaOutline(id, w, h) {
+  if (id === "cannibal")
+    return Array.from({ length: 20 }, (_, i) => {
+      const angle = -Math.PI / 2 + (i * Math.PI) / 10;
+      return {
+        x: (0.5 + Math.cos(angle) * 0.36) * w,
+        y: (0.5 + Math.sin(angle) * 0.35) * h,
+      };
+    });
+  if (["platform", "cannibal", "icecream"].includes(id)) {
+    const m = id === "cannibal" ? 0.12 : id === "icecream" ? 0.15 : 0.08;
+    return [
+      [m, m],
+      [1 - m, m],
+      [1 - m, 1 - m],
+      [m, 1 - m],
+    ].map(([x, y]) => ({ x: x * w, y: y * h }));
+  }
   const points =
     id === "pirate"
       ? [

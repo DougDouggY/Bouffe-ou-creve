@@ -147,10 +147,36 @@ export async function setupBurgerMenu() {
       );
       group.insertBefore(light, group.querySelector("text"));
       group.dataset.ingredient = id;
-      return { group, alpha };
+      return { group, alpha, texture, image };
     }),
   );
   svg.prepend(defs);
+  const secretIllustration = await loadImage(
+    new URL("./assets/secrets/burger.webp", import.meta.url).href,
+  );
+  function applyTheme() {
+    const secret = document.body.classList.contains("shadow-realm");
+    document.querySelector("#title-screen").style.backgroundImage =
+      `url("${secret ? secretIllustration.src : illustration.src}")`;
+    for (const layer of layers) {
+      const canvas = document.createElement("canvas");
+      canvas.width = WIDTH;
+      canvas.height = HEIGHT;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(
+        secret ? secretIllustration : illustration,
+        0,
+        0,
+        WIDTH,
+        HEIGHT,
+      );
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(layer.image, 0, 0);
+      layer.texture.setAttribute("href", canvas.toDataURL());
+    }
+  }
+  document.addEventListener("shadowchange", applyTheme);
+  applyTheme();
 
   let hovered = null;
   function pick(event) {

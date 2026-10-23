@@ -65,7 +65,7 @@ try {
   await page.waitForFunction(() => window.__gameTest);
   await mkdir(path.join(root, "assets/previews"), { recursive: true });
   const allIds = await page.evaluate(async () => {
-    const { REMOVED_MAPS } = await import("/map-catalog.js?v=wild-arenas-13");
+    const { REMOVED_MAPS } = await import("/map-catalog.js?v=secrets-14");
     return Object.keys(window.__gameTest.catalog).filter(
       (id) => !REMOVED_MAPS.has(id),
     );
@@ -75,7 +75,15 @@ try {
   for (const id of ids) {
     const data = await page.evaluate(async (id) => {
       const { Game, renderFloor, catalog } = window.__gameTest;
-      const game = new Game(2400, 1800, Math.random, { mapId: id, chef: true });
+      const game = new Game(2400, 1800, Math.random, {
+        mapId: id,
+        chef: true,
+        mode: ["platform", "cannibal", "icecream"].includes(id)
+          ? id
+          : "classic",
+        headless: true,
+      });
+      if (game.secretRules) game.secretRules.arrival = 0;
       const canvas = document.createElement("canvas");
       canvas.width = 960;
       canvas.height = 720;

@@ -344,14 +344,12 @@ try {
   await page.locator("#enter-shadow").click();
   assert.equal(
     await page
-      .locator('[data-menu-mode="classic"] text:not(.ingredient-subtitle)')
+      .locator('[data-menu-mode="somalia"] text:not(.ingredient-subtitle)')
       .textContent(),
     "SOMALIE",
   );
   checks++;
-  await mode("gros");
-  assert(await page.locator("#title-screen").isVisible());
-  await mode("classic");
+  await mode("somalia");
   await cover();
   assert.equal(await page.locator(".map-card:visible").count(), 1);
   await page.locator("#start-game").click();
