@@ -35,7 +35,7 @@ export function createRestaurantMenu(catalog, onSelect) {
     book.id = group.id === "available" ? "maps-available" : "maps-in-progress";
     const cover = document.createElement("button");
     cover.className = "book-cover";
-    cover.innerHTML = `<span>BOUFFE OU CRÈVE</span><strong>${group.id === "available" ? "La carte de la maison" : "Le carnet des essais"}</strong><small>${group.id === "available" ? "LES CARTES VALIDÉES" : "LES CARTES EN TRAVAUX"}</small><i>Ouvrir la carte →</i>`;
+    cover.innerHTML = `<span>LES GOURMANDS</span><strong>${group.id === "available" ? "La carte de la maison" : "Le carnet des essais"}</strong><small>${group.id === "available" ? "LES CARTES VALIDÉES" : "LES CARTES EN TRAVAUX"}</small><i>Ouvrir la carte →</i>`;
     book.append(cover);
     const inside = document.createElement("div");
     inside.className = "book-inside";

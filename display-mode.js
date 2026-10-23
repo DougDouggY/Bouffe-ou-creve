@@ -20,7 +20,7 @@
       });
       document.querySelector("#display-status").textContent =
         mode === "phone"
-          ? "Téléphone : menus et commandes adaptés au toucher."
+          ? "Téléphone : vue élargie, menus et commandes adaptés au toucher."
           : "Ordinateur : présentation classique, souris ou pavé tactile.";
     };
     radios.forEach((input) =>

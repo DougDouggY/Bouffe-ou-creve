@@ -491,6 +491,8 @@ try {
   await mobile.locator('[data-map="beach"]').click();
   await mobile.locator("#start-game").click();
   await mobile.locator("#close-briefing").click();
+  const portraitView = await mobile.evaluate(() => window.__view);
+  assert(portraitView.width >= 719 && portraitView.height > 1500);
   const mb = await mobile.locator("#game").boundingBox();
   assert.equal(Math.round(mb.width), 390);
   assert.equal(Math.round(mb.height), 844);
@@ -518,10 +520,25 @@ try {
     state,
   );
   checks++;
+  const landscapeView = await mobile.evaluate(() => window.__view);
+  assert(landscapeView.height >= 719 && landscapeView.width > 1500);
   const aim = await mobile.evaluate(() => {
     const p = window.__game.people[0].body.position,
       c = window.__view.camera;
-    return { x: p.x - c.x, y: p.y - c.y };
+    const view = window.__view,
+      b = document.querySelector("#game").getBoundingClientRect();
+    return {
+      x: b.x + ((p.x - c.x) * b.width) / view.sceneW,
+      y: b.y + ((p.y - c.y) * b.height) / view.sceneH,
+    };
+  });
+  await mobile.evaluate(() => {
+    const game = window.__game,
+      launch = game.launch.bind(game);
+    game.launch = (shot, ...rest) => {
+      window.__phoneShot = shot;
+      return launch(shot, ...rest);
+    };
   });
   const touch = await mobile.context().newCDPSession(mobile);
   await touch.send("Input.dispatchTouchEvent", {
@@ -538,6 +555,11 @@ try {
   });
   await touch.detach();
   await mobile.waitForFunction(() => !!window.__game.people[0].roundStart);
+  const shot = await mobile.evaluate(() => window.__phoneShot);
+  assert(
+    Math.abs(Math.hypot(shot.x, shot.y) - Math.hypot(55, 20) * 0.12) < 0.01,
+  );
+  assert.equal(await mobile.title(), "Les gourmands — Le dernier repas");
   checks++;
   // A damaged primary save recovers its local backup and original victory evidence.
   const recovery = await browser.newPage();

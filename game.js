@@ -1,3 +1,4 @@
+import { gameplayViewport } from "./viewport.js?v=phone-36";
 import {
   COSMETIC_SLOTS,
   SLOT_LABELS,
@@ -61,7 +62,7 @@ import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=teams-31";
+} from "./restaurant-menu.js?v=phone-36";
 
 import {
   drawArenaFloor,
@@ -3095,7 +3096,7 @@ function ze() {
         "FONDUE FILANTE ! Garde de l’élan pour t’en dégager."),
     Dt(),
     (w("#power b").style.width =
-      `${q?.kind === "shot" ? Math.min(100, Math.hypot(q.dx, q.dy) / 1.4) : 0}%`));
+      `${q?.kind === "shot" ? Math.min(100, aimDistance(q.dx, q.dy) / 1.4) : 0}%`));
 }
 function Dt() {
   const e = !!K.cinematic;
@@ -3177,6 +3178,14 @@ function vI(e) {
     y: ((e.clientY - g.top) / g.height) * SA - aA + QA.y,
   };
 }
+function aimDistance(dx, dy) {
+  return (
+    Math.hypot(dx, dy) *
+    (document.documentElement.dataset.display === "phone"
+      ? oA.getBoundingClientRect().width / hA
+      : 1)
+  );
+}
 oA.addEventListener("pointerdown", (e) => {
   if (K.phase !== "aim" || (online?.active && !online.canShoot())) return;
   const g = vI(e),
@@ -3198,10 +3207,11 @@ oA.addEventListener("pointermove", (e) => {
 });
 oA.addEventListener("pointerup", (e) => {
   if (!q || q.id !== e.pointerId) return;
-  const g = Math.hypot(q.dx, q.dy);
+  const distance = Math.hypot(q.dx, q.dy);
+  const g = aimDistance(q.dx, q.dy);
   if (g > 6) {
     const o = Math.min(17, g * 0.12);
-    const vector = { x: (q.dx / g) * o, y: (q.dy / g) * o };
+    const vector = { x: (q.dx / distance) * o, y: (q.dy / distance) * o };
     if (online?.active) online.shoot(vector);
     else K.launch(vector);
   }
@@ -3464,7 +3474,9 @@ function bt(e) {
     const u = K.people[0].body.position,
       E = Math.hypot(q.dx, q.dy);
     if (E > 3) {
-      const A = Math.min(E, 140) * propulsionFactor(K.people[0].mass, K.mode),
+      const A =
+          Math.min(aimDistance(q.dx, q.dy), 140) *
+          propulsionFactor(K.people[0].mass, K.mode),
         n = q.dx / E,
         i = q.dy / E,
         I = u.x + n * (A + 25),
@@ -3828,12 +3840,14 @@ function ae() {
 }
 function be() {
   if (w("#play-area").hidden) return;
-  const scale =
-    SECRET_MAP_MODE(K.mode) || K.mode === "classic"
-      ? Math.max(1, innerWidth / K.w, innerHeight / K.h)
-      : 1;
-  const width = Math.max(320, innerWidth) / scale,
-    height = Math.max(320, innerHeight) / scale;
+  const { width, height } = gameplayViewport(
+    innerWidth,
+    innerHeight,
+    K.w,
+    K.h,
+    document.documentElement.dataset.display === "phone",
+    SECRET_MAP_MODE(K.mode) || K.mode === "classic",
+  );
   if (gA !== width || sA !== height) {
     gA = width;
     sA = height;
