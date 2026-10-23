@@ -1,4 +1,4 @@
-import { setupMultiplayer } from "./multiplayer-client.js?v=multi-20";
+import { setupMultiplayer } from "./multiplayer-client.js?v=multi-panel-21";
 import {
   CA,
   Ee,

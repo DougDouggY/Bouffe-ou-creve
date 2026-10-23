@@ -3281,17 +3281,51 @@ html[data-display="phone"] body.playing .game-nav button {
 
 /* Private invitations use the same printed restaurant menu as solo. */
 .multiplayer-entry {
-  display: block;
-  margin: 18px auto;
-  padding: 14px 22px;
-  font:
-    bold 18px Georgia,
-    serif;
+  position: fixed;
+  top: max(100px, calc(env(safe-area-inset-top) + 12px));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 20;
+  display: grid;
+  gap: 5px;
+  width: 220px;
+  min-height: 64px;
+  margin: 0;
+  padding: 11px 14px;
+  text-align: left;
   color: #713b35;
-  background: #f5e8d0;
+  background: #fbf3df;
   border: 3px double #b59472;
-  border-radius: 3px;
-  min-height: 48px;
+  border-radius: 5px;
+  box-shadow: 0 5px 18px #38291633;
+}
+.multiplayer-entry strong {
+  font:
+    bold 15px Georgia,
+    serif;
+  white-space: nowrap;
+}
+.multiplayer-entry span {
+  font:
+    italic 13px Georgia,
+    serif;
+}
+.multiplayer-entry:hover {
+  background: #f0dfbd;
+}
+.multiplayer-entry:focus-visible {
+  outline: 3px solid #713b35;
+  outline-offset: 3px;
+}
+@media (max-width: 650px) {
+  .multiplayer-entry {
+    top: max(84px, calc(env(safe-area-inset-top) + 8px));
+    right: max(10px, env(safe-area-inset-right));
+    width: 210px;
+  }
+  /* Space for the temporary card, above the existing burger artwork. */
+  body:not(.shadow-realm) #main-menu:has(#title-screen:not([hidden])) {
+    padding-top: 86px;
+  }
 }
 body.shadow-realm #multiplayer-entry,
 .main-menu:has(#title-screen[hidden]) #multiplayer-entry {

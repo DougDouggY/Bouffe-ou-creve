@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=multi-20"></script>
+    <script type="module" src="./game.js?v=multi-panel-21"></script>
 
-    <link rel="stylesheet" href="./style.css?v=multi-20" />
+    <link rel="stylesheet" href="./style.css?v=multi-panel-21" />
   </head>
   <body>
     <div id="app">
@@ -152,8 +152,15 @@
               ><span id="menu-record"></span>
             </div>
           </div>
-          <button id="multiplayer-entry" class="multiplayer-entry">
-            Une table entre amis · Multijoueur
+          <button
+            id="multiplayer-entry"
+            class="multiplayer-entry"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="multiplayer-dialog"
+          >
+            <strong>🍔 MULTIJOUEUR PRIVÉ</strong>
+            <span>Jouer avec mes amis</span>
           </button>
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
