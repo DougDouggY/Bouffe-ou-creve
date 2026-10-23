@@ -3216,7 +3216,11 @@ WA = Qt({
 online = setupMultiplayer({
   getCosmetics: () => {
     try {
-      return Xe(localStorage.getItem(Oe)).equipped;
+      const raw = localStorage.getItem(Oe);
+      const value = JSON.parse(raw);
+      return value && typeof value === "object" && !Array.isArray(value)
+        ? Xe(raw).equipped
+        : WA.equipped;
     } catch {
       return WA.equipped;
     }
