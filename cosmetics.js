@@ -54,7 +54,7 @@ export const EXTRA_COSMETICS = [
 export const EXTRA_HAT_BOUNDS = Object.fromEntries(
   hats.map(([id, , , , width, height]) => [
     "hat_" + id,
-    { width, height },
+    { width, height, front: false },
   ]),
 );
 const ids = new Set(EXTRA_COSMETICS.map((item) => item.id));

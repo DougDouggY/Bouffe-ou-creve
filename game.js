@@ -47,7 +47,7 @@ import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=hat-original-24";
+} from "./cosmetics.js?v=hat-mask-25";
 import { drawMapArt, mapArtURL } from "./map-art.js?v=hunger-18";
 import {
   WORK_IN_PROGRESS_MAPS,
@@ -166,7 +166,7 @@ function dI(e, g = 1) {
         y: (-0.56 - o.height - (o.lift || 0)) * g,
         w: o.width * g,
         h: o.height * g,
-        front: e !== "halo",
+        front: o.front ?? e !== "halo",
       }
     : null;
 }
@@ -694,7 +694,7 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
     Q(0, -0.38, 0.49, 0.49, i),
     Q(-0.42, -0.37, 0.13, 0.17, i),
     Q(0.42, -0.37, 0.13, 0.17, i),
-    s?.front ||
+    (s && u.hat !== "halo") ||
       ((e.fillStyle = "#6b4632"),
       e.beginPath(),
       e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2),

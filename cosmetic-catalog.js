@@ -1,5 +1,5 @@
 // The Dressing catalog is shared by solo, multiplayer clients and server validation.
-import { EXTRA_COSMETICS } from "./cosmetics.js?v=hat-original-24";
+import { EXTRA_COSMETICS } from "./cosmetics.js?v=hat-mask-25";
 export const COSMETIC_CATALOG = [
   {
     id: "plain",

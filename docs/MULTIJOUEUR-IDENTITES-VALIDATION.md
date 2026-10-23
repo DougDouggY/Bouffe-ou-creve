@@ -4,7 +4,7 @@ Le client transmet uniquement les deux identifiants réels `hat` et `outfit` du 
 
 L'apparence est actualisée au salon (y compris après un changement dans un autre onglet), ce qui retire l'état prêt. Elle est ensuite figée pour toute la partie et conservée après reconnexion. Une modification du Dressing pendant la partie prend effet au prochain salon. Les humains conservent un identifiant de membre et une place fixes ; le pseudo, normalisé et limité à 24 caractères Unicode par le serveur, reste associé à cette place. Les noms sont rendus avec `textContent`.
 
-Les noms humains deviennent bleu clair et gras, avec une petite étoile. Le personnage local reçoit un contour bleu. Le style des IA reste inchangé. Les quinze chapeaux supplémentaires sont légèrement remontés pour dégager le front, dans le Dressing et le jeu.
+Les noms humains deviennent bleu clair et gras, avec une petite étoile. Le personnage local reçoit un contour bleu. Le style des IA reste inchangé. Les quinze chapeaux supplémentaires conservent leur position d’origine et sont dessinés derrière le crâne pour dégager le front, dans le Dressing et le jeu.
 
 L'invitation multijoueur est intégrée en bas à droite de l'illustration, dans les deux menus. L'entrée du burger caché ouvre le même salon privé existant ; elle n'ajoute pas de règles secrètes au multijoueur. Le menu normal présente Classique sur la salade, Grand Banquet sur la tomate et États-Unis sur le fromage.
 
