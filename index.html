@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=multi-panel-21"></script>
+    <script type="module" src="./game.js?v=identity-22"></script>
 
-    <link rel="stylesheet" href="./style.css?v=multi-panel-21" />
+    <link rel="stylesheet" href="./style.css?v=identity-22" />
   </head>
   <body>
     <div id="app">
@@ -70,17 +70,37 @@
                 class="ingredient-button"
                 role="button"
                 tabindex="0"
-                aria-label="GRAND BANQUET"
+                aria-label="ÉTATS-UNIS"
                 data-menu-mode="gros"
               >
                 <path
                   d="M365 576 Q382 547 449 533 Q534 514 661 523 Q738 532 809 520 Q954 509 1092 535 Q1152 545 1163 582 Q1171 605 1164 625 Q1157 631 1148 618 Q1135 600 1114 606 Q1090 619 1077 668 Q1070 696 1056 690 Q1040 685 1026 650 Q1009 620 968 624 Q938 640 903 631 Q878 616 844 632 Q815 642 785 631 Q758 621 723 635 Q697 646 664 633 Q636 623 607 634 Q569 639 548 627 Q529 621 512 636 Q495 647 482 677 Q468 704 452 683 Q443 667 436 632 Q433 607 416 604 Q398 604 385 625 Q371 642 363 627 Q355 605 365 576 Z"
                 />
-                <text x="768" y="584" text-anchor="middle">GRAND BANQUET</text>
+                <text x="768" y="584" text-anchor="middle">ÉTATS-UNIS</text>
                 <text
                   class="ingredient-subtitle"
                   x="768"
                   y="611"
+                  text-anchor="middle"
+                >
+                  50 gourmands
+                </text>
+              </g>
+              <g
+                class="ingredient-button"
+                role="button"
+                tabindex="0"
+                aria-label="GRAND BANQUET"
+                data-menu-mode="classic"
+              >
+                <path
+                  d="M405 466 Q422 434 489 418 Q612 393 740 418 Q768 426 795 418 Q948 393 1085 433 Q1115 442 1128 467 L1124 506 Q1047 529 930 518 Q829 537 754 528 Q632 537 539 522 Q465 533 410 514 Z"
+                />
+                <text x="768" y="478" text-anchor="middle">GRAND BANQUET</text>
+                <text
+                  class="ingredient-subtitle"
+                  x="768"
+                  y="505"
                   text-anchor="middle"
                 >
                   24 gourmands
@@ -91,39 +111,19 @@
                 role="button"
                 tabindex="0"
                 aria-label="CLASSIQUE"
-                data-menu-mode="classic"
-              >
-                <path
-                  d="M405 466 Q422 434 489 418 Q612 393 740 418 Q768 426 795 418 Q948 393 1085 433 Q1115 442 1128 467 L1124 506 Q1047 529 930 518 Q829 537 754 528 Q632 537 539 522 Q465 533 410 514 Z"
-                />
-                <text x="768" y="478" text-anchor="middle">CLASSIQUE</text>
-                <text
-                  class="ingredient-subtitle"
-                  x="768"
-                  y="505"
-                  text-anchor="middle"
-                >
-                  8 gourmands
-                </text>
-              </g>
-              <g
-                class="ingredient-button"
-                role="button"
-                tabindex="0"
-                aria-label="ÉTATS-UNIS"
                 data-menu-mode="somalia"
               >
                 <path
                   d="M399 308 Q418 312 438 302 Q458 293 479 307 Q498 320 521 310 Q545 292 570 306 Q592 300 615 295 Q641 305 659 307 Q683 288 708 303 Q728 297 749 306 Q769 294 795 297 Q817 303 833 310 Q853 295 877 306 Q904 295 929 311 Q957 298 978 315 Q1000 305 1022 316 Q1051 301 1071 315 Q1093 309 1117 319 Q1147 313 1155 335 Q1178 330 1170 353 Q1193 357 1176 376 Q1163 383 1175 397 Q1172 411 1155 413 Q1161 431 1144 442 Q1157 463 1138 466 Q1127 460 1124 447 Q1103 456 1096 440 Q1076 449 1064 435 Q1046 435 1039 417 Q1021 419 1015 433 Q998 450 985 435 Q970 425 957 429 Q944 442 928 429 Q916 420 906 433 Q897 450 879 439 Q867 429 849 435 Q833 443 825 425 Q814 418 803 428 Q790 421 781 410 Q764 419 759 433 Q740 441 730 424 Q717 414 706 424 Q689 420 687 407 Q674 409 664 422 Q651 416 638 416 Q623 439 605 414 Q589 408 577 427 Q574 449 559 451 Q541 446 542 429 Q520 443 512 429 Q493 436 481 425 Q462 445 449 432 Q431 450 419 438 Q405 446 400 429 Q379 437 376 419 Q359 426 362 406 Q345 398 355 382 Q364 373 354 357 Q360 343 375 344 Q366 326 385 326 Q384 311 399 308 Z"
                 />
-                <text x="768" y="365" text-anchor="middle">ÉTATS-UNIS</text>
+                <text x="768" y="365" text-anchor="middle">CLASSIQUE</text>
                 <text
                   class="ingredient-subtitle"
                   x="768"
                   y="392"
                   text-anchor="middle"
                 >
-                  50 gourmands
+                  8 gourmands
                 </text>
               </g>
               <g
@@ -147,21 +147,22 @@
                 </text>
               </g>
             </svg>
+            <button
+              id="multiplayer-entry"
+              class="multiplayer-entry"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="multiplayer-dialog"
+            >
+              <strong>🍔 MULTIJOUEUR PRIVÉ</strong>
+              <span>Jouer avec mes amis</span>
+            </button>
             <div class="title-wallet">
               <span>🧈 <strong data-wallet>0</strong> points de graisse</span
               ><span id="menu-record"></span>
             </div>
           </div>
-          <button
-            id="multiplayer-entry"
-            class="multiplayer-entry"
-            type="button"
-            aria-haspopup="dialog"
-            aria-controls="multiplayer-dialog"
-          >
-            <strong>🍔 MULTIJOUEUR PRIVÉ</strong>
-            <span>Jouer avec mes amis</span>
-          </button>
+
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
             <p class="menu-kicker">Bouffe ou Crève · La maison des gourmands</p>
@@ -249,7 +250,9 @@
             Salons privés sur invitation.
           </p>
           <div id="multiplayer-connect">
-            <label for="multiplayer-name">Ton petit nom</label>
+            <label for="multiplayer-name"
+              >Ton pseudo · 24 caractères maximum</label
+            >
             <input
               id="multiplayer-name"
               maxlength="24"
@@ -283,6 +286,11 @@
               <option value="50">50 gourmands</option>
             </select>
             <p id="multiplayer-fill"></p>
+            <p class="multiplayer-help">
+              L’apparence de ton Dressing est partagée avec tes amis. Elle peut
+              changer dans le salon, puis reste figée jusqu’à la fin de la
+              partie.
+            </p>
             <button id="multiplayer-ready">Je suis prêt</button>
             <button id="multiplayer-start">Servir le festin · Lancer</button>
             <p class="multiplayer-help">

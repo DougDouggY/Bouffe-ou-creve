@@ -184,7 +184,10 @@ export async function verifyDeployment(
   console.log("OK : /health, version et origine GitHub Pages.");
   const peers = [];
   try {
-    const first = await post("/api/rooms", { name: "Test déploiement A" });
+    const first = await post("/api/rooms", {
+      name: "Test déploiement A",
+      cosmetics: { hat: "chef", outfit: "cook" },
+    });
     assert.match(first.code, /^[A-HJ-NP-Z2-9]{12}$/);
     assert.match(first.token, /^[a-f0-9]{64}$/);
     const socketURL = new URL("/api/socket/" + first.code, base);
@@ -194,6 +197,7 @@ export async function verifyDeployment(
     await a.wait((p) => p.type === "welcome");
     const second = await post("/api/join", {
       name: "Test déploiement B",
+      cosmetics: { hat: "hat_pancakes", outfit: "outfit_royal" },
       code: first.code,
     });
     const b = new Peer(socketURL, second);
@@ -223,6 +227,22 @@ export async function verifyDeployment(
     const startB = (await b.wait((p) => p.type === "state")).state;
     assert.deepEqual(startA, startB);
     assert.equal(startA.people.length, 24);
+    for (const [ticket, name, cosmetics] of [
+      [first, "Test déploiement A", { hat: "chef", outfit: "cook" }],
+      [
+        second,
+        "Test déploiement B",
+        { hat: "hat_pancakes", outfit: "outfit_royal" },
+      ],
+    ]) {
+      const person = startA.people.find((p) => p.memberId === ticket.memberId);
+      assert(person?.human);
+      assert.equal(person.name, name);
+      assert.deepEqual(person.cosmetics, cosmetics);
+    }
+    console.log(
+      "OK : identités et vrais cosmétiques partagés par les deux clients.",
+    );
     a.send({ type: "shot", turn: 1, x: 8, y: 3 });
     const locked = await b.wait(
       (p) =>

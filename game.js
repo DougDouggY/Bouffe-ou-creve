@@ -1,4 +1,6 @@
-import { setupMultiplayer } from "./multiplayer-client.js?v=multi-panel-21";
+import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
+import { setupMultiplayer } from "./multiplayer-client.js?v=identity-22";
 import {
   CA,
   Ee,
@@ -34,7 +36,7 @@ import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=hunger-18";
+} from "./restaurant-menu.js?v=identity-22";
 
 import {
   drawArenaFloor,
@@ -42,11 +44,10 @@ import {
   drawArenaPowers,
 } from "./arena-render.js?v=filmovore-15";
 import {
-  EXTRA_COSMETICS,
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=filmovore-15";
+} from "./cosmetics.js?v=identity-22";
 import { drawMapArt, mapArtURL } from "./map-art.js?v=hunger-18";
 import {
   WORK_IN_PROGRESS_MAPS,
@@ -400,98 +401,7 @@ function UI(e, g, o, u, E) {
       ((e.trophies[Q.id] = Date.now()), C.push(Q.id));
   return C;
 }
-const Oe = "bouffe-profile-v1",
-  KA = [
-    {
-      id: "plain",
-      slot: "outfit",
-      name: "Tenue de cantine",
-      price: 0,
-      color: "#ed9a41",
-      icon: "👕",
-    },
-    { id: "none", slot: "hat", name: "Sans chapeau", price: 0, icon: "🙂" },
-    {
-      id: "cap",
-      slot: "hat",
-      name: "Bouteille de ketchup",
-      price: 100,
-      icon: "🧢",
-    },
-    { id: "beanie", slot: "hat", name: "Bonnet DIAG", price: 150, icon: "🎿" },
-    { id: "chef", slot: "hat", name: "Toque du chef", price: 250, icon: "👨‍🍳" },
-    {
-      id: "crown",
-      slot: "hat",
-      name: "Couronne du gros",
-      price: 500,
-      icon: "👑",
-    },
-    {
-      id: "burger",
-      slot: "hat",
-      name: "Burger sur la tête",
-      price: 350,
-      icon: "🍔",
-    },
-    {
-      id: "pirate",
-      slot: "hat",
-      name: "Chapeau pirate",
-      price: 300,
-      icon: "🏴‍☠️",
-    },
-    { id: "halo", slot: "hat", name: "Auréole de steak", price: 300 },
-    { id: "tender", slot: "hat", name: "Tender croustillant", price: 200 },
-    {
-      id: "diag",
-      slot: "outfit",
-      name: "T-shirt DIAG",
-      price: 180,
-      color: "#ad3e31",
-    },
-    {
-      id: "sport",
-      slot: "outfit",
-      name: "Survêt brocoli",
-      price: 150,
-      color: "#679b64",
-      icon: "🥦",
-    },
-    {
-      id: "cook",
-      slot: "outfit",
-      name: "Veste de chef",
-      price: 250,
-      color: "#f1eddf",
-      icon: "🥼",
-    },
-    {
-      id: "cosmic",
-      slot: "outfit",
-      name: "Combinaison cosmique",
-      price: 400,
-      color: "#9476bd",
-      icon: "🪐",
-    },
-    {
-      id: "candy",
-      slot: "outfit",
-      name: "Tenue barbe à papa",
-      price: 250,
-      color: "#e49abb",
-      icon: "🍬",
-    },
-    {
-      id: "tux",
-      slot: "outfit",
-      name: "Smoking du buffet",
-      price: 350,
-      color: "#334558",
-      icon: "🤵",
-    },
-    ...EXTRA_COSMETICS,
-  ];
+const Oe = "bouffe-profile-v1";
 function Te() {
   return {
     trophies: {},
@@ -524,6 +434,13 @@ function Xe(e) {
       Number.isSafeInteger(g.modeWins?.[u]) &&
         g.modeWins[u] >= 0 &&
         (o.modeWins[u] = g.modeWins[u]);
+    if (o.trophies["classic-win"])
+      o.modeWins.classic = Math.max(1, o.modeWins.classic);
+    if (o.trophies["us-win"]) o.modeWins.usa = Math.max(1, o.modeWins.usa);
+    if (o.modeWins.usa > 0 || o.trophies["all-modes"]) {
+      o.modeWins.classic = Math.max(1, o.modeWins.classic);
+      o.modeWins.gros = Math.max(1, o.modeWins.gros);
+    }
     o.shadow = secretProfile(g.shadow);
     o.shadow.wins.somalia = Math.max(o.shadow.wins.somalia, o.modeWins.somalia);
     if (o.trophies["somalia-win"]) {
@@ -709,7 +626,8 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   (e.save(), e.translate(E, A));
   const C =
     1 +
-    Math.sin(o * 0.012 + g.id) * Math.min(0.035, (g.body.speed || 0) * 0.006) +
+    Math.sin(o * 0.012 + (g.networkSeat ?? g.id)) *
+      Math.min(0.035, (g.body.speed || 0) * 0.006) +
     (g.pop || 0) * 0.05;
   e.scale(n * C, n / C);
   const Q = (r, d, M, S, v) => {
@@ -720,8 +638,8 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   };
   (Q(0.03, 0.85, 1.08, 0.27, "#172b3035"),
     g.id === 0 &&
-      ((e.strokeStyle = "#f0b75c"),
-      (e.lineWidth = 2 / n),
+      ((e.strokeStyle = g.human ? "#a6e4ff" : "#f0b75c"),
+      (e.lineWidth = (g.human ? 2.8 : 2) / n),
       e.beginPath(),
       e.arc(0, 0, 1 + 5 / n, 0, 7),
       e.stroke()),
@@ -742,7 +660,9 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
     Q(-I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i),
     Q(I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i));
   const B =
-      (g.id === 0 ? KA.find((r) => r.id === u.outfit)?.color : null) ||
+      (g.id === 0 || g.cosmetics
+        ? KA.find((r) => r.id === u.outfit)?.color
+        : null) ||
       g.color ||
       "#eda052",
     k =
@@ -759,10 +679,12 @@ function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
   (t.addColorStop(0, B),
     t.addColorStop(1, k),
     g.id !== 0 &&
+      !g.cosmetics &&
       u.outfit === "plain" &&
       Q(0, 0.2, I.bodyWidth, I.bodyHeight, t));
   const a = xI(1, g.mass ?? 60);
-  ((g.id === 0 || u.outfit !== "plain") && Ie(e, u.outfit, a.x, a.y, a.w, a.h),
+  ((g.id === 0 || g.cosmetics || u.outfit !== "plain") &&
+    Ie(e, u.outfit, a.x, a.y, a.w, a.h),
     e.save(),
     e.translate(0, I.headY),
     e.scale(I.headScale, I.headScale));
@@ -1410,11 +1332,33 @@ function II() {
 }
 function Qt({ start: e, appearance: g }) {
   let o, journey;
+  function storedProfile(fallback = Te()) {
+    let primary, backup;
+    try {
+      primary = JSON.parse(localStorage.getItem(Oe));
+    } catch {}
+    try {
+      backup = JSON.parse(localStorage.getItem(Oe + "-backup"));
+    } catch {}
+    const valid = (value) =>
+      value && typeof value === "object" && !Array.isArray(value);
+    const active = valid(primary) ? primary : valid(backup) ? backup : fallback;
+    return Xe(
+      JSON.stringify(
+        mergeProfileProgress(
+          Xe(JSON.stringify(active)),
+          null,
+          Xe(JSON.stringify(valid(backup) ? backup : active)),
+        ),
+      ),
+    );
+  }
   try {
-    o = Xe(localStorage.getItem(Oe));
+    o = storedProfile();
   } catch {
     o = Xe(null);
   }
+  let savedProfile = structuredClone(o);
   let u = "cantine",
     E = "classic",
     A = 0,
@@ -1486,9 +1430,20 @@ function Qt({ start: e, appearance: g }) {
   }
   function a() {
     try {
-      (localStorage.setItem(Oe, JSON.stringify(o)),
-        (L("#save-status").textContent =
-          "Progression enregistrée dans ce navigateur."));
+      const merged = Xe(
+        JSON.stringify(
+          mergeProfileProgress(o, savedProfile, storedProfile(savedProfile)),
+        ),
+      );
+      Object.assign(o, merged);
+      const serialized = JSON.stringify(o);
+      localStorage.setItem(Oe, serialized);
+      savedProfile = structuredClone(o);
+      try {
+        localStorage.setItem(Oe + "-backup", serialized);
+      } catch {}
+      L("#save-status").textContent =
+        "Progression enregistrée dans ce navigateur.";
     } catch {
       L("#save-status").textContent =
         "Sauvegarde indisponible : progression conservée pendant cette session.";
@@ -1496,6 +1451,23 @@ function Qt({ start: e, appearance: g }) {
     t();
   }
   function s(l) {
+    if (!I) {
+      try {
+        Object.assign(
+          o,
+          Xe(
+            JSON.stringify(
+              mergeProfileProgress(
+                o,
+                savedProfile,
+                storedProfile(savedProfile),
+              ),
+            ),
+          ),
+        );
+        savedProfile = structuredClone(o);
+      } catch {}
+    }
     const R = KA.find((h) => h.id === l);
     R && (I ? ((C[R.slot] = l), t(), r()) : LI(o, l) && (a(), r()));
   }
@@ -2596,6 +2568,7 @@ const w = (e) => document.querySelector(e),
 let oe = [];
 const PA = new Map();
 let online = null;
+let onlineMembers = new Map();
 let onlinePeople = [],
   onlineSeat = 0;
 let ve = "resin",
@@ -2846,12 +2819,7 @@ function Dt() {
         x: (I.body.position.x - QA.x + uA) * o,
         y: (I.body.position.y - QA.y + aA) * u,
         r: I.body.circleRadius * o,
-        top:
-          FI(
-            I.id === 0 ? WA.equipped.hat : "none",
-            I.body.circleRadius,
-            I.mass,
-          ) * o,
+        top: FI(equippedFor(I).hat, I.body.circleRadius, I.mass) * o,
       })),
       g.width,
       g.height,
@@ -2868,6 +2836,9 @@ function Dt() {
       w("#character-labels").append(Q),
       PA.set(C.id, Q)),
       (Q.dataset.player = C.id === 0 ? "true" : "false"),
+      (Q.dataset.human = C.human === true ? "true" : "false"),
+      (Q.dataset.member = C.memberId || ""),
+      (Q.title = C.name),
       (Q.querySelector(".badge-name").textContent = C.name),
       (Q.querySelector(".badge-weight").textContent = RI(C.mass)),
       (Q.style.transform = `translate(${I.x}px,${I.y}px)`),
@@ -2973,9 +2944,16 @@ function BA(e, g, o, u, E) {
     (x.fillStyle = E),
     x.fill());
 }
+function equippedFor(person) {
+  return online?.active
+    ? person.cosmetics || { hat: "none", outfit: "plain" }
+    : person.id === 0
+      ? WA.equipped
+      : { hat: "none", outfit: "plain" };
+}
 function kI(e, g) {
   if (drawSecretPerson(x, K, e, g)) return;
-  Se(x, e, g, e.id === 0 ? WA.equipped : { hat: "none", outfit: "plain" });
+  Se(x, e, g, equippedFor(e));
 }
 function uI(e) {
   if (drawSecretFood(x, K, e, performance.now())) return;
@@ -3236,6 +3214,19 @@ WA = Qt({
   },
 });
 online = setupMultiplayer({
+  getCosmetics: () => {
+    try {
+      return Xe(localStorage.getItem(Oe)).equipped;
+    } catch {
+      return WA.equipped;
+    }
+  },
+  onRoster(members) {
+    onlineMembers = new Map(members.map((member) => [member.id, member]));
+    if (online?.active)
+      for (const person of onlinePeople)
+        person.human = onlineMembers.has(person.memberId);
+  },
   onStart(state, seat) {
     clearTimeout(Re);
     K?.destroy();
@@ -3275,6 +3266,9 @@ online = setupMultiplayer({
       if (person.mass !== data.mass) K.resize(person, data.mass);
       const { x, y, vx, vy, angle, id, ...attributes } = data;
       Object.assign(person, attributes);
+      person.networkSeat = id;
+      person.human =
+        attributes.human === true && onlineMembers.has(attributes.memberId);
       person.id = id === onlineSeat ? 0 : id === 0 ? onlineSeat : id;
       eA.setPosition(person.body, { x, y });
       eA.setVelocity(person.body, { x: vx, y: vy });

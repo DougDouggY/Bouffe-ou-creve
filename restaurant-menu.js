@@ -213,13 +213,13 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
   function refresh() {
     const modes = secret
       ? ["somalia", "platform", "cannibal", "icecream"]
-      : ["usa", "classic", "gros", "shop"];
+      : ["classic", "gros", "usa", "shop"];
     const titles = secret
       ? ["SOMALIE", "FILMOVORE", "LE FESTIN CANNIBALE", "LE MARCHAND DE GLACES"]
-      : ["ÉTATS-UNIS", "CLASSIQUE", "GRAND BANQUET", "LE DRESSING DU GLOUTON"];
+      : ["CLASSIQUE", "GRAND BANQUET", "ÉTATS-UNIS", "LE DRESSING DU GLOUTON"];
     const counts = secret
       ? ["50 gourmands", "16 ou 24 gourmands", "16 gourmands", "16 gourmands"]
-      : ["50 gourmands", "8 gourmands", "24 gourmands", "DU GLOUTON"];
+      : ["8 gourmands", "24 gourmands", "50 gourmands", "DU GLOUTON"];
     subtitle.style.display = secret ? "" : "none";
     slots.forEach((slot, i) => {
       slot.querySelector("text:not(.ingredient-subtitle)").textContent =

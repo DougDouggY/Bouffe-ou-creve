@@ -214,3 +214,116 @@ test("network recording compresses intermediate frames and preserves exact endpo
   }
   assert.deepEqual(previous, replay.final);
 });
+
+test("real Dressing IDs, slot validation, human seats and cosmetics survive checkpoints", async () => {
+  const { COSMETIC_CATALOG, normalizeCosmetics } =
+    await import("../cosmetic-catalog.js");
+  assert.equal(
+    COSMETIC_CATALOG.find((c) => c.id === "cap").name,
+    "Bouteille de ketchup",
+  );
+  for (const item of COSMETIC_CATALOG)
+    assert.equal(
+      normalizeCosmetics({ [item.slot]: item.id })[item.slot],
+      item.id,
+    );
+  assert.deepEqual(
+    normalizeCosmetics({
+      hat: "tux",
+      outfit: "chef",
+      url: "https://example.com/a.png",
+    }),
+    { hat: "none", outfit: "plain" },
+  );
+  const r = new Room(),
+    a = r.create(randomCode(), "Doug", 19, { hat: "cap", outfit: "sport" }),
+    b = r.join("Tony", { hat: "chef", outfit: "cook" });
+  r.connect(a);
+  r.connect(b);
+  r.action(a, { type: "ready", ready: true, version });
+  r.action(a, {
+    type: "appearance",
+    cosmetics: { hat: "crown", outfit: "sport" },
+    version,
+  });
+  assert.equal(a.ready, false);
+  assert.deepEqual(r.publicState().members[0].cosmetics, {
+    hat: "crown",
+    outfit: "sport",
+  });
+  for (const m of [a, b]) r.action(m, { type: "ready", ready: true, version });
+  r.action(a, { type: "start", version });
+  assert.equal(r.game.people[0].memberId, a.id);
+  assert.equal(r.game.people[1].memberId, b.id);
+  assert(r.game.people[0].human && r.game.people[1].human);
+  assert(r.game.people.slice(2).every((p) => !p.human && !p.cosmetics));
+  assert.deepEqual(r.game.people[1].cosmetics, { hat: "chef", outfit: "cook" });
+  assert.throws(
+    () =>
+      r.action(b, {
+        type: "appearance",
+        cosmetics: { hat: "burger", outfit: "tux" },
+        version,
+      }),
+    { code: "APPEARANCE_LOCKED" },
+  );
+  const restored = new Room(structuredClone(r.data));
+  assert.deepEqual(snapshot(restored.game), snapshot(r.game));
+  restored.leave(restored.data.members[0]);
+  const again = new Room(structuredClone(restored.data));
+  assert.equal(again.game.people[0].human, false);
+  assert.equal(again.game.people[1].memberId, b.id);
+  assert.deepEqual(again.game.people[1].cosmetics, {
+    hat: "chef",
+    outfit: "cook",
+  });
+});
+
+test("nicknames are server-normalized, bounded Unicode text and do not change seats", () => {
+  const r = new Room(),
+    a = r.create(randomCode(), "  <Doug>\u202e   le gourmand\n", 19);
+  assert.equal(a.name, "Doug le gourmand");
+  const b = r.join("🍔".repeat(40));
+  assert.equal(Array.from(b.name).length, 24);
+  assert.throws(() => r.join({ name: "injected" }), { code: "NAME" });
+  assert.throws(() => r.join(["Tony"]), { code: "NAME" });
+  r.connect(a);
+  r.connect(b);
+  for (const m of [a, b]) r.action(m, { type: "ready", ready: true, version });
+  r.action(a, { type: "start", version });
+  const state = snapshot(r.game);
+  assert.equal(state.people[0].name, a.name);
+  assert.equal(state.people[1].name, b.name);
+  assert.equal(state.people[0].memberId, a.id);
+  assert.equal(state.people[1].memberId, b.id);
+});
+
+test("cosmetics and human labels do not affect propulsion, AI or physical outcomes", () => {
+  const players = [
+    { id: "a", name: "A", seat: 0 },
+    { id: "b", name: "B", seat: 1 },
+  ];
+  const plain = createSimulation(24, 19, players),
+    dressed = createSimulation(
+      24,
+      19,
+      players.map((p, i) => ({
+        ...p,
+        cosmetics: { hat: i ? "chef" : "cap", outfit: i ? "cook" : "sport" },
+      })),
+    );
+  const inputs = new Map([
+    [0, { x: 12, y: 2 }],
+    [1, { x: -12, y: 3 }],
+  ]);
+  const a = resolveTurn(plain, inputs).final,
+    b = resolveTurn(dressed, inputs).final;
+  for (let i = 0; i < 24; i++) {
+    assert.equal(a.people[i].mass, b.people[i].mass);
+    assert.equal(a.people[i].alive, b.people[i].alive);
+    assert(Math.abs(a.people[i].x - b.people[i].x) < 1e-6);
+    assert(Math.abs(a.people[i].y - b.people[i].y) < 1e-6);
+  }
+  plain.destroy();
+  dressed.destroy();
+});

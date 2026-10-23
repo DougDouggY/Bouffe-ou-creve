@@ -1,3 +1,4 @@
+import { normalizeCosmetics } from "./cosmetic-catalog.js?v=identity-22";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
   zt as Game,
@@ -40,7 +41,11 @@ export function createSimulation(count, seed, humans) {
   // This is an online last-survivor match, including after seat zero dies.
   game.checkTruce = () => false;
   humans.forEach((member, index) => {
-    game.people[index].name = member.name;
+    const person = game.people[member.seat ?? index];
+    person.name = member.name;
+    person.human = true;
+    person.memberId = member.id;
+    person.cosmetics = normalizeCosmetics(member.cosmetics);
   });
   return game;
 }

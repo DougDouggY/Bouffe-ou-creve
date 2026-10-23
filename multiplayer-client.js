@@ -1,3 +1,7 @@
+import {
+  normalizeCosmetics,
+  COSMETIC_CATALOG,
+} from "./cosmetic-catalog.js?v=identity-22";
 import { decodeFrame } from "./multiplayer-protocol.js?v=multi-20";
 const VERSION = "multi-20";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
@@ -12,6 +16,8 @@ export function setupMultiplayer({
   onLeave,
   onEnd,
   onEvent,
+  getCosmetics = () => ({ hat: "none", outfit: "plain" }),
+  onRoster = () => {},
 }) {
   let ticket = null,
     ws = null,
@@ -77,6 +83,13 @@ export function setupMultiplayer({
     $("#multiplayer-players").replaceChildren(
       ...(room?.members || []).map((m) => {
         const li = document.createElement("li");
+        const cosmetics = normalizeCosmetics(m.cosmetics);
+        li.dataset.member = m.id;
+        li.dataset.hat = cosmetics.hat;
+        li.dataset.outfit = cosmetics.outfit;
+        li.title = [cosmetics.hat, cosmetics.outfit]
+          .map((id) => COSMETIC_CATALOG.find((item) => item.id === id)?.name)
+          .join(" · ");
         li.textContent = `${m.name}${m.id === room.host ? " · hôte" : ""}${m.id === ticket.memberId ? " · toi" : ""} — ${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
         return li;
       }),
@@ -103,6 +116,7 @@ export function setupMultiplayer({
   function acceptRoom(data) {
     if (room && data.revision < room.revision) return;
     room = data;
+    onRoster(data.members);
     offset = data.serverTime - Date.now();
     if (pendingTurn !== room.turn) pendingTurn = null;
     update();
@@ -170,6 +184,7 @@ export function setupMultiplayer({
       if (packet.type === "welcome") {
         acceptRoom(packet.room);
         if (packet.state) enter(packet.state);
+        else syncAppearance();
       } else if (packet.type === "room") acceptRoom(packet.room);
       else if (packet.type === "state") enter(packet.state);
       else if (packet.type === "resolution") {
@@ -232,7 +247,12 @@ export function setupMultiplayer({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, code, version: VERSION }),
+          body: JSON.stringify({
+            name,
+            code,
+            cosmetics: normalizeCosmetics(getCosmetics()),
+            version: VERSION,
+          }),
           signal: AbortSignal.timeout(10000),
         },
       );
@@ -332,7 +352,6 @@ export function setupMultiplayer({
     }
   }
   $("#multiplayer-entry").onclick = () => {
-    if (document.body.classList.contains("shadow-realm")) return;
     dialog.showModal();
     update();
     if (!ticket) health();
@@ -345,11 +364,29 @@ export function setupMultiplayer({
       join(false);
     }
   });
-  $("#multiplayer-ready").onclick = () =>
+  function syncAppearance() {
+    if (!ticket || room?.phase !== "lobby" || ws?.readyState !== WebSocket.OPEN)
+      return;
+    const cosmetics = normalizeCosmetics(getCosmetics());
+    const member = room.members.find((m) => m.id === ticket.memberId);
+    if (
+      JSON.stringify(cosmetics) !==
+      JSON.stringify(normalizeCosmetics(member?.cosmetics))
+    )
+      send({ type: "appearance", cosmetics });
+  }
+  window.addEventListener("focus", syncAppearance);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "bouffe-profile-v1" || event.key === null)
+      syncAppearance();
+  });
+  $("#multiplayer-ready").onclick = () => {
+    syncAppearance();
     send({
       type: "ready",
       ready: !room?.members.find((m) => m.id === ticket.memberId)?.ready,
     });
+  };
   $("#multiplayer-size").onchange = (e) =>
     send({ type: "size", count: Number(e.target.value) });
   $("#multiplayer-start").onclick = () => send({ type: "start" });

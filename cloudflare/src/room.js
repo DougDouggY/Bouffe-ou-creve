@@ -1,3 +1,4 @@
+import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
 import {
   createSimulation,
   resolveTurn,
@@ -32,12 +33,18 @@ function token() {
   ).join("");
 }
 function cleanName(name) {
+  if (name !== undefined && name !== null && typeof name !== "string")
+    throw new RoomError("NAME", "Le pseudo doit être du texte.");
   return (
-    String(name || "")
-      .normalize("NFC")
-      .replace(/[\p{Cc}\p{Cf}<>]/gu, "")
-      .trim()
-      .slice(0, 24) || "Gourmand"
+    Array.from(
+      String(name || "")
+        .normalize("NFC")
+        .replace(/[\p{Cc}\p{Cf}<>]/gu, "")
+        .replace(/\s+/gu, " ")
+        .trim(),
+    )
+      .slice(0, 24)
+      .join("") || "Gourmand"
   );
 }
 export class RoomError extends Error {
@@ -77,7 +84,7 @@ export class Room {
     )
       fail("EXPIRED", "Ce salon a expiré. Crée un nouveau salon.", 410);
   }
-  create(code, name, seed) {
+  create(code, name, seed, cosmetics) {
     if (this.data) fail("EXISTS", "Ce salon existe déjà.", 409);
     const now = this.now();
     this.data = {
@@ -96,11 +103,11 @@ export class Room {
       readyAt: 0,
       deadline: 0,
     };
-    const member = this.join(name);
+    const member = this.join(name, cosmetics);
     this.data.host = member.id;
     return member;
   }
-  join(name) {
+  join(name, cosmetics) {
     this.exists();
     if (this.data.phase !== "lobby")
       fail(
@@ -114,6 +121,7 @@ export class Room {
       id: crypto.randomUUID(),
       token: token(),
       name: cleanName(name),
+      cosmetics: normalizeCosmetics(cosmetics),
       connected: false,
       disconnectedAt: this.now(),
       ready: false,
@@ -167,15 +175,18 @@ export class Room {
       deadline: d.deadline,
       serverTime: this.now(),
       expiresAt: d.expiresAt,
-      members: d.members.map(({ id, name, connected, ready, seat }) => ({
-        id,
-        name,
-        connected,
-        ready,
-        seat,
-        alive: seat === null || !!this.game?.people[seat]?.alive,
-        locked: seat !== null && Object.hasOwn(d.shots, seat),
-      })),
+      members: d.members.map(
+        ({ id, name, connected, ready, seat, cosmetics }) => ({
+          id,
+          name,
+          cosmetics: normalizeCosmetics(cosmetics),
+          connected,
+          ready,
+          seat,
+          alive: seat === null || !!this.game?.people[seat]?.alive,
+          locked: seat !== null && Object.hasOwn(d.shots, seat),
+        }),
+      ),
     };
   }
   action(member, message) {
@@ -183,7 +194,18 @@ export class Room {
     if (!message || message.version !== SIMULATION_VERSION)
       fail("VERSION", "Recharge le jeu pour utiliser la même version.");
     const d = this.data;
-    if (message.type === "ready") {
+    if (message.type === "appearance") {
+      if (d.phase !== "lobby")
+        fail(
+          "APPEARANCE_LOCKED",
+          "L’apparence est figée pour cette partie. Change-la avant de rejoindre le prochain salon.",
+        );
+      const cosmetics = normalizeCosmetics(message.cosmetics);
+      if (JSON.stringify(cosmetics) !== JSON.stringify(member.cosmetics)) {
+        member.cosmetics = cosmetics;
+        member.ready = false;
+      }
+    } else if (message.type === "ready") {
       if (d.phase !== "lobby") fail("STARTED", "La partie a commencé.");
       member.ready = message.ready === true;
     } else if (message.type === "size") {
@@ -271,6 +293,10 @@ export class Room {
     return replay;
   }
   leave(member) {
+    if (this.game && member.seat !== null) {
+      this.game.people[member.seat].human = false;
+      this.data.checkpoint = checkpoint(this.game);
+    }
     this.data.members = this.data.members.filter((m) => m.id !== member.id);
     if (this.data.host === member.id)
       this.data.host =

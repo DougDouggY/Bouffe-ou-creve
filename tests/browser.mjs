@@ -100,7 +100,7 @@ try {
   checks += 3;
 
   async function mode(slot) {
-    await page.locator(`[data-menu-mode="${slot}"]`).focus();
+    await page.locator(`[data-actual-mode="${slot}"]`).focus();
     await page.keyboard.press("Enter");
     await page.waitForTimeout(260);
   }
@@ -126,7 +126,7 @@ try {
     ),
   );
   checks++;
-  await mode("somalia");
+  await mode("usa");
   assert(await page.locator("#title-screen").isVisible());
   assert(
     (await page.locator("#mode-unlock-note").textContent()).includes(
@@ -375,7 +375,7 @@ try {
     window.__game.emit("end");
   });
   await page.locator("#end-menu").click();
-  await mode("somalia");
+  await mode("usa");
   await start("beach");
   assert.equal(await page.evaluate(() => window.__game.count), 50);
   checks++;
@@ -390,6 +390,11 @@ try {
   await page.locator('#shadow-form button[type="submit"]').click();
   assert(await page.locator("#shadow-message").isVisible());
   await page.locator("#enter-shadow").click();
+  assert(await page.locator("#multiplayer-entry").isVisible());
+  await page.locator("#multiplayer-entry").click();
+  assert(await page.locator("#multiplayer-dialog").isVisible());
+  await page.locator("#multiplayer-close").click();
+  checks++;
   assert.equal(
     await page
       .locator('[data-menu-mode="somalia"] text:not(.ingredient-subtitle)')
@@ -411,7 +416,7 @@ try {
   await page.locator("#return-classic").click();
   assert.equal(
     await page
-      .locator('[data-menu-mode="classic"] text:not(.ingredient-subtitle)')
+      .locator('[data-actual-mode="classic"] text:not(.ingredient-subtitle)')
       .textContent(),
     "CLASSIQUE",
   );
@@ -480,7 +485,7 @@ try {
     ),
   );
   checks += 2;
-  await mobile.locator('[data-menu-mode="classic"]').focus();
+  await mobile.locator('[data-actual-mode="classic"]').focus();
   await mobile.keyboard.press("Enter");
   await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="beach"]').click();
@@ -534,6 +539,63 @@ try {
   await touch.detach();
   await mobile.waitForFunction(() => !!window.__game.people[0].roundStart);
   checks++;
+  // A damaged primary save recovers its local backup and original victory evidence.
+  const recovery = await browser.newPage();
+  await recovery.goto(url);
+  await recovery.evaluate(() => {
+    localStorage.setItem("bouffe-profile-v1", "{damaged");
+    localStorage.setItem(
+      "bouffe-profile-v1-backup",
+      JSON.stringify({
+        points: 750,
+        trophies: { "classic-win": 123, "us-win": 456 },
+        owned: ["none", "plain", "hat_pancakes", "outfit_royal"],
+        equipped: { hat: "hat_pancakes", outfit: "outfit_royal" },
+      }),
+    );
+  });
+  await recovery.reload();
+  await recovery.waitForFunction(
+    () => document.querySelector(".burger-menu").dataset.masksReady === "true",
+  );
+  assert.equal(
+    await recovery
+      .locator('[data-actual-mode="gros"]')
+      .getAttribute("aria-disabled"),
+    "false",
+  );
+  assert.equal(
+    await recovery
+      .locator('[data-actual-mode="usa"]')
+      .getAttribute("aria-disabled"),
+    "false",
+  );
+  assert.equal(
+    await recovery
+      .locator('[data-menu-mode="somalia"]')
+      .getAttribute("data-actual-mode"),
+    "classic",
+  );
+  assert.equal(
+    await recovery
+      .locator('[data-menu-mode="classic"]')
+      .getAttribute("data-actual-mode"),
+    "gros",
+  );
+  assert.equal(
+    await recovery
+      .locator('[data-menu-mode="gros"]')
+      .getAttribute("data-actual-mode"),
+    "usa",
+  );
+  await recovery.locator("#menu-shop").focus();
+  await recovery.keyboard.press("Enter");
+  await recovery.waitForTimeout(300);
+  await recovery
+    .locator("#avatar-preview")
+    .screenshot({ path: path.join(output, "pancakes-front-degage.png") });
+  await recovery.close();
+  checks += 4;
   assert.deepEqual(errors, []);
   await mobile.close();
   console.log(

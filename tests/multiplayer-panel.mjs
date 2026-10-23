@@ -1,7 +1,7 @@
 // Public URLs/origin are preserved. Due to network restrictions, published files
 // and the Worker are served through local relays; this is not a live Internet test.
 import assert from "node:assert/strict";
-import { readFile, mkdir, mkdtemp } from "node:fs/promises";
+import { readFile, writeFile, mkdir, mkdtemp } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,7 +87,23 @@ try {
       const filename = path.resolve(root, relative);
       try {
         assert(filename.startsWith(root + path.sep));
-        const body = await readFile(filename);
+        let body = await readFile(filename);
+        if (relative === "game.js")
+          body = Buffer.concat([
+            body,
+            Buffer.from(`
+          window.__cosmeticTest = {
+            ready(ids) { return lA.complete && lA.naturalWidth > 0 && DA.complete && DA.naturalWidth > 0 && ids.every(id => { const im = extraCosmeticImage(id); return !im || im.complete && im.naturalWidth > 0; }); },
+            avatar(memberId) {
+              const p = window.__game.people.find(p => p.memberId === memberId);
+              const canvas = document.createElement('canvas'); canvas.width = 144; canvas.height = 180;
+              Se(canvas.getContext('2d', {willReadFrequently:true}), {...p, id:-1, body:{position:{x:72,y:118}, circleRadius:32, speed:3}},1234,equippedFor(p));
+              return { png:canvas.toDataURL(), pixels:Array.from(canvas.getContext("2d").getImageData(0,0,144,180).data) };
+            }
+          };
+`),
+          ]);
+
         resources.add(relative + url.search);
         await route.fulfill({
           status: 200,
@@ -157,6 +173,19 @@ try {
         route.onClose(() => server.close());
       },
     );
+    await context.addInitScript(() => {
+      if (!localStorage.getItem("cosmetic-test-seeded")) {
+        localStorage.setItem(
+          "bouffe-profile-v1",
+          JSON.stringify({
+            points: 5000,
+            owned: ["none", "plain"],
+            equipped: { hat: "none", outfit: "plain" },
+          }),
+        );
+        localStorage.setItem("cosmetic-test-seeded", "1");
+      }
+    });
     const page = await context.newPage();
     pages.push(page);
     page.on("pageerror", (e) => errors.push(e.message));
@@ -164,7 +193,7 @@ try {
       if (req.url().startsWith(SITE))
         failures.push(new URL(req.url()).pathname);
     });
-    await page.goto(SITE + "?v=multi-panel-21");
+    await page.goto(SITE + "?v=identity-22");
     await page.waitForFunction(
       () =>
         typeof document.querySelector("#multiplayer-entry").onclick ===
@@ -189,11 +218,7 @@ try {
         );
       }),
     );
-    if (viewport.width <= 650)
-      assert(
-        (await page.locator("#title-screen").boundingBox()).y >=
-          box.y + box.height,
-      );
+    assert(await page.locator("#title-screen #multiplayer-entry").count());
     await page.screenshot({
       path: path.join(
         output,
@@ -205,10 +230,41 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=multi-panel-21"));
-  assert(resources.has("style.css?v=multi-panel-21"));
-  assert(resources.has("multiplayer-client.js?v=multi-panel-21"));
+  assert(resources.has("game.js?v=identity-22"));
+  assert(resources.has("style.css?v=identity-22"));
+  assert(resources.has("multiplayer-client.js?v=identity-22"));
   assert(resources.has("multiplayer-protocol.js?v=multi-20"));
+  async function dress(page, hat, outfit) {
+    await page.locator("#menu-shop").focus();
+    await page.keyboard.press("Enter");
+    await page.locator("#shop-dialog").waitFor({ state: "visible" });
+    for (const id of [hat, outfit]) {
+      const button = page.locator(`[data-item="${id}"]`);
+      if (!(await button.isDisabled())) await button.click();
+    }
+    await page.locator("#close-shop").click();
+    assert.deepEqual(
+      await page.evaluate(
+        () => JSON.parse(localStorage.getItem("bouffe-profile-v1")).equipped,
+      ),
+      { hat, outfit },
+    );
+  }
+  const outfits = [
+    { hat: "cap", outfit: "sport" },
+    { hat: "chef", outfit: "cook" },
+    { hat: "hat_pizza", outfit: "outfit_royal" },
+    { hat: "hat_teapot", outfit: "outfit_chocolate" },
+  ];
+  // Equip through the real Dressing UI rather than inventing display-only skins.
+  for (const [i, page] of pages.entries()) {
+    await page.locator("#multiplayer-close").click();
+    await dress(page, outfits[i].hat, outfits[i].outfit);
+    await page.locator("#multiplayer-entry").click();
+    await page.waitForFunction(
+      () => !document.querySelector("#multiplayer-create").disabled,
+    );
+  }
   const names = ["Doug", "Tony", "Ami 3", "Ami 4"];
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-name").fill(names[i]);
@@ -241,6 +297,39 @@ try {
         count - 4,
       );
   }
+  for (const outfit of outfits)
+    for (const page of pages)
+      assert.equal(
+        await page
+          .locator(
+            `#multiplayer-players li[data-hat="${outfit.hat}"][data-outfit="${outfit.outfit}"]`,
+          )
+          .count(),
+        1,
+      );
+  await host.locator("#multiplayer-ready").click();
+  await host.waitForFunction(() =>
+    document
+      .querySelector("#multiplayer-ready")
+      .textContent.includes("plus prêt"),
+  );
+  const wardrobe = await host.context().newPage();
+  wardrobe.on("pageerror", (e) => errors.push(e.message));
+  await wardrobe.goto(SITE + "?v=identity-22");
+  await wardrobe.waitForFunction(
+    () =>
+      window.__cosmeticTest &&
+      document.querySelector(".burger-menu").dataset.masksReady === "true",
+  );
+  await dress(wardrobe, "crown", "sport");
+  outfits[0] = { hat: "crown", outfit: "sport" };
+  for (const page of pages)
+    await page.locator('#multiplayer-players li[data-hat="crown"]').waitFor();
+  assert.equal(
+    await host.locator("#multiplayer-ready").textContent(),
+    "Je suis prêt",
+  );
+  await wardrobe.close();
   for (const page of pages) await page.locator("#multiplayer-ready").click();
   await host.waitForFunction(
     () => !document.querySelector("#multiplayer-start").disabled,
@@ -258,6 +347,101 @@ try {
   }
   const start = wires[0].find((p) => p.type === "state").state;
   assert.equal(start.count, 24);
+  assert.equal(start.people.filter((p) => p.human).length, 4);
+  for (let i = 0; i < 4; i++) {
+    assert.equal(start.people[i].name, names[i]);
+    assert.deepEqual(start.people[i].cosmetics, outfits[i]);
+  }
+  const identities = start.people
+    .filter((p) => p.human)
+    .map((p) => ({
+      memberId: p.memberId,
+      name: p.name,
+      cosmetics: p.cosmetics,
+      networkSeat: p.id,
+    }));
+  async function verifyIdentityRendering() {
+    const renderIds = outfits.flatMap((o) => [o.hat, o.outfit]);
+    let reference, referenceImages;
+    for (const page of pages) {
+      await page.waitForFunction(
+        (ids) => window.__cosmeticTest.ready(ids),
+        renderIds,
+      );
+      const people = await page.evaluate(() =>
+        window.__game.people
+          .filter((p) => p.human)
+          .map((p) => ({
+            memberId: p.memberId,
+            name: p.name,
+            cosmetics: p.cosmetics,
+            networkSeat: p.networkSeat,
+          }))
+          .sort((a, b) => a.networkSeat - b.networkSeat),
+      );
+      assert.deepEqual(people, identities);
+      const rendered = await page.evaluate(
+        (ids) => ids.map((id) => window.__cosmeticTest.avatar(id)),
+        identities.map((p) => p.memberId),
+      );
+      // Chromium may choose different WebP raster downsampling after thumbnail use.
+      // Compare premultiplied pixels with a narrow edge tolerance, not PNG encoding.
+      if (reference) {
+        for (let j = 0; j < rendered.length; j++) {
+          const x = rendered[j].pixels,
+            y = reference[j].pixels;
+          let total = 0,
+            max = 0;
+          for (let k = 0; k < x.length; k += 4)
+            for (let c = 0; c < 4; c++) {
+              const delta = Math.abs(
+                c === 3
+                  ? x[k + c] - y[k + c]
+                  : (x[k + c] * x[k + 3]) / 255 - (y[k + c] * y[k + 3]) / 255,
+              );
+              total += delta;
+              max = Math.max(max, delta);
+            }
+          assert(
+            total / x.length < 0.75 && max <= 32,
+            "Same costume, pose and proportions across clients",
+          );
+        }
+      } else reference = rendered;
+      assert.equal(new Set(rendered.map((r) => r.png)).size, 4);
+      if (!(await page.evaluate(() => window.__game.people[0].alive))) continue;
+      const badge = page.locator(
+        '.character-badge[data-human="true"][data-player="true"]',
+      );
+      await badge.waitFor();
+      assert.equal(
+        await badge
+          .locator(".badge-name")
+          .evaluate((e) => getComputedStyle(e).color),
+        "rgb(172, 226, 255)",
+      );
+      assert(
+        Number(
+          await badge
+            .locator(".badge-name")
+            .evaluate((e) => getComputedStyle(e).fontWeight),
+        ) >= 700,
+      );
+      assert.equal(
+        await badge.locator(".badge-name").textContent(),
+        await page.evaluate(() => window.__game.people[0].name),
+      );
+    }
+    assert.equal(
+      new Set(reference).size,
+      4,
+      "Distinct Dressing appearances must not render as the same fallback.",
+    );
+  }
+  await verifyIdentityRendering();
+  await host.screenshot({
+    path: path.join(output, "identity-online-host.png"),
+  });
   for (const wire of wires)
     assert.deepEqual(wire.find((p) => p.type === "state").state, start);
   for (const [i, page] of pages.entries()) {
@@ -321,6 +505,26 @@ try {
     );
   const reference = await rendered(host);
   for (const page of pages) assert.deepEqual(await rendered(page), reference);
+  // A changed Dressing during the match applies only to the next lobby.
+  const nextLook = await host.context().newPage();
+  nextLook.on("pageerror", (e) => errors.push(e.message));
+  await nextLook.goto(SITE + "?v=identity-22");
+  await nextLook.waitForFunction(
+    () =>
+      window.__cosmeticTest &&
+      document.querySelector(".burger-menu").dataset.masksReady === "true",
+  );
+  await dress(nextLook, "burger", "cosmic");
+  await nextLook.close();
+  for (const page of pages) {
+    await page.reload();
+    await page.waitForFunction(
+      () =>
+        document.body.classList.contains("online-playing") &&
+        window.__game.round >= 2,
+    );
+  }
+  await verifyIdentityRendering();
   for (const page of pages) {
     await page.locator("#back-menu").click();
     assert(await page.locator("#multiplayer-entry").isVisible());
@@ -347,6 +551,10 @@ try {
         ai: 20,
         partySizes: [8, 24, 50],
         synchronized: true,
+        cosmetics: outfits,
+        reconnectedHumans: 4,
+        realDressingUI: true,
+        equivalentAvatarRendering: true,
       },
       null,
       2,

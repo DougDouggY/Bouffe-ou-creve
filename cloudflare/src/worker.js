@@ -212,8 +212,9 @@ export class PrivateRoom {
                   body.code,
                   body.name,
                   crypto.getRandomValues(new Uint32Array(1))[0],
+                  body.cosmetics,
                 )
-              : this.room.join(body.name);
+              : this.room.join(body.name, body.cosmetics);
           await this.persist();
           this.publish();
           return json({

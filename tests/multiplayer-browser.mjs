@@ -315,7 +315,7 @@ try {
   await a.waitForFunction(() => !document.body.classList.contains("playing"));
   assert(await a.locator("#main-menu").isVisible());
   // Solo must still work after an online session.
-  await a.locator('[data-menu-mode="classic"]').focus();
+  await a.locator('[data-actual-mode="classic"]').focus();
   await a.keyboard.press("Enter");
   await a.locator('[data-group="available"] .book-cover').click();
   await a.locator('[data-map="cantine"]').click();

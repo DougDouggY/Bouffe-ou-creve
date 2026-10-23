@@ -3280,54 +3280,67 @@ html[data-display="phone"] body.playing .game-nav button {
 }
 
 /* Private invitations use the same printed restaurant menu as solo. */
-.multiplayer-entry {
-  position: fixed;
-  top: max(100px, calc(env(safe-area-inset-top) + 12px));
-  right: max(16px, env(safe-area-inset-right));
-  z-index: 20;
+/* A small illuminated invitation rests in the foreground of both burgers. */
+#multiplayer-entry {
+  position: absolute;
+  top: min(calc(100% - 126px), calc(100svh - 230px));
+  right: 18px;
+  z-index: 5;
   display: grid;
-  gap: 5px;
-  width: 220px;
-  min-height: 64px;
+  gap: 4px;
+  width: 202px;
+  min-height: 65px;
   margin: 0;
-  padding: 11px 14px;
-  text-align: left;
-  color: #713b35;
-  background: #fbf3df;
-  border: 3px double #b59472;
-  border-radius: 5px;
-  box-shadow: 0 5px 18px #38291633;
+  padding: 12px;
+  text-align: center;
+  color: #fff1c5;
+  background: radial-gradient(ellipse at top, #8b5b30, #33281f 90%);
+  border: 2px solid #dbb77b;
+  border-radius: 13px;
+  box-shadow:
+    0 0 26px #ffd58566,
+    inset 0 0 13px #ffdc8a33,
+    0 5px 12px #0008;
 }
-.multiplayer-entry strong {
+#multiplayer-entry strong {
   font:
-    bold 15px Georgia,
-    serif;
-  white-space: nowrap;
-}
-.multiplayer-entry span {
-  font:
-    italic 13px Georgia,
+    bold 13px Georgia,
     serif;
 }
-.multiplayer-entry:hover {
-  background: #f0dfbd;
+#multiplayer-entry span {
+  font:
+    italic 12px Georgia,
+    serif;
 }
-.multiplayer-entry:focus-visible {
-  outline: 3px solid #713b35;
+#multiplayer-entry:hover {
+  box-shadow:
+    0 0 35px #ffd585aa,
+    inset 0 0 17px #ffdc8a55;
+}
+#multiplayer-entry:focus-visible {
+  outline: 3px solid #fff1c5;
   outline-offset: 3px;
 }
+body.shadow-realm #multiplayer-entry {
+  background: radial-gradient(ellipse at top, #495361, #1c202b 90%);
+  border-color: #c0b48a;
+}
 @media (max-width: 650px) {
-  .multiplayer-entry {
-    top: max(84px, calc(env(safe-area-inset-top) + 8px));
-    right: max(10px, env(safe-area-inset-right));
-    width: 210px;
+  #multiplayer-entry {
+    right: 10px;
+    top: auto;
+    bottom: 44px;
+    width: 124px;
+    min-height: 58px;
+    padding: 8px 6px;
   }
-  /* Space for the temporary card, above the existing burger artwork. */
-  body:not(.shadow-realm) #main-menu:has(#title-screen:not([hidden])) {
-    padding-top: 86px;
+  #multiplayer-entry strong {
+    font-size: 11px;
+  }
+  #multiplayer-entry span {
+    font-size: 10px;
   }
 }
-body.shadow-realm #multiplayer-entry,
 .main-menu:has(#title-screen[hidden]) #multiplayer-entry {
   display: none;
 }
@@ -3429,4 +3442,25 @@ body.online-playing
     .result-trophies-title
   ) {
   display: none;
+}
+
+/* Shared online identity; AI and solo labels retain their original appearance. */
+body.online-playing .character-badge[data-human="true"] {
+  background: #172c3aee;
+  border-color: #527b91;
+}
+body.online-playing .character-badge[data-human="true"] .badge-name {
+  color: #ace2ff;
+  font-weight: 750;
+}
+body.online-playing .character-badge[data-human="true"] .badge-name::before {
+  content: "✦ ";
+  font-size: 0.85em;
+}
+body.online-playing .character-badge[data-human="true"] .badge-weight {
+  color: #fff4da;
+}
+body.online-playing .character-badge[data-human="true"][data-player="true"] {
+  border-color: #b5ebff;
+  box-shadow: 0 0 0 1px #b5ebff66;
 }
