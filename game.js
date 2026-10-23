@@ -10297,7 +10297,7 @@ let ve = "resin",
   dA,
   HA = 0,
   qA = 0;
-const MA = matchMedia("(max-width:650px)").matches;
+const MA = document.documentElement.dataset.display === "phone";
 let gA = MA ? 680 : 1e3,
   sA = MA ? 740 : 560,
   uA = MA ? 65 : 90,
@@ -10577,7 +10577,10 @@ oA.addEventListener("pointerdown", (e) => {
   const g = vI(e),
     o = K.people[0];
   Math.hypot(g.x - o.body.position.x, g.y - o.body.position.y) >
-    o.body.circleRadius + 24 ||
+    o.body.circleRadius +
+      (document.documentElement.dataset.display === "phone"
+        ? Math.max(24, (28 * hA) / oA.getBoundingClientRect().width)
+        : 24) ||
     (oA.setPointerCapture(e.pointerId),
     (q = { kind: "shot", id: e.pointerId, x: g.x, y: g.y, dx: 0, dy: 0 }),
     (w("#hint").style.display = "none"),

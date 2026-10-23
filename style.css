@@ -3172,3 +3172,109 @@ body.shadow-realm #sound {
   border-color: #8a6151;
   background: #241b25;
 }
+
+/* A device preference changes presentation, never arena geometry. */
+.display-options {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid #b79779;
+}
+.display-options legend {
+  font-weight: 700;
+}
+.display-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.display-choices label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid #b79779;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.display-choices label:has(:checked) {
+  background: #e2d0ab;
+  color: #452d23;
+}
+.display-choices input {
+  accent-color: #713b35;
+  width: 18px;
+  height: 18px;
+}
+.display-options p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+html[data-display="phone"] {
+  -webkit-text-size-adjust: 100%;
+}
+html[data-display="phone"] .main-menu {
+  max-width: 640px;
+  margin-inline: auto;
+}
+html[data-display="phone"] #title-screen {
+  aspect-ratio: 3/4;
+  background-size: auto 100%;
+  background-position: center;
+}
+html[data-display="phone"] :is(button, select, summary) {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+html[data-display="phone"]
+  :is(input[type="range"], input[type="text"], input[type="password"]) {
+  min-height: 44px;
+  font-size: 16px;
+}
+html[data-display="phone"] dialog {
+  box-sizing: border-box;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+html[data-display="phone"] #options-dialog {
+  width: 500px;
+  padding: 20px 16px;
+}
+html[data-display="phone"] .book-inside {
+  grid-template-columns: 1fr;
+  padding: 16px;
+  gap: 10px;
+}
+html[data-display="phone"] .book-index {
+  flex-direction: row;
+  flex-wrap: wrap;
+  max-height: 130px;
+  overflow: auto;
+}
+html[data-display="phone"] .book-index .map-card {
+  min-height: 44px;
+}
+html[data-display="phone"] .restaurant-page .map-preview {
+  max-width: 100%;
+}
+html[data-display="phone"] body.playing .game-nav button {
+  min-width: 64px;
+  min-height: 44px;
+}
+@media (max-width: 650px) {
+  html[data-display="desktop"] #title-screen {
+    aspect-ratio: 3/2;
+    background-size: 100% 100%;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  html[data-display="phone"] .main-menu {
+    max-width: 600px;
+  }
+  html[data-display="phone"] #title-screen {
+    aspect-ratio: 3/2;
+    background-size: 100% 100%;
+  }
+}

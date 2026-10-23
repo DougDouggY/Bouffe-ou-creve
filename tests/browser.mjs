@@ -69,6 +69,36 @@ try {
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
   assert.equal(await page.locator(".ingredient-button").count(), 6);
+  assert.equal(
+    await page.locator("html").getAttribute("data-display"),
+    "desktop",
+  );
+  await page.locator("#options-entry").focus();
+  await page.keyboard.press("Enter");
+  await page.locator('input[name="display-mode"][value="phone"]').check();
+  assert.equal(
+    await page.locator("html").getAttribute("data-display"),
+    "phone",
+  );
+  assert((await page.locator("#title-screen").boundingBox()).width <= 640);
+  await page.reload();
+  await page.waitForFunction(
+    () => document.querySelector(".burger-menu").dataset.masksReady === "true",
+  );
+  assert.equal(
+    await page.locator("html").getAttribute("data-display"),
+    "phone",
+  );
+  await page.locator("#options-entry").focus();
+  await page.keyboard.press("Enter");
+  await page.locator('input[name="display-mode"][value="desktop"]').check();
+  await page.locator("#close-options").click();
+  assert.equal(
+    await page.locator("html").getAttribute("data-display"),
+    "desktop",
+  );
+  checks += 3;
+
   async function mode(slot) {
     await page.locator(`[data-menu-mode="${slot}"]`).focus();
     await page.keyboard.press("Enter");
@@ -428,6 +458,28 @@ try {
   await mobile.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
+  assert.equal(
+    await mobile.locator("html").getAttribute("data-display"),
+    "phone",
+  );
+  await mobile.waitForFunction(
+    () =>
+      typeof document.querySelector("#options-entry").onclick === "function",
+  );
+  await mobile.locator("#options-entry").focus();
+  await mobile.keyboard.press("Enter");
+  await mobile.locator("#options-dialog").waitFor({ state: "visible" });
+  const phoneDialog = await mobile.locator("#options-dialog").boundingBox();
+  assert(phoneDialog.x >= 0 && phoneDialog.x + phoneDialog.width <= 390);
+  assert(phoneDialog.height <= 844);
+  await mobile.screenshot({ path: path.join(output, "options-telephone.png") });
+  await mobile.locator("#close-options").click();
+  assert(
+    await mobile.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  checks += 2;
   await mobile.locator('[data-menu-mode="classic"]').focus();
   await mobile.keyboard.press("Enter");
   await mobile.locator('[data-group="available"] .book-cover').click();
@@ -466,10 +518,20 @@ try {
       c = window.__view.camera;
     return { x: p.x - c.x, y: p.y - c.y };
   });
-  await mobile.mouse.move(aim.x, aim.y);
-  await mobile.mouse.down();
-  await mobile.mouse.move(aim.x - 55, aim.y + 20, { steps: 4 });
-  await mobile.mouse.up();
+  const touch = await mobile.context().newCDPSession(mobile);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: aim.x, y: aim.y }],
+  });
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: aim.x - 55, y: aim.y + 20 }],
+  });
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await touch.detach();
   await mobile.waitForFunction(() => !!window.__game.people[0].roundStart);
   checks++;
   assert.deepEqual(errors, []);

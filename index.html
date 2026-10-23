@@ -8,9 +8,10 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
-    <script type="module" src="./game.js?v=hunger-18"></script>
+    <script src="./display-mode.js?v=display-19"></script>
+    <script type="module" src="./game.js?v=display-19"></script>
 
-    <link rel="stylesheet" href="./style.css?v=burger-16" />
+    <link rel="stylesheet" href="./style.css?v=display-19" />
   </head>
   <body>
     <div id="app">
@@ -237,6 +238,24 @@
           <p>
             Le son et le plein écran sont aussi accessibles pendant la partie.
           </p>
+          <fieldset class="display-options">
+            <legend>Affichage</legend>
+            <div class="display-choices">
+              <label
+                ><input type="radio" name="display-mode" value="desktop" />
+                Ordinateur</label
+              >
+              <label
+                ><input type="radio" name="display-mode" value="phone" />
+                Téléphone</label
+              >
+            </div>
+            <p id="display-status" role="status"></p>
+            <p>
+              Sur téléphone : pose le doigt sur ton gourmand, tire vers
+              l’arrière puis relâche. Portrait et paysage sont disponibles.
+            </p>
+          </fieldset>
           <details id="how-to-play" class="restaurant-guide">
             <summary>Comment jouer ?</summary>
             <p class="guide-intro">
