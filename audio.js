@@ -11,6 +11,7 @@ export function isPlayerMeal(event, actor, victim) {
 
 export function createGameAudio({
   isMenuVisible,
+  isShadowMenu = () => false,
   AudioClass = Audio,
   target = document,
 }) {
@@ -33,7 +34,8 @@ export function createGameAudio({
   jingle.volume = 0.35;
 
   async function startJingle() {
-    if (muted || played || pending || !isMenuVisible()) return;
+    if (muted || played || pending || !isMenuVisible() || isShadowMenu())
+      return;
     pending = true;
     try {
       await jingle.play();
@@ -49,6 +51,53 @@ export function createGameAudio({
       pending = false;
     }
   }
+  let shadowJingle,
+    shadowWanted = false,
+    shadowPending = false,
+    shadowActive = isShadowMenu();
+  async function startShadowJingle() {
+    if (
+      !shadowWanted ||
+      shadowPending ||
+      muted ||
+      !isMenuVisible() ||
+      !isShadowMenu()
+    )
+      return;
+    shadowJingle ||= new AudioClass(
+      new URL("./assets/secrets/jingle.m4a", import.meta.url).href,
+    );
+    shadowJingle.loop = false;
+    shadowJingle.volume = 0.22;
+    shadowPending = true;
+    try {
+      await shadowJingle.play();
+      shadowWanted = false;
+    } catch (error) {
+      if (error.name !== "NotAllowedError" && error.name !== "AbortError") {
+        shadowWanted = false;
+        console.warn("Le jingle de la Face Cachée n’a pas pu être lu.", error);
+      }
+    } finally {
+      shadowPending = false;
+    }
+  }
+  target.addEventListener("pointerdown", startShadowJingle, true);
+  target.addEventListener("keydown", startShadowJingle, true);
+  target.addEventListener("shadowchange", () => {
+    const active = isShadowMenu();
+    if (active === shadowActive) return;
+    shadowActive = active;
+    shadowWanted = active;
+    if (shadowJingle) {
+      shadowJingle.pause();
+      shadowJingle.currentTime = 0;
+    }
+    if (shadowWanted) {
+      jingle.pause();
+      startShadowJingle();
+    }
+  });
   target.addEventListener("pointerdown", startJingle, true);
   target.addEventListener("keydown", startJingle, true);
   startJingle();
@@ -73,10 +122,12 @@ export function createGameAudio({
       muted = value;
       if (muted) {
         jingle.pause();
+        shadowJingle?.pause();
         for (const sound of meals) sound.pause();
         meals.clear();
       } else {
         startJingle();
+        startShadowJingle();
       }
     },
   };

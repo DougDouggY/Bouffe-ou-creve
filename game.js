@@ -72,7 +72,7 @@ import {
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
 import { setupBurgerMenu } from "./burger-menu.js?v=burger-16";
-import { createGameAudio } from "./audio.js?v=filmovore-15";
+import { createGameAudio } from "./audio.js?v=shadow-jingle-34";
 import { setupMusicControls } from "./music.js?v=filmovore-15";
 
 const L = (e) => document.querySelector(e);
@@ -2810,6 +2810,7 @@ let gA = MA ? 680 : 1e3,
   SA = sA + 2 * aA;
 w(".arena-wrap").style.aspectRatio = `${hA}/${SA}`;
 const gameAudio = createGameAudio({
+  isShadowMenu: () => document.body.classList.contains("shadow-realm"),
   isMenuVisible: () => !w("#main-menu").hidden && !w("#title-screen").hidden,
 });
 const ambientMusic = setupMusicControls();

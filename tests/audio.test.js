@@ -88,3 +88,62 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
   audio.setMuted(false);
   assert.equal(voices[0].calls, 2);
 });
+
+test("Face Cachée jingle plays once per entry, retries autoplay, stops on exit and respects mute", async () => {
+  const voices = [];
+  let shadow = false,
+    blocked = true;
+  class FakeAudio {
+    constructor(src) {
+      this.src = src;
+      this.calls = 0;
+      voices.push(this);
+    }
+    async play() {
+      this.calls++;
+      if (this.src.includes("/secrets/") && blocked)
+        throw new DOMException("gesture", "NotAllowedError");
+      this.paused = false;
+    }
+    pause() {
+      this.paused = true;
+    }
+  }
+  const target = new EventTarget();
+  const audio = createGameAudio({
+    isMenuVisible: () => true,
+    isShadowMenu: () => shadow,
+    AudioClass: FakeAudio,
+    target,
+  });
+  const settle = () => new Promise((resolve) => setImmediate(resolve));
+  await settle();
+  shadow = true;
+  target.dispatchEvent(new Event("shadowchange"));
+  await settle();
+  const sound = voices[1];
+  assert(sound.src.endsWith("/secrets/jingle.m4a"));
+  assert.equal(sound.loop, false);
+  assert(voices[0].paused);
+  blocked = false;
+  target.dispatchEvent(new Event("pointerdown"));
+  await settle();
+  target.dispatchEvent(new Event("keydown"));
+  assert.equal(sound.calls, 2);
+  target.dispatchEvent(new Event("shadowchange"));
+  assert.equal(sound.calls, 2);
+  assert.equal(sound.paused, false);
+  shadow = false;
+  target.dispatchEvent(new Event("shadowchange"));
+  assert(sound.paused);
+  assert.equal(sound.currentTime, 0);
+  audio.setMuted(true);
+  shadow = true;
+  target.dispatchEvent(new Event("shadowchange"));
+  assert.equal(sound.calls, 2);
+  audio.setMuted(false);
+  await settle();
+  assert.equal(sound.calls, 3);
+  audio.setMuted(true);
+  assert(sound.paused);
+});
