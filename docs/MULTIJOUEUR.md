@@ -33,42 +33,17 @@ Sources lues : [note Free/SQLite](https://github.com/cloudflare/cloudflare-docs/
 
 La configuration n’active ni offre payante, ni service tiers payant, ni modification de facturation. Conserver le compte sur **Workers Free**. Les quotas réels du compte restent à contrôler dans le tableau Cloudflare. La configuration ne fixe aucun budget CPU réservé au plan payant.
 
-## Installer le serveur sur ton compte
+## Installer le serveur depuis le navigateur
 
-**Cette opération remplace le code « Hello World » du Worker existant et crée son espace de salons SQLite.** Elle ne déplace pas le site GitHub Pages et ne change pas le plan Cloudflare. Aucun secret ne doit être ajouté aux fichiers publics.
+Le déploiement recommandé utilise **Cloudflare Workers Builds**, connecté au dépôt GitHub. Aucune installation de Node.js ou Git sur Windows n’est nécessaire, et les protections Windows restent activées.
 
-Sur ton ordinateur, installer Node.js **22 ou plus récent** et Git, puis ouvrir un terminal :
+Suivre le [guide pas à pas de connexion GitHub → Worker existant](DEPLOIEMENT-CLOUDFLARE-GITHUB.md). Il indique les champs exacts : Worker `bouffeoucrevemulti`, branche **`gh-pages`**, racine **`/`**, installation des dépendances serveur et déploiement avec vérification des salons/WebSockets.
 
-```bash
-git clone --branch gh-pages --single-branch https://github.com/DougDouggY/Bouffe-ou-creve.git
-cd Bouffe-ou-creve/cloudflare
-npm ci
-npx wrangler login
-npx wrangler whoami
-npm run check
-npm run deploy
-```
+La configuration unique est désormais **`wrangler.jsonc` à la racine du dépôt**. Elle pointe vers `cloudflare/src/worker.js`, conserve le binding `ROOMS` et la migration SQLite `v1-private-rooms`. Le jeu solo reste hébergé par GitHub Pages.
 
-`wrangler login` ouvre Cloudflare dans ton navigateur : se connecter au compte qui possède **bouffeoucrevemulti**. `whoami` permet de vérifier le compte sélectionné. Si Wrangler demande quel compte utiliser, choisir celui du Worker existant. Ne pas activer d’abonnement ni ajouter de clé API dans le dépôt.
+Après déploiement, le contrôle automatique crée deux invités et vérifie un vrai tour à 24 gourmands sur l’adresse cible. Les tests locaux et le fait de publier ces fichiers dans GitHub ne constituent pas une preuve de déploiement sur ton compte Cloudflare.
 
-`npm run check` produit le bundle localement sans le publier. `npm run deploy` utilise le nom et les migrations de `wrangler.jsonc`. Le nom de domaine attendu est celui indiqué en tête de ce guide. Si le dossier du jeu existe déjà, récupérer la branche `gh-pages` dans un dossier séparé pour éviter d’écraser des modifications locales.
-
-Vérifier ensuite dans un navigateur :
-
-<https://bouffeoucrevemulti.jeferson-patry-sin.workers.dev/health>
-
-Le résultat doit contenir :
-
-```json
-{
-  "service": "bouffe-private-rooms",
-  "version": "multi-20",
-  "roomLimit": 8,
-  "sizes": [8, 24, 50]
-}
-```
-
-Le site utilise automatiquement ce serveur en HTTPS/WSS. L’origine autorisée est **https://dougdouggy.github.io**, sans chemin : c’est ainsi que les navigateurs transmettent l’origine de GitHub Pages. Le fichier autorise également `http://localhost:8000` et `http://127.0.0.1:8000` pour les essais locaux. Aucun `*` n’est utilisé.
+Pour un développeur qui possède déjà Node.js, les commandes `npm run check --prefix cloudflare` et `npm run deploy:ci --prefix cloudflare` restent disponibles. Elles ne sont pas à installer ni à lancer sur ton PC pour suivre le guide navigateur.
 
 ## Tester avec Tony sur deux appareils
 
@@ -80,7 +55,7 @@ Le site utilise automatiquement ce serveur en HTTPS/WSS. L’origine autorisée 
 6. Vérifier poids, survivants et résultat. Si un ami ne tire pas, attendre 45 secondes : l’IA joue pour lui. Recharger un onglet pour essayer la reconnexion ; un gourmand éliminé reste spectateur.
 7. **Menu** quitte le salon. Le mode solo reste accessible normalement.
 
-Si le bouton indique que le service est indisponible, consulter d’abord `/health`. Un Worker qui répond encore `Hello World!` n’a pas reçu ce code. Si `/health` est correct mais que le navigateur refuse la connexion, vérifier l’origine dans `wrangler.jsonc`, puis redéployer. Un quota Free épuisé nécessite d’attendre sa réinitialisation, pas de passer en payant.
+Si le bouton indique que le service est indisponible, consulter d’abord `/health`. Un Worker qui répond encore `Hello World!` n’a pas reçu ce code. Si `/health` est correct mais que le navigateur refuse la connexion, vérifier l’origine dans le `wrangler.jsonc` à la racine, puis redéployer depuis Workers Builds. Un quota Free épuisé nécessite d’attendre sa réinitialisation, pas de passer en payant.
 
 ## Développement et vérifications reproductibles
 
@@ -109,5 +84,5 @@ Les tests moteur couvrent aussi les collisions/dévorations, les poids, la pours
 - **Testé localement** : deux navigateurs distincts (ordinateur et téléphone tactile), création/saisie de code, état identique au départ et après un vrai tour, 2 humains + 22 IA, tirs séparés et secrets, mouvements/poids partagés, reconnexion par rechargement, refus d’un tour périmé par le vrai Worker, départ puis relance solo et filtrage des origines. Les collisions/éliminations et la prise de relais à l’échéance sont aussi testées dans le moteur réel côté serveur.
 - **Mesures locales** : sur un échantillon à 24 gourmands, trois tours serveur ont pris environ 824 ms CPU au total sous Node ; un enregistrement de tour passe d’environ 606 Ko à 205 Ko avec le protocole compact. Ces mesures locales ne garantissent pas les performances Cloudflare. La sauvegarde d’un salon représentait environ 31 Ko.
 - **Publication du site** : le bouton n’active le service que si le serveur répond au contrôle de version `/health`. Le solo reste disponible si le Worker est encore en « Hello World ».
-- **Pas déployé ici sur Cloudflare** : aucun accès à ton compte n’est connecté dans cet environnement. Aucune facturation modifiée. La procédure ci-dessus reste à exécuter par le propriétaire du compte.
+- **Pas déployé ici sur Cloudflare** : aucun accès à ton compte n’est connecté dans cet environnement. Aucune facturation modifiée. La connexion GitHub décrite dans le guide navigateur reste à effectuer par le propriétaire du compte.
 - **Pas encore vérifié sur Internet avec Tony** : les deux navigateurs testés communiquent avec workerd localement. La latence réelle, les quotas et les performances du compte Cloudflare gratuit devront être vérifiés après déploiement. La compatibilité du bundle a été contrôlée avec Wrangler, sans prétendre remplacer cet essai réel.

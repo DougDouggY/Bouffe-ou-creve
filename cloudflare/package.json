@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local --ip 127.0.0.1 --port 8787",
-    "deploy": "wrangler deploy",
-    "check": "wrangler deploy --dry-run"
+    "dev": "wrangler dev --config ../wrangler.jsonc --local --ip 127.0.0.1 --port 8787",
+    "deploy": "wrangler deploy --config ../wrangler.jsonc",
+    "check": "wrangler deploy --config ../wrangler.jsonc --dry-run",
+    "deploy:ci": "npm run deploy && npm run verify:deployed",
+    "verify:deployed": "node scripts/verify-deployment.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.152.0"
+    "wrangler": "4.152.0",
+    "ws": "8.22.0"
   }
 }

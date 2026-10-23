@@ -51,6 +51,8 @@ const worker = spawn(
   wrangler,
   [
     "dev",
+    "--config",
+    "../wrangler.jsonc",
     "--local",
     "--ip",
     "127.0.0.1",
