@@ -47,7 +47,7 @@ import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
-} from "./cosmetics.js?v=hat-fit-23";
+} from "./cosmetics.js?v=hat-original-24";
 import { drawMapArt, mapArtURL } from "./map-art.js?v=hunger-18";
 import {
   WORK_IN_PROGRESS_MAPS,
