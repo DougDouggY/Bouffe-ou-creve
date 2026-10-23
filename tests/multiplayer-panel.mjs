@@ -272,7 +272,7 @@ try {
     );
   }
   assert(resources.has("game.js?v=podium-35"));
-  assert(resources.has("style.css?v=podium-35"));
+  assert(resources.has("style.css?v=podium-35b"));
   assert(resources.has("multiplayer-client.js?v=podium-35"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {

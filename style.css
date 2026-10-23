@@ -4363,3 +4363,6 @@ body.online-playing #overlay:has(#match-podium:not([hidden])) #result-title {
     0 10px 0 #b18a36,
     0 14px 10px #66421c33;
 }
+#multiplayer-players li[data-team] .cosmetic-title {
+  color: #ffe0a0;
+}
