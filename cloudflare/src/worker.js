@@ -1,3 +1,8 @@
+import {
+  profileRequest,
+  validProfileId,
+  validProfileToken,
+} from "./player-profile.js";
 import { encodeFrames } from "../../multiplayer-protocol.js";
 import {
   Room,
@@ -53,6 +58,7 @@ export default {
           version: SIMULATION_VERSION,
           roomLimit: 8,
           teamSizes: [1, 2, 3, 4],
+          trophies: true,
           sizes: [8, 24, 50],
         },
         200,
@@ -63,6 +69,62 @@ export default {
     try {
       let response;
       if (
+        request.method === "POST" &&
+        ["/api/profile", "/api/profile/state"].includes(url.pathname)
+      ) {
+        const raw = await request.text();
+        if (raw.length > 512)
+          throw new RoomError("SIZE", "Requête trop grande.", 413);
+        let credentials;
+        try {
+          credentials = JSON.parse(raw);
+        } catch {
+          throw new RoomError("JSON", "Requête invalide.");
+        }
+        const creating = url.pathname === "/api/profile";
+        if (creating) {
+          const digest = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(
+              request.headers.get("CF-Connecting-IP") || "local",
+            ),
+          );
+          const ip = Array.from(new Uint8Array(digest).slice(0, 12), (b) =>
+            b.toString(16).padStart(2, "0"),
+          ).join("");
+          const admission = await env.ROOMS.get(
+            env.ROOMS.idFromName("admission"),
+          ).fetch("https://internal/admit", {
+            method: "POST",
+            body: JSON.stringify({ ip, creating: false }),
+          });
+          if (!admission.ok)
+            return new Response(admission.body, {
+              status: admission.status,
+              headers: { ...cors, "Content-Type": "application/json" },
+            });
+          credentials = {
+            profileId: crypto.randomUUID(),
+            profileToken: Array.from(
+              crypto.getRandomValues(new Uint8Array(32)),
+              (b) => b.toString(16).padStart(2, "0"),
+            ).join(""),
+          };
+        }
+        if (
+          !validProfileId(credentials?.profileId) ||
+          !validProfileToken(credentials?.profileToken)
+        )
+          throw new RoomError("PROFILE", "Profil multijoueur invalide.", 401);
+        response = await env.ROOMS.get(
+          env.ROOMS.idFromName("profile:" + credentials.profileId),
+        ).fetch("https://internal/profile/" + (creating ? "create" : "state"), {
+          method: "POST",
+          body: JSON.stringify(credentials),
+        });
+        if (creating && response.ok)
+          response = json({ ...credentials, state: await response.json() });
+      } else if (
         request.method === "POST" &&
         ["/api/rooms", "/api/join"].includes(url.pathname)
       ) {
@@ -110,10 +172,30 @@ export default {
             status: admission.status,
             headers: { ...cors, "Content-Type": "application/json" },
           });
+        let profileId = null;
+        if (body.profile !== undefined) {
+          if (
+            !validProfileId(body.profile?.profileId) ||
+            !validProfileToken(body.profile?.profileToken)
+          )
+            throw new RoomError("PROFILE", "Profil multijoueur invalide.", 401);
+          const verified = await env.ROOMS.get(
+            env.ROOMS.idFromName("profile:" + body.profile.profileId),
+          ).fetch("https://internal/profile/state", {
+            method: "POST",
+            body: JSON.stringify({ profileToken: body.profile.profileToken }),
+          });
+          if (!verified.ok)
+            throw new RoomError("PROFILE", "Profil multijoueur invalide.", 401);
+          profileId = (await verified.json()).profileId;
+        }
         const room = env.ROOMS.get(env.ROOMS.idFromName("room:" + code));
         response = await room.fetch(
           "https://internal/" + (creating ? "create" : "join"),
-          { method: "POST", body: JSON.stringify({ ...body, code }) },
+          {
+            method: "POST",
+            body: JSON.stringify({ ...body, code, profileId }),
+          },
         );
       } else if (
         request.method === "GET" &&
@@ -172,7 +254,56 @@ export class PrivateRoom {
   async persist() {
     if (!this.room.data) return;
     await this.ctx.storage.put("room", this.room.data);
-    await this.ctx.storage.setAlarm(this.room.nextAlarm());
+    await this.ctx.storage.setAlarm(
+      this.room.data.trophyOutbox?.length
+        ? Math.min(this.room.nextAlarm(), Date.now() + 5000)
+        : this.room.nextAlarm(),
+    );
+    // Deliver rewards after the gameplay packets: profile writes must not delay a replay.
+    if (this.room.data.trophyOutbox?.length && !this.profileFlushPending) {
+      this.profileFlushPending = true;
+      this.ctx.waitUntil(
+        this.serial(async () => {
+          try {
+            await this.flushTrophies();
+          } finally {
+            this.profileFlushPending = false;
+          }
+        }),
+      );
+    }
+  }
+  async flushTrophies() {
+    if (!this.room.data?.trophyOutbox?.length) return;
+    const remaining = [];
+    for (const grant of this.room.data.trophyOutbox) {
+      try {
+        const result = await this.env.ROOMS.get(
+          this.env.ROOMS.idFromName("profile:" + grant.profileId),
+        ).fetch("https://internal/profile/apply", {
+          method: "POST",
+          body: JSON.stringify(grant),
+        });
+        if (!result.ok) throw Error("Profile receipt pending");
+        const state = await result.json();
+        for (const ws of this.ctx.getWebSockets()) {
+          const member = this.room.data.members.find(
+            (m) => m.id === ws.deserializeAttachment()?.memberId,
+          );
+          if (member?.profileId === grant.profileId)
+            this.send(ws, { type: "profile", state });
+        }
+      } catch {
+        remaining.push(grant);
+      }
+    }
+    this.room.data.trophyOutbox = remaining;
+    await this.ctx.storage.put("room", this.room.data);
+    await this.ctx.storage.setAlarm(
+      this.room.data.trophyOutbox.length
+        ? Date.now() + 5000
+        : this.room.nextAlarm(),
+    );
   }
   send(ws, message) {
     try {
@@ -203,6 +334,14 @@ export class PrivateRoom {
     return this.serial(async () => {
       try {
         const url = new URL(request.url);
+        if (url.pathname.startsWith("/profile/"))
+          return json(
+            await profileRequest(
+              this.ctx.storage,
+              url.pathname.slice("/profile/".length),
+              await request.json(),
+            ),
+          );
         if (url.pathname === "/admit") return this.admit(await request.json());
         if (url.pathname === "/create" || url.pathname === "/join") {
           const body = await request.json();
@@ -214,8 +353,9 @@ export class PrivateRoom {
                   body.name,
                   crypto.getRandomValues(new Uint32Array(1))[0],
                   body.cosmetics,
+                  body.profileId,
                 )
-              : this.room.join(body.name, body.cosmetics);
+              : this.room.join(body.name, body.cosmetics, body.profileId);
           await this.persist();
           this.publish();
           return json({
@@ -387,6 +527,10 @@ export class PrivateRoom {
     return this.webSocketClose(ws);
   }
   async expire() {
+    if (this.room.data?.trophyOutbox?.length) {
+      await this.persist();
+      if (this.room.data.trophyOutbox.length) return;
+    }
     this.broadcast({ type: "expired", message: "Le salon a expiré." });
     for (const ws of this.ctx.getWebSockets())
       try {

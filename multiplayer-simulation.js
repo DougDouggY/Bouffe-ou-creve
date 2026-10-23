@@ -208,23 +208,27 @@ export function resolveTurn(game, shots) {
   const aliveAtStart = new Set(
     game.people.filter((p) => p.alive).map((p) => p.id),
   );
+  function recordElimination(person) {
+    if (!person || !aliveAtStart.has(person.id) || person.alive) return;
+    aliveAtStart.delete(person.id);
+    events.push({
+      t: time,
+      kind: "elimination",
+      person: person.id,
+      name: person.name,
+      human: person.human === true,
+      eliminatedBy: person.eliminatedBy || null,
+    });
+  }
   function recordEliminations() {
-    for (const person of game.people)
-      if (aliveAtStart.has(person.id) && !person.alive) {
-        aliveAtStart.delete(person.id);
-        events.push({
-          t: time,
-          kind: "elimination",
-          person: person.id,
-          name: person.name,
-          human: person.human === true,
-          eliminatedBy: person.eliminatedBy || null,
-        });
-      }
+    for (const person of game.people) recordElimination(person);
   }
   game.onEvent = (kind, person, food) => {
-    if (kind === "eat" && food && person)
+    if (kind === "eat" && food && person) {
       food.eliminatedBy = { id: person.id, name: person.name };
+      recordElimination(food);
+    }
+    if (["hazard", "burn"].includes(kind)) recordElimination(person);
     if (["food", "eat", "burn", "power", "end"].includes(kind))
       events.push({
         t: time,

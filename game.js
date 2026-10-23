@@ -2,7 +2,11 @@ import {
   drawTailoredOutfit,
   drawFittedHat,
 } from "./wardrobe-render.js?v=wardrobe-29";
-import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
+import {
+  MULTIPLAYER_TROPHIES,
+  onlineProfile,
+} from "./multiplayer-trophy-catalog.js?v=trophies-32";
+import { mergeProfileProgress } from "./profile-storage.js?v=trophies-32";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
 import {
   sameTeam,
@@ -10,7 +14,7 @@ import {
   teamColor,
   teamLabel,
 } from "./teams.js?v=teams-31";
-import { setupMultiplayer } from "./multiplayer-client.js?v=teams-31";
+import { setupMultiplayer } from "./multiplayer-client.js?v=trophies-32";
 import {
   CA,
   Ee,
@@ -412,6 +416,7 @@ const Oe = "bouffe-profile-v1";
 function Te() {
   return {
     trophies: {},
+    online: onlineProfile(),
     shadow: secretProfile(),
     trophyTotals: Object.fromEntries(MI.map((e) => [e, 0])),
     modeWins: { classic: 0, gros: 0, usa: 0, somalia: 0 },
@@ -448,6 +453,7 @@ function Xe(e) {
       o.modeWins.classic = Math.max(1, o.modeWins.classic);
       o.modeWins.gros = Math.max(1, o.modeWins.gros);
     }
+    o.online = onlineProfile(g.online);
     o.shadow = secretProfile(g.shadow);
     o.shadow.wins.somalia = Math.max(o.shadow.wins.somalia, o.modeWins.somalia);
     if (o.trophies["somalia-win"]) {
@@ -1221,9 +1227,16 @@ const _I = "./assets/trophies.webp",
 setupSecretTrophyLab(xe);
 FA.src = _I;
 SHADOW_TROPHY_IMAGE.src = "./assets/secrets/trophies.webp";
-const trophyById = (id) => [...GA, ...SECRET_TROPHIES].find((t) => t.id === id);
+const ONLINE_TROPHY_IMAGE = new Image();
+ONLINE_TROPHY_IMAGE.src = "./assets/multiplayer-trophies.webp";
+const trophyById = (id) =>
+  [...GA, ...SECRET_TROPHIES, ...MULTIPLAYER_TROPHIES].find((t) => t.id === id);
 function xe(e, g = !1, o = !1) {
-  const source = e.shadow ? SHADOW_TROPHY_IMAGE : FA;
+  const source = e.online
+    ? ONLINE_TROPHY_IMAGE
+    : e.shadow
+      ? SHADOW_TROPHY_IMAGE
+      : FA;
   const u = document.createElement("canvas");
   ((u.width = u.height = 180),
     (u.className = "trophy-medal"),
@@ -1231,16 +1244,35 @@ function xe(e, g = !1, o = !1) {
   const E = () => {
     const A = u.getContext("2d");
     A.clearRect(0, 0, 180, 180);
-    const n = source.naturalWidth / 7,
-      i = source.naturalHeight / 6;
-    const cacheKey = `${e.shadow ? "shadow" : "normal"}-${e.art}`;
+    if (e.online && o) {
+      const metal = A.createRadialGradient(65, 50, 5, 90, 90, 80);
+      metal.addColorStop(0, "#c7baa0");
+      metal.addColorStop(1, "#605447");
+      A.fillStyle = metal;
+      A.beginPath();
+      A.arc(90, 90, 72, 0, Math.PI * 2);
+      A.fill();
+      A.strokeStyle = "#e5d6b7";
+      A.lineWidth = 5;
+      A.stroke();
+      A.fillStyle = "#f8edd3";
+      A.font = "900 75px sans-serif";
+      A.textAlign = "center";
+      A.fillText("?", 90, 116);
+      return;
+    }
+    const columns = e.online ? 5 : 7,
+      rows = e.online ? 5 : 6;
+    const n = source.naturalWidth / columns,
+      i = source.naturalHeight / rows;
+    const cacheKey = `${e.online ? "online" : e.shadow ? "shadow" : "normal"}-${e.art}`;
     let I = eI.get(cacheKey);
     (I ||
       ((I = Be(source, [
-        Math.round((e.art % 7) * n),
-        Math.round(Math.floor(e.art / 7) * i),
-        Math.round(((e.art % 7) + 1) * n),
-        Math.round((Math.floor(e.art / 7) + 1) * i),
+        Math.round((e.art % columns) * n),
+        Math.round(Math.floor(e.art / columns) * i),
+        Math.round(((e.art % columns) + 1) * n),
+        Math.round((Math.floor(e.art / columns) + 1) * i),
       ])),
       eI.set(cacheKey, I)),
       A.drawImage(I, 6, 6, 168, 168),
@@ -1251,7 +1283,7 @@ function xe(e, g = !1, o = !1) {
         (A.globalCompositeOperation = "source-over")));
   };
   return (
-    source.complete && source.naturalWidth
+    (e.online && o) || (source.complete && source.naturalWidth)
       ? E()
       : source.addEventListener("load", E, { once: !0 }),
     g && u.classList.add("locked-medal"),
@@ -1261,17 +1293,29 @@ function xe(e, g = !1, o = !1) {
 function At(e, g) {
   const o = document.createElement("article");
   o.className = "trophy-card" + (g ? " unlocked" : "");
-  o.title = e.secret && !g ? e.name : `${e.name} — ${e.condition}`;
+  o.title =
+    e.online && !g
+      ? "Trophée mystérieux"
+      : e.secret && !g
+        ? e.name
+        : `${e.name} — ${e.condition}`;
   o.dataset.trophy = e.id;
   const u = e.secret && !g;
   o.append(xe(e, !g, u));
   const E = document.createElement("h3");
-  E.textContent = e.name;
+  E.textContent = e.online && !g ? "???" : e.name;
   const A = document.createElement("p");
   A.textContent = u ? "Condition : ???" : e.condition;
   const n = document.createElement("small");
   return (
-    (n.textContent = g ? "DÉBLOQUÉ" : u ? "RECETTE SECRÈTE" : "À DÉBLOQUER"),
+    (n.textContent =
+      e.enabled === false
+        ? "INDISPONIBLE"
+        : g
+          ? "DÉBLOQUÉ"
+          : u
+            ? "RECETTE SECRÈTE"
+            : "À DÉBLOQUER"),
     o.append(n, E, A),
     o
   );
@@ -1280,22 +1324,37 @@ function et(e) {
   const shadow = document.body.classList.contains("shadow-realm");
   const catalog = shadow
     ? SECRET_TROPHIES
-    : GA.filter((t) => t.id !== "somalia-win");
-  const unlocked = shadow ? e.shadow.trophies : e.trophies;
+    : [...GA.filter((t) => t.id !== "somalia-win"), ...MULTIPLAYER_TROPHIES];
+  const unlocked = shadow
+    ? e.shadow.trophies
+    : { ...e.trophies, ...e.online.trophies };
   document.querySelector("#trophies-dialog h2").textContent = shadow
     ? "LES TROPHÉES DE LA FACE CACHÉE"
     : "LES TROPHÉES DU GOURMAND";
   document.querySelector("#trophies-dialog .trophy-intro").textContent = shadow
     ? "Quatre modes, une autre faim. Les recettes masquées se révèlent après leur déblocage."
     : "Chaque assiette raconte un exploit. Certaines recettes restent secrètes…";
-  document
-    .querySelector("#trophy-grid")
-    .replaceChildren(...catalog.map((t) => At(t, !!unlocked[t.id])));
-  const count = catalog.filter((t) => unlocked[t.id]).length;
+  const grid = document.querySelector("#trophy-grid");
+  grid.replaceChildren();
+  const groups = shadow
+    ? [["La Face Cachée", catalog]]
+    : [
+        ["Classiques", catalog.filter((t) => !t.online)],
+        ["Multijoueur", catalog.filter((t) => t.section === "multiplayer")],
+        ["En équipe", catalog.filter((t) => t.section === "teams")],
+      ];
+  for (const [name, items] of groups) {
+    const heading = document.createElement("h3");
+    heading.className = "trophy-section-title";
+    heading.textContent = name;
+    grid.append(heading, ...items.map((t) => At(t, !!unlocked[t.id])));
+  }
+  const active = catalog.filter((t) => t.enabled !== false);
+  const count = active.filter((t) => unlocked[t.id]).length;
   document.querySelector("#trophy-count").textContent =
-    `Trophées débloqués : ${count} / ${catalog.length}`;
+    `Trophées débloqués : ${count} / ${active.length}`;
   const progress = document.querySelector("#trophy-progress");
-  progress.max = catalog.length;
+  progress.max = active.length;
   progress.value = count;
   document.querySelector("#trophy-lab-open").hidden = !shadow;
 }
@@ -1327,6 +1386,20 @@ function tt(e) {
   if (!e.length) return;
   const g = trophyById(e[0]),
     o = document.querySelector("#trophy-toast");
+  if (g.online) {
+    const modal = [...document.querySelectorAll("dialog[open]")].at(-1);
+    const parent =
+      modal ||
+      document.fullscreenElement ||
+      (document.body.classList.contains("playing")
+        ? document.querySelector("#game-shell")
+        : document.body);
+    parent.append(o);
+    o.classList.add("online-toast");
+  } else if (o.classList.contains("online-toast")) {
+    document.querySelector(".arena-wrap").append(o);
+    o.classList.remove("online-toast");
+  }
   o.replaceChildren(xe(g));
   const u = document.createElement("div"),
     E = document.createElement("small");
@@ -1443,13 +1516,14 @@ function Qt({ start: e, appearance: g }) {
         `${o.wins} victoire${o.wins > 1 ? "s" : ""}`),
       k());
   }
-  function a() {
+  function a(verifiedOnline = null) {
     try {
       const merged = Xe(
         JSON.stringify(
           mergeProfileProgress(o, savedProfile, storedProfile(savedProfile)),
         ),
       );
+      if (verifiedOnline) merged.online = onlineProfile(verifiedOnline);
       Object.assign(o, merged);
       const serialized = JSON.stringify(o);
       localStorage.setItem(Oe, serialized);
@@ -1687,6 +1761,22 @@ function Qt({ start: e, appearance: g }) {
         L("#shop-dialog").showModal();
         r();
         k();
+      },
+      onlineProgress(state, { notify = true } = {}) {
+        const verified = onlineProfile(state);
+        if (!verified.profileId) return;
+        const latest = storedProfile(o);
+        const previous =
+          latest.online.profileId === verified.profileId
+            ? latest.online.trophies
+            : {};
+        const ids = Object.keys(verified.trophies).filter(
+          (id) => !previous[id],
+        );
+        o.online = verified;
+        a(verified);
+        if (L("#trophies-dialog").open) et(o);
+        if (notify) tt(ids);
       },
       startOnline() {
         i = false;
@@ -3406,6 +3496,9 @@ online = setupMultiplayer({
     } catch {
       return WA.equipped;
     }
+  },
+  onProfile(state, options) {
+    WA?.onlineProgress(state, options);
   },
   onRoster(members) {
     onlineMembers = new Map(members.map((member) => [member.id, member]));

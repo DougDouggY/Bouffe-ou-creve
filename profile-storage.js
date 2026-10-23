@@ -35,6 +35,17 @@ export function mergeProfileProgress(current, baseline, latest) {
   result.owned = [
     ...new Set([...(latest.owned || []), ...(current.owned || [])]),
   ];
+  // These counters are authoritative snapshots, never additive deltas from tabs.
+  if (current.online || latest.online) {
+    const a = current.online,
+      b = latest.online;
+    result.online = !a?.profileId
+      ? b
+      : a.profileId === b?.profileId && b.revision > a.revision
+        ? b
+        : a;
+    result.online = structuredClone(result.online);
+  }
   result.equipped = { ...latest.equipped };
   for (const slot of ["hat", "outfit"])
     if (!baseline || current.equipped?.[slot] !== baseline.equipped?.[slot])

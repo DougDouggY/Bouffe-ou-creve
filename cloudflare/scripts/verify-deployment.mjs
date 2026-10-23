@@ -163,6 +163,7 @@ export async function verifyDeployment(
       assert.equal(health.service, "bouffe-private-rooms");
       assert.equal(health.version, SIMULATION_VERSION);
       assert.deepEqual(health.teamSizes, [1, 2, 3, 4]);
+      assert.equal(health.trophies, true);
       break;
     } catch {
       if (attempt === 5)
@@ -185,8 +186,17 @@ export async function verifyDeployment(
   console.log("OK : /health, version et origine GitHub Pages.");
   const peers = [];
   try {
+    const profileA = await post("/api/profile", {}),
+      profileB = await post("/api/profile", {});
+    const credentials = (p) => ({
+      profileId: p.profileId,
+      profileToken: p.profileToken,
+    });
+    assert.equal(profileA.state.wins, 0);
+    assert.equal(profileB.state.wins, 0);
     const first = await post("/api/rooms", {
       name: "Test déploiement A",
+      profile: credentials(profileA),
       cosmetics: { hat: "chef", outfit: "cook" },
     });
     assert.match(first.code, /^[A-HJ-NP-Z2-9]{12}$/);
@@ -198,6 +208,7 @@ export async function verifyDeployment(
     await a.wait((p) => p.type === "welcome");
     const second = await post("/api/join", {
       name: "Test déploiement B",
+      profile: credentials(profileB),
       cosmetics: { hat: "hat_pancakes", outfit: "outfit_royal" },
       code: first.code,
     });
@@ -220,6 +231,23 @@ export async function verifyDeployment(
       (p) =>
         p.type === "room" &&
         p.room.chat?.at(-1)?.text === "Le chat de la table fonctionne.",
+    );
+    const earned = await a.wait(
+      (p) => p.type === "profile" && p.state.trophies["mp-chat"],
+    );
+    assert.equal(earned.state.profileId, profileA.profileId);
+    const saved = await post("/api/profile/state", {
+      ...credentials(profileA),
+      win: true,
+      awards: ["mp-wins5"],
+    });
+    assert(saved.trophies["mp-chat"]);
+    assert.equal(saved.wins, 0);
+    assert(!saved.trophies["mp-wins5"]);
+    const other = await post("/api/profile/state", credentials(profileB));
+    assert(!other.trophies["mp-chat"]);
+    console.log(
+      "OK : trophée de chat privé, sauvegarde de profil et revendication de victoire ignorée.",
     );
     a.send({ type: "map", mapId: "cold" });
     await b.wait((p) => p.type === "room" && p.room.mapId === "cold");

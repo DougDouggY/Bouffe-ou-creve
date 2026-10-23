@@ -3950,3 +3950,17 @@ body.online-spectator .stat:has(#mass) {
 .badge-team[hidden] {
   display: none;
 }
+
+.trophy-section-title {
+  grid-column: 1 / -1;
+  padding: 0.6rem 0;
+  margin: 1rem 0 0;
+  border-bottom: 2px solid #aa8958;
+  font-size: 1.4rem;
+  color: #694a29;
+}
+
+#trophy-toast.online-toast {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+}

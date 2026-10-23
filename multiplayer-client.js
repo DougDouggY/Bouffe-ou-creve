@@ -1,3 +1,4 @@
+import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=trophies-32";
 import { validTeamSetup, teamColor } from "./teams.js?v=teams-31";
 import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=teams-31";
 import {
@@ -20,6 +21,7 @@ export function setupMultiplayer({
   onEvent,
   getCosmetics = () => ({ hat: "none", outfit: "plain" }),
   onRoster = () => {},
+  onProfile = () => {},
   renderAvatar = () => {},
   openShop = () => {},
 }) {
@@ -46,6 +48,9 @@ export function setupMultiplayer({
     $("#multiplayer-title").focus({ preventScroll: true });
     dialog.scrollTop = 0;
   }
+  const profile = createOnlineProfileClient(SERVER, onProfile);
+  let pendingProfile = null,
+    welcomed = false;
   const status = $("#multiplayer-status");
   for (const map of MULTIPLAYER_MAPS) {
     const option = document.createElement("option");
@@ -336,9 +341,12 @@ export function setupMultiplayer({
         eventIndex = 0;
         pendingTurn = null;
         acceptRoom(packet.room);
+        if (welcomed) profile.refresh().catch(() => {});
+        welcomed = true;
         if (packet.state) enter(packet.state);
         else syncAppearance();
-      } else if (packet.type === "room") acceptRoom(packet.room);
+      } else if (packet.type === "profile") pendingProfile = packet.state;
+      else if (packet.type === "room") acceptRoom(packet.room);
       else if (packet.type === "state") enter(packet.state);
       else if (packet.type === "resolution") {
         replay = { ...packet, frames: [], complete: false };
@@ -401,6 +409,7 @@ export function setupMultiplayer({
     $("#multiplayer-join").disabled = true;
     message(creating ? "Préparation de la table…" : "Recherche du salon…");
     try {
+      const credentials = await profile.ensure();
       const response = await fetch(
         SERVER + (creating ? "/api/rooms" : "/api/join"),
         {
@@ -410,6 +419,7 @@ export function setupMultiplayer({
             name,
             code,
             cosmetics: normalizeCosmetics(getCosmetics()),
+            profile: credentials,
             version: VERSION,
           }),
           signal: AbortSignal.timeout(10000),
@@ -577,6 +587,14 @@ export function setupMultiplayer({
     }
   };
   setInterval(() => {
+    if (
+      pendingProfile &&
+      !replay &&
+      (!room || Date.now() + offset >= room.readyAt)
+    ) {
+      profile.accept(pendingProfile);
+      pendingProfile = null;
+    }
     tick();
     update();
   }, 500);
@@ -595,6 +613,7 @@ export function setupMultiplayer({
       connect();
     }
   } catch {}
+  profile.refresh().catch(() => {});
   update();
   return {
     get active() {

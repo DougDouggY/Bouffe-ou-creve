@@ -249,9 +249,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=teams-31"));
-  assert(resources.has("style.css?v=teams-31"));
-  assert(resources.has("multiplayer-client.js?v=teams-31"));
+  assert(resources.has("game.js?v=trophies-32"));
+  assert(resources.has("style.css?v=trophies-32"));
+  assert(resources.has("multiplayer-client.js?v=trophies-32"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
@@ -328,6 +328,69 @@ try {
     });
   }
   const host = pages[0];
+  const trophyPage = await host.context().newPage();
+  trophyPage.on("pageerror", (e) => errors.push(e.message));
+  await trophyPage.goto(SITE + "?v=trophies-32");
+  await trophyPage.locator("#trophies-entry").focus();
+  await trophyPage.keyboard.press("Enter");
+  await trophyPage.locator("#trophies-dialog").waitFor({ state: "visible" });
+  assert.equal(
+    await trophyPage
+      .locator('[data-trophy^="mp-"], [data-trophy^="team-"]')
+      .count(),
+    25,
+  );
+  assert(
+    await trophyPage
+      .locator(".trophy-section-title")
+      .allTextContents()
+      .then((x) => x.includes("Multijoueur") && x.includes("En équipe")),
+  );
+  for (const name of await trophyPage
+    .locator('[data-trophy^="mp-"] h3, [data-trophy^="team-"] h3')
+    .allTextContents())
+    assert.equal(name, "???");
+  assert.equal(
+    await trophyPage
+      .locator('[data-trophy="team-betrayal"] small')
+      .textContent(),
+    "INDISPONIBLE",
+  );
+  await trophyPage.screenshot({
+    path: path.join(output, "trophees-multijoueur-masques.png"),
+  });
+  await trophyPage.close();
+  const authenticated = await host.evaluate(async (worker) => {
+    const credentials = JSON.parse(
+      localStorage.getItem("bouffe-online-profile-v1"),
+    );
+    const response = await fetch(worker + "/api/profile/state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...credentials, win: true, awards: ["mp-wins5"] }),
+    });
+    const state = await response.json();
+    const bad = await fetch(worker + "/api/profile/state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...credentials, profileToken: "00".repeat(32) }),
+    });
+    const forged = await fetch(worker + "/api/profile/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...credentials, win: true, awards: ["mp-wins5"] }),
+    });
+    return {
+      wins: state.wins,
+      unlocked: state.trophies["mp-wins5"],
+      bad: bad.status,
+      forged: forged.status,
+    };
+  }, WORKER);
+  assert.equal(authenticated.wins, 0);
+  assert(!authenticated.unlocked);
+  assert.equal(authenticated.bad, 401);
+  assert.equal(authenticated.forged, 404);
   const lobbyChat = host.locator("#multiplayer-lobby [data-chat-panel]");
   await lobbyChat.locator("summary").click();
   const greeting = "Salut les gourmands <img src=x onerror=alert(1)>";
@@ -343,6 +406,44 @@ try {
     );
     assert.equal(await page.locator("[data-chat-messages] img").count(), 0);
   }
+  await host.waitForFunction(
+    () =>
+      JSON.parse(localStorage.getItem("bouffe-profile-v1"))?.online?.trophies?.[
+        "mp-chat"
+      ],
+  );
+  await host.locator("#trophy-toast").waitFor({ state: "visible" });
+  assert.equal(
+    await host.locator("#trophy-toast").evaluate((el) => el.parentElement.id),
+    "multiplayer-dialog",
+  );
+  assert(
+    !(await pages[1].evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("bouffe-profile-v1"))?.online
+          ?.trophies?.["mp-chat"],
+    )),
+  );
+  const revealed = await host.context().newPage();
+  revealed.on("pageerror", (e) => errors.push(e.message));
+  await revealed.goto(SITE + "?v=trophies-32-reveal");
+  await revealed.locator("#trophies-entry").focus();
+  await revealed.keyboard.press("Enter");
+  await revealed
+    .locator('[data-trophy="mp-chat"].unlocked')
+    .waitFor({ state: "visible" });
+  assert.equal(
+    await revealed.locator('[data-trophy="mp-chat"] h3').textContent(),
+    "La bouche pleine",
+  );
+  assert.equal(
+    await revealed.locator('[data-trophy="mp-wins5"] h3').textContent(),
+    "???",
+  );
+  await revealed
+    .locator('[data-trophy="mp-chat"]')
+    .screenshot({ path: path.join(output, "trophee-chat-debloque.png") });
+  await revealed.close();
   for (const count of [8, 50, 24]) {
     await host.locator("#multiplayer-size").selectOption(String(count));
     for (const page of pages)
@@ -714,6 +815,36 @@ try {
     ).includes("Bon appétit depuis la partie !"),
   );
   await host.locator("#continue-spectating").click();
+  const ghostChat = host.locator("#game-shell > [data-chat-panel]");
+  await ghostChat.locator("summary").click();
+  await ghostChat.locator("[data-chat-input]").fill("Même mort, je parle !");
+  await ghostChat.locator("button[type=submit]").click();
+  await host.waitForFunction(
+    () =>
+      JSON.parse(localStorage.getItem("bouffe-profile-v1"))?.online?.trophies?.[
+        "mp-ghost-chat"
+      ],
+  );
+  await host.locator("#trophy-toast").waitFor({ state: "visible" });
+  const ghostAt = await host.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("bouffe-profile-v1")).online.trophies[
+        "mp-ghost-chat"
+      ],
+  );
+  await host.reload();
+  await host.locator("#spectator-panel").waitFor({ state: "visible" });
+  assert.equal(
+    await host.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("bouffe-profile-v1")).online.trophies[
+          "mp-ghost-chat"
+        ],
+    ),
+    ghostAt,
+  );
+  await host.locator("#continue-spectating").click();
+  assert(await host.locator("#trophy-toast").isHidden());
   await host.screenshot({ path: path.join(output, "social-spectator.png") });
   await pages[1].evaluate(() => (window.__forceHidden = true));
   assert.equal(

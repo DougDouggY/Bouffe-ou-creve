@@ -1,3 +1,9 @@
+import {
+  beginTrophyMatch,
+  trophyChat,
+  trophyTurn,
+  finishTrophyMatch,
+} from "./trophy-rules.js";
 import { validTeamSetup } from "../../teams.js?v=teams-31";
 import { validMultiplayerMap } from "../../multiplayer-maps.js?v=teams-31";
 import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=identity-22";
@@ -86,7 +92,7 @@ export class Room {
     )
       fail("EXPIRED", "Ce salon a expiré. Crée un nouveau salon.", 410);
   }
-  create(code, name, seed, cosmetics) {
+  create(code, name, seed, cosmetics, profileId = null) {
     if (this.data) fail("EXISTS", "Ce salon existe déjà.", 409);
     const now = this.now();
     this.data = {
@@ -108,11 +114,11 @@ export class Room {
       readyAt: 0,
       deadline: 0,
     };
-    const member = this.join(name, cosmetics);
+    const member = this.join(name, cosmetics, profileId);
     this.data.host = member.id;
     return member;
   }
-  join(name, cosmetics) {
+  join(name, cosmetics, profileId = null) {
     this.exists();
     if (this.data.members.length >= MAX_HUMANS)
       fail("FULL", "Le salon accueille au maximum 8 humains.", 409);
@@ -120,6 +126,7 @@ export class Room {
       id: crypto.randomUUID(),
       token: token(),
       name: cleanName(name),
+      profileId,
       cosmetics: normalizeCosmetics(cosmetics),
       connected: false,
       disconnectedAt: this.now(),
@@ -244,6 +251,7 @@ export class Room {
         at: this.now(),
       });
       d.chat = d.chat.slice(-40);
+      trophyChat(this, member);
     } else if (message.type === "appearance") {
       if (d.phase !== "lobby")
         fail(
@@ -349,6 +357,7 @@ export class Room {
         d.mapId || "cantine",
         d.teamSize || 1,
       );
+      beginTrophyMatch(this);
       d.phase = "playing";
       d.readyAt = this.now();
       d.deadline = this.now() + TURN_MS;
@@ -399,6 +408,7 @@ export class Room {
       !d.members.every((m) => m.connected && m.rematch)
     )
       return;
+    finishTrophyMatch(this);
     this.game.destroy();
     this.game = null;
     this.replay = null;
@@ -431,6 +441,7 @@ export class Room {
     );
     // Missing / disconnected humans use the existing AI, never another client's decision.
     const replay = resolveTurn(this.game, inputs);
+    trophyTurn(this, replay);
     const now = this.now();
     replay.startedAt = now + 300;
     this.data.readyAt = replay.startedAt + replay.duration;
