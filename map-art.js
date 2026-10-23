@@ -1,4 +1,4 @@
-import { shaft } from "./secret-modes.js?v=filmovore-15";
+import { shaft, secretSprite } from "./secret-modes.js?v=arena-17";
 export const ILLUSTRATED_MAPS = [
   "survival",
   "platform",
@@ -24,8 +24,13 @@ export const ILLUSTRATED_MAPS = [
   "mirror",
 ];
 const images = new Map();
+const platformFloors = new WeakMap();
+const survivalPatterns = new WeakMap();
 export function mapArtURL(id) {
   if (!ILLUSTRATED_MAPS.includes(id)) return null;
+  if (id === "survival")
+    return new URL("./assets/secrets/survival-ground.webp", import.meta.url)
+      .href;
   if (id === "icecream")
     return new URL("./assets/secrets/icecream-street.webp", import.meta.url)
       .href;
@@ -48,25 +53,70 @@ export function drawMapArt(context, game) {
   }
   const image = images.get(game.mapId);
   if (!image.complete || !image.naturalWidth) return false;
-  if (game.mapId === "platform") {
-    const s = shaft(game),
-      sx = [0, 0.365, 0.638, 1].map((n) => n * image.naturalWidth),
-      sy = [0, 0.294, 0.633, 1].map((n) => n * image.naturalHeight);
-    const dx = [0, s.x - s.half, s.x + s.half, game.w],
-      dy = [0, s.y - s.half, s.y + s.half, game.h];
-    for (let y = 0; y < 3; y++)
-      for (let x = 0; x < 3; x++)
-        context.drawImage(
-          image,
-          sx[x],
-          sy[y],
-          sx[x + 1] - sx[x],
-          sy[y + 1] - sy[y],
-          dx[x],
-          dy[y],
-          dx[x + 1] - dx[x],
-          dy[y + 1] - dy[y],
+  if (game.mapId === "survival") {
+    let pattern = survivalPatterns.get(game);
+    if (!pattern) {
+      pattern = context.createPattern(image, "repeat");
+      pattern.setTransform(
+        new DOMMatrix().scale(Math.min(game.w, game.h) / 18000),
+      );
+      survivalPatterns.set(game, pattern);
+    }
+    context.fillStyle = pattern;
+    context.fillRect(0, 0, game.w, game.h);
+    context.fillStyle = "rgba(43,58,34,.20)";
+    context.fillRect(0, 0, game.w, game.h);
+    for (const o of game.obstacles) {
+      if (o.scenery === "cornucopia")
+        secretSprite(context, "cornucopia", o.artX, o.artY, o.artW, o.artH);
+      else if (o.scenery === "forest-grove")
+        secretSprite(
+          context,
+          "forest-grove",
+          o.x,
+          o.y,
+          o.w * 1.12,
+          o.h * 1.12,
+          o.angle,
         );
+    }
+    return true;
+  }
+  if (game.mapId === "platform") {
+    const half = shaft(game).half;
+    let cached = platformFloors.get(game);
+    if (
+      !cached ||
+      cached.half !== half ||
+      cached.w !== game.w ||
+      cached.h !== game.h
+    ) {
+      const floor = document.createElement("canvas");
+      floor.width = game.w;
+      floor.height = game.h;
+      const floorContext = floor.getContext("2d");
+      const s = shaft(game),
+        sx = [0, 0.365, 0.638, 1].map((n) => n * image.naturalWidth),
+        sy = [0, 0.294, 0.633, 1].map((n) => n * image.naturalHeight);
+      const dx = [0, s.x - s.half, s.x + s.half, game.w],
+        dy = [0, s.y - s.half, s.y + s.half, game.h];
+      for (let y = 0; y < 3; y++)
+        for (let x = 0; x < 3; x++)
+          floorContext.drawImage(
+            image,
+            sx[x],
+            sy[y],
+            sx[x + 1] - sx[x],
+            sy[y + 1] - sy[y],
+            dx[x],
+            dy[y],
+            dx[x + 1] - dx[x],
+            dy[y + 1] - dy[y],
+          );
+      cached = { half, w: game.w, h: game.h, floor };
+      platformFloors.set(game, cached);
+    }
+    context.drawImage(cached.floor, 0, 0);
     return true;
   }
   if (game.mapId === "royal") {

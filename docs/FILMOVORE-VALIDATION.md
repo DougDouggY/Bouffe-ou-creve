@@ -26,24 +26,36 @@ Les déplacements mesurés comprennent le choc et sa décélération, pas une t�
 
 ## Hunger Games secret — 24 gourmands
 
-| Graine | Survivants après les tirs 1 / 2 / 3 | Tour final | Parachutages   | Résolution physique simulée | Temps CPU | Issue                              |
-| ------ | ----------------------------------- | ---------: | -------------- | --------------------------: | --------: | ---------------------------------- |
-| 17     | 22 / 21 / 19                        |         17 | Tours 5, 9, 13 |                        45 s |    627 ms | aucun survivant, égalité explicite |
-| 71     | 18 / 17 / 16                        |         16 | Tours 5, 9, 13 |                        42 s |    483 ms | 1 survivant                        |
-| 190    | 20 / 16 / 15                        |         16 | Tours 5, 13    |                        43 s |    469 ms | 1 survivant                        |
+| Graine | Survivants après les tirs 1 / 2 / 3 | Tour final | Parachutages                        | Résolution physique simulée | Temps CPU | Issue       |
+| ------ | ----------------------------------- | ---------: | ----------------------------------- | --------------------------: | --------: | ----------- |
+| 17     | 24 / 23 / 22                        |         49 | Tours 5, 13, 25, 29, 33, 37, 45, 49 |                       128 s |   3122 ms | 1 survivant |
+| 71     | 24 / 23 / 22                        |         38 | Tours 5, 9, 13, 17, 21, 25, 37      |                       101 s |   2775 ms | 1 survivant |
+| 190    | 24 / 23 / 22                        |         32 | Tours 5, 9, 13, 17, 25, 29          |                        87 s |   2642 ms | 1 survivant |
 
-Chaque partie commence avec 32 aliments accessibles, puis le moteur refuse `addFood`. Les baisses de stock, les colis et les effectifs sont enregistrés à chaque tour. Les contrôles retrouvent des comportements de recherche de nourriture, chasse, fuite, recherche de territoire et repli dans la zone. Des approches de colis sont également observées selon les parties. Aucun tir futur du joueur n’est accessible aux IA.
+Chaque partie commence avec 96 aliments accessibles en trois anneaux, puis le moteur refuse `addFood`. Les baisses de stock, les colis et les effectifs sont enregistrés à chaque tour. Les contrôles retrouvent des comportements de recherche de nourriture, chasse, fuite, recherche de territoire et repli dans la zone. Des approches de colis sont également observées selon les parties. Aucun tir futur du joueur n’est accessible aux IA.
 
-La durée physique ci-dessus exclut le temps humain de visée : elle ne prédit pas la durée réelle d’une partie jouée. La zone est annoncée avant la résolution et contrôlée en fin de tir à partir du tour 6. Si les derniers gourmands restent tous hors zone dans le même contrôle, ils sont tous éliminés : aucun gagnant artificiel n’est sauvé, et le résultat indique explicitement qu’il n’y a aucun survivant.
+La durée physique ci-dessus exclut le temps humain de visée : elle ne prédit pas la durée réelle d’une partie jouée. La zone est annoncée avant la résolution et contrôlée en fin de tir à partir du tour 6 ; le rayon ne descend pas sous 990. Si les derniers gourmands restent tous hors zone dans le même contrôle, ils sont tous éliminés : aucun gagnant artificiel n’est sauvé, et le résultat indique explicitement qu’il n’y a aucun survivant.
 
 ## Régressions et limites
 
 - `npm test` : 26 tests unitaires.
 - `npm run test:browser` : 21 contrôles menus (dont un écran de 3 440 pixels),, progression et plein écran.
 - `npm run test:arenas` : 77 contrôles réels du moteur et 2 contrôles mobiles.
-- `npm run test:secrets` : 68 contrôles moteur / profil / trophées sur cette exécution, puis 10 contrôles de menu, sauvegarde et propulsion ordinateur / mobile.
+- `npm run test:secrets` : 69 contrôles moteur / profil / trophées sur cette exécution, puis 10 contrôles de menu, sauvegarde et propulsion ordinateur / mobile.
 - `npm run test:filmovore` : mesures ci-dessus, positions du festin, gardes à 500 kg, renforts et trois parties complètes.
 
 Les illustrations et captures réelles sont vérifiées visuellement. Les captures de jeu sont dans `test-results/secret-*.png`, dont `secret-survival.png` et les quatre versions mobiles. La carte Hunger Games classique reste disponible dans son carnet initial.
 
 La dissimulation sous les arbres n’est pas ajoutée. Le rot reste synthétique ; aucun enregistrement authentique n’est inclus. L’appréciation du rythme et du niveau de difficulté reste à tester en partie humaine.
+
+## Retours du joueur — grande arène et fluidité
+
+Hunger Games utilise désormais un monde de 12 000 × 9 000, avec rayon de départ des gourmands de 2 500 (espacement voisin mesuré : 652,63) et 96 aliments sur trois anneaux de rayons 1 900 / 2 020 / 2 140. Chaque gourmand a une route directe sans obstacle vers le festin. Un vrai tir du joueur attrape les trois aliments en face de lui : poids de 60 à 235 kg, stock de 96 à 93.
+
+Le cercle sûr part d’un rayon de 3 960 et termine à 990, sans réduction supplémentaire : le duel final conserve la taille de l’ancienne zone initiale. Les trois parties complètes ci-dessus terminent avec un vainqueur. Le sol, les groupes d’arbres et la structure centrale sont rendus séparément pour préserver leur détail et éviter d’étirer un fond sur toute la nouvelle étendue.
+
+La Plateforme réutilise son décor rasterisé : une image par rendu, au lieu de recalculer neuf morceaux. Pendant un mouvement, un seul duel hors écran avance ; la visée et le tableau permettent le rattrapage, sous budget. Les sous-pas physiques restent bornés à 8,34 ms.
+
+Mesure comparative `node tests/platform-performance.mjs`, 1 800 pas dans le même Chromium, graine 17 : temps de calcul cumulé de 252,6 à 179,5 ms ; 95e percentile de 0,4 à 0,2 ms ; maximum de 10,3 à 9,2 ms. Aucun dépassement de 16 ms dans ces mesures. Ce sont des durées de calcul dans cet environnement, sans simulation d’un téléphone ni mesure de rendu GPU : elles ne permettent pas de promettre l’absence de ralentissements sur tous les appareils.
+
+Le Marchand emploie maintenant un camion de glaces décoré sur le toit et vu verticalement ; sa coque et sa rotation sont conservées. Les captures ordinateur et mobile vérifient le nouveau visuel.

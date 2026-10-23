@@ -61,6 +61,7 @@ try {
     const { shaft, overShaft } =
       await import("/secret-modes.js?v=filmovore-15");
     const { survivalZone } = await import("/survival.js?v=filmovore-15");
+    const { clearRoute } = await import("/survival-navigation.js?v=arena-17");
     const result = [];
     const check = (name, ok, data) => {
       if (!ok) throw Error(name + ": " + JSON.stringify(data));
@@ -182,9 +183,50 @@ try {
       check("soldier cannot be eaten", !p.alive);
       g.destroy();
     }
+    {
+      const g = new Game(12000, 9000, seeded(17), {
+        mode: "survival",
+        mapId: "survival",
+        count: 24,
+      });
+      const separation = Math.hypot(
+        g.people[0].body.position.x - g.people[1].body.position.x,
+        g.people[0].body.position.y - g.people[1].body.position.y,
+      );
+      check(
+        "large arena, spaced ring and final original size",
+        separation > 650 &&
+          survivalZone(g, 1).r === 3960 &&
+          survivalZone(g, 60).r === 990,
+        {
+          separation,
+          initial: survivalZone(g, 1).r,
+          final: survivalZone(g, 60).r,
+        },
+      );
+      check(
+        "every gourmand has a direct accessible route to the food ring",
+        g.people.every((p) =>
+          g.food.some(
+            (f) =>
+              Math.hypot(f.x - p.body.position.x, f.y - p.body.position.y) <
+                650 && clearRoute(p.body.position, f, g.obstacles, 30),
+          ),
+        ),
+      );
+      g.plan = () => ({ x: 0, y: 0 });
+      g.launch({ x: 0, y: 17 });
+      for (let i = 0; i < 120 && g.phase === "moving"; i++) g.step();
+      check(
+        "real first shot reaches and eats central ring food",
+        g.people[0].mass > 60,
+        { mass: g.people[0].mass, remaining: g.food.length },
+      );
+      g.destroy();
+    }
     for (const seed of [17, 71, 190]) {
       const started = performance.now(),
-        g = new Game(3000, 2250, seeded(seed), {
+        g = new Game(12000, 9000, seeded(seed), {
           mode: "survival",
           mapId: "survival",
           count: 24,
@@ -194,7 +236,7 @@ try {
         "24 equal ring starts seed " + seed,
         g.people.length === 24 &&
           g.people.every((p) => p.mass === 60) &&
-          g.food.length === 32,
+          g.food.length === 96,
       );
       check(
         "ordinary food spawning disabled seed " + seed,

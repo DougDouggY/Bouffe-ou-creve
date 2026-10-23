@@ -19,7 +19,7 @@ La génération d’images, bloquée lors de la première tentative, a fonctionn
 
 ## La Plateforme
 
-Tournoi de seize gourmands, huit duels initiaux dans huit vrais mondes Matter. Les duels hors écran utilisent les mêmes méthodes `Game.step`, les mêmes IA, les mêmes aliments, les mêmes impulsions et les mêmes critères de chute. Le travail hors écran est réparti entre les images pour borner le coût par image ; aucun résultat n’est choisi par tirage au sort ou comparaison arbitraire des poids.
+Tournoi de seize gourmands, huit duels initiaux dans huit vrais mondes Matter. Les duels hors écran utilisent les mêmes méthodes `Game.step`, les mêmes IA, les mêmes aliments, les mêmes impulsions et les mêmes critères de chute. Le travail hors écran est réduit à un monde pendant les mouvements, deux pendant la visée, avec rattrapage sous budget au tableau. Le décor du puits est calculé une fois et réutilisé tant que son ouverture ne change pas ; aucun résultat n’est choisi par tirage au sort ou comparaison arbitraire des poids.
 
 Chaque duel offre trois propulsions de festin. Le troisième tour affiche une alerte explicite. La plateforme descend ensuite pendant 1,1 seconde ; ses occupants tombent, les aliments repartent, le puits reste ouvert. Les survivants continuent le duel. Une chute est testée après chaque sous-pas physique, avec retrait du corps et animation visuelle ; la transition attend l’animation.
 
@@ -37,11 +37,13 @@ Si deux gourmands tombent, l’instant du sous-pas physique permet de distinguer
 
 Cette entrée des tomates ouvre un carnet réunissant **La Plateforme · 16 gourmands** et **Hunger Games · 24 gourmands**. `survival` est un nouveau mode ; la carte classique `hunger` reste distincte.
 
-Les 24 gourmands commencent à 60 kg sur un cercle autour d’un festin fini de 32 aliments : plusieurs burgers de Douggy, XL, normaux et petits (8 kg, silhouette réduite). Les aliments sont placés hors des obstacles et ne se reconstituent pas. Aucun service automatique, fondue ou tirage de pouvoirs ordinaire n’intervient. Une forêt originale, des rochers et une structure métallique centrale servent de décor ; ses obstacles sont physiques.
+Les 24 gourmands commencent à 60 kg, espacés d’environ 653 unités sur un cercle de rayon 2 500, autour d’un festin fini de 96 aliments répartis en trois anneaux : plusieurs burgers de Douggy, XL, normaux et petits (8 kg, silhouette réduite). Les aliments sont placés hors des obstacles, sur des rayons de 1 900 / 2 020 / 2 140 ; chaque départ dispose d’un chemin direct vers eux. Un vrai premier tir vérifie leur collecte. Ils ne se reconstituent pas. Aucun service automatique, fondue ou tirage de pouvoirs ordinaire n’intervient. Une forêt originale, des rochers et une structure métallique centrale servent de décor ; ses obstacles sont physiques.
 
 Un parachutage est possible tous les quatre tours à partir du cinquième (78 % à chaque créneau). Il annonce son emplacement, descend pendant 2,6 secondes avec voile, caisse et ombre, puis fournit quatre aliments, dont parfois un Douggy (12 % pour le premier aliment du colis). L’emplacement doit rester accessible dans la zone du tour suivant. Il n’y a aucun remplissage automatique du centre.
 
-La fermeture commence au sixième tour, après cinq tours sans réduction. La limite à rejoindre est visible pendant toute la visée et le mouvement ; l’élimination n’a lieu qu’à la fin du tir. Le rayon diminue de 10 % par tour. Les IA ont trois préférences initiales, fuient les plus gros, chassent les plus petits, cherchent les ressources et utilisent des chemins contournant les obstacles. Elles ne lisent pas les tirs à venir. La dissimulation sous les arbres n’est pas ajoutée : les arbres n’effacent pas les personnages.
+La fermeture commence au sixième tour, après cinq tours sans réduction. La limite à rejoindre est visible pendant toute la visée et le mouvement ; l’élimination n’a lieu qu’à la fin du tir. L’arène initiale mesure 12 000 × 9 000, soit seize fois l’ancienne surface. Le rayon sûr part de 3 960, diminue de 10 % par tour puis reste à 990 : la taille de l’ancienne arène initiale pour le combat final. Le sol forestier utilise une texture répétée à son échelle native ; les bosquets et la structure centrale sont des calques séparés assortis aux obstacles physiques, sans étirement flou d’une petite image sur tout le monde.
+
+Les IA ont trois préférences initiales, fuient les plus gros, chassent les plus petits, cherchent les ressources et utilisent un graphe de visibilité autour des obstacles, mis en cache par gabarit de personnage. La recherche ne parcourt plus une grille couvrant toute la grande carte. Elles ne lisent pas les tirs à venir. La dissimulation sous les arbres n’est pas ajoutée : les arbres n’effacent pas les personnages.
 
 Les victoires et compteurs restent dans la progression cachée ; les 39 trophées existants sont conservés. Aucun nouveau trophée Hunger Games n’est inventé. La victoire affiche un résultat propre au mode. Si la fermeture élimine les derniers gourmands au même contrôle, la partie annonce explicitement une égalité sans survivant.
 
@@ -55,7 +57,7 @@ La prédation entre gourmands et la règle du dernier survivant restent celles d
 
 ## Le Marchand de Glaces
 
-Le joueur dirige un fourgon utilitaire blanc, dans une grande rue droite bordée de maisons. Sa coque physique rectangulaire à coins arrondis et son illustration suivent la direction du tir, y compris une direction exactement horizontale. Les limites suivent les trottoirs ; les anciennes îles au milieu de la rue sont retirées.
+Le joueur dirige un camion de glaces blanc, décoré sur le toit et vu strictement à la verticale sans flancs visibles, dans une grande rue droite bordée de maisons. Sa coque physique rectangulaire à coins arrondis et son illustration suivent la direction du tir, y compris une direction exactement horizontale. Le camion tourne avec la direction du tir. Les limites suivent les trottoirs ; les anciennes îles au milieu de la rue sont retirées.
 
 Les enfants sont des personnages humains stylisés, en tee-shirt et baskets. Comme les adultes du Festin Cannibale, ils utilisent six poses illustrées : deux foulées, attente, trébuchement, chute et relevé. Les captures sont sans animation graphique de violence. Chaque capture donne 40 kg ; le récapitulatif affiche **Enfants capturés**.
 

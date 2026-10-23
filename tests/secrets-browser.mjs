@@ -459,6 +459,8 @@ try {
     await page.locator("#close-briefing").click();
     await page.waitForTimeout(350);
     assert.equal(await page.evaluate(() => window.__game.mode), id);
+    if (id === "survival")
+      assert.equal(await page.evaluate(() => window.__game.w), 12000);
     assert(await page.locator("#shop-dialog").isHidden());
     await page.screenshot({
       path: path.join(root, "test-results", `secret-${id}.png`),

@@ -1,10 +1,60 @@
+import { survivalWaypoint } from "./survival-navigation.js?v=arena-17";
 // Secret FILMOVORE survival mode. Its finite food supply never calls Game.addFood.
+export function survivalStart(w, h, index, count) {
+  const a = -Math.PI / 2 + (index * Math.PI * 2) / count,
+    r = Math.min(w, h) * (2500 / 9000);
+  return { x: w / 2 + Math.cos(a) * r, y: h / 2 + Math.sin(a) * r };
+}
+export function survivalObstacles(w, h) {
+  const u = Math.min(w, h) / 9000,
+    cx = w / 2,
+    cy = h / 2;
+  const block = (dx, dy, bw, bh, angle = 0, extra = {}) => ({
+    x: cx + dx * u,
+    y: cy + dy * u,
+    w: bw * u,
+    h: bh * u,
+    angle,
+    ...extra,
+  });
+  const objects = [
+    block(0, 100, 500, 280, 0, {
+      scenery: "cornucopia",
+      artX: cx,
+      artY: cy,
+      artW: 760 * u,
+      artH: 720 * u,
+    }),
+    block(-285, -65, 130, 570, -0.12, { sceneryPart: true }),
+    block(285, -65, 130, 570, 0.12, { sceneryPart: true }),
+    block(0, -255, 450, 75, 0, { sceneryPart: true }),
+  ];
+  for (let ring = 0; ring < 2; ring++)
+    for (let i = 0; i < (ring ? 16 : 12); i++) {
+      const a = (i * Math.PI * 2) / (ring ? 16 : 12) + ring * 0.14,
+        r = (ring ? 4200 : 3150) + Math.sin(i * 2.3) * 110;
+      objects.push(
+        block(
+          Math.cos(a) * r,
+          Math.sin(a) * r,
+          450 + Math.sin(i) * 70,
+          350 + Math.cos(i * 1.7) * 50,
+          a,
+          { scenery: "forest-grove" },
+        ),
+      );
+    }
+  return objects;
+}
 export function survivalZone(g, round = g.round) {
   const step = Math.max(0, round - 5);
   return {
     x: g.w / 2,
     y: g.h / 2,
-    r: Math.min(g.w, g.h) * 0.44 * Math.pow(0.9, step),
+    r: Math.max(
+      Math.min(990, Math.min(g.w, g.h) * 0.44),
+      Math.min(g.w, g.h) * 0.44 * Math.pow(0.9, step),
+    ),
   };
 }
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -35,29 +85,23 @@ export class SurvivalRules {
       "small",
       "small",
     ];
-    for (let i = 0; i < 32; i++) {
-      let point;
-      for (let trial = 0; trial < 500; trial++) {
-        const a = g.random() * Math.PI * 2,
-          radius = Math.min(g.w, g.h) * (0.075 + g.random() * 0.045);
-        point = {
-          x: g.w / 2 + Math.cos(a) * radius,
-          y: g.h / 2 + Math.sin(a) * radius,
+    const unit = Math.min(g.w, g.h) / 9000;
+    // Three complete accessible food rings, outside the central sculpture.
+    for (let ring = 0; ring < 3; ring++)
+      for (let i = 0; i < 32; i++) {
+        const angle = -Math.PI / 2 + (i * Math.PI) / 16,
+          r = (1900 + ring * 120) * unit;
+        const point = {
+          x: g.w / 2 + Math.cos(angle) * r,
+          y: g.h / 2 + Math.sin(angle) * r,
         };
-        if (
-          !g.obstacles.some((o) => api.intersects(point, 24, o)) &&
-          !g.food.some((f) => dist(f, point) < 28)
-        )
-          break;
-        point = null;
+        if (!g.obstacles.some((o) => api.intersects(point, 26, o)))
+          g.food.push({
+            ...point,
+            type: "burger",
+            size: types[(i + ring * 4) % types.length],
+          });
       }
-      if (point)
-        g.food.push({
-          ...point,
-          type: "burger",
-          size: types[i % types.length],
-        });
-    }
     for (const p of g.people) p.survivalStyle = p.id % 3;
   }
   onEnd() {
@@ -138,7 +182,7 @@ export class SurvivalRules {
       z = survivalZone(g, g.round + 1),
       radius = person.body.circleRadius;
     const seen = g.people.filter(
-      (q) => q.alive && q !== person && dist(p, q.body.position) < 650,
+      (q) => q.alive && q !== person && dist(p, q.body.position) < 1000,
     );
     const threats = seen
       .filter((q) => q.mass > person.mass * 1.1)
@@ -154,7 +198,7 @@ export class SurvivalRules {
       .sort((a, b) => dist(p, a) - dist(p, b));
     let target;
     if (dist(p, z) + radius > z.r * 0.82) {
-      target = z;
+      target = { x: z.x, y: z.y + Math.min(z.r * 0.4, g.h * 0.08) };
       person.intent = "reposition";
     } else if (threats.length && dist(p, threats[0].body.position) < 330) {
       const q = threats[0].body.position;
@@ -170,15 +214,24 @@ export class SurvivalRules {
       target = this.drops.find((d) => !d.landed);
       person.intent = "supply";
     } else {
-      // Deliberate search of the remaining arena, no knowledge of unseen targets or hidden shots.
-      const a = person.id * 2.4 + g.round * 0.74;
-      target = {
-        x: z.x + Math.cos(a) * z.r * 0.52,
-        y: z.y + Math.sin(a) * z.r * 0.52,
-      };
+      // Finish crossing a search sector instead of changing destination every turn.
+      const old = person.survivalSearch;
+      if (!old || dist(p, old) < 130 || dist(old, z) > z.r * 0.84) {
+        const a =
+          Math.atan2(p.y - z.y, p.x - z.x) +
+          Math.PI +
+          ((person.id % 3) - 1) * 0.6;
+        person.survivalSearch = {
+          x: z.x + Math.cos(a) * z.r * 0.72,
+          y: z.y + Math.sin(a) * z.r * 0.72,
+        };
+      }
+      target = person.survivalSearch;
       person.intent = "search";
     }
-    const waypoint = g.mechanics.waypoint(p, target, radius + 8),
+    if (g.obstacles.some((o) => this.api.intersects(target, radius + 8, o)))
+      target = { x: z.x, y: z.y + Math.min(z.r * 0.55, g.h * 0.1) };
+    const waypoint = survivalWaypoint(g, p, target, radius + 8),
       base = Math.atan2(waypoint.y - p.y, waypoint.x - p.x);
     let best = { score: -Infinity, x: 0, y: 0 };
     const mobility = Math.max(0.38, Math.min(1.2, Math.sqrt(60 / person.mass)));

@@ -1,4 +1,9 @@
-import { SurvivalRules, drawSurvivalFloor } from "./survival.js?v=filmovore-15";
+import {
+  SurvivalRules,
+  drawSurvivalFloor,
+  survivalStart,
+  survivalObstacles,
+} from "./survival.js?v=arena-17";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
   SecretRules,
@@ -9,7 +14,7 @@ import {
   drawSecretPerson,
   drawSecretFood,
   drawSecretFalls,
-} from "./secret-modes.js?v=filmovore-15";
+} from "./secret-modes.js?v=arena-17";
 import {
   SECRET_MODES,
   SECRET_TROPHIES,
@@ -25,7 +30,7 @@ import {
   arenaSize,
   arenaBorderBodies,
   drawArenaBorders,
-} from "./arena-bounds.js?v=filmovore-15";
+} from "./arena-bounds.js?v=arena-17";
 import {
   createRestaurantMenu,
   setupSecretBurger,
@@ -43,7 +48,7 @@ import {
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=filmovore-15";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=filmovore-15";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=arena-17";
 import {
   REMOVED_MAPS,
   WORK_IN_PROGRESS_MAPS,
@@ -1132,7 +1137,7 @@ for (const [id, mode] of Object.entries(SECRET_GAME_MODES))
           ? "Les victimes sont des adultes fictifs de 40 kg. Elles préparent de courtes fuites avant les propulsions simultanées, paniquent et trébuchent parfois. Les gourmands peuvent toujours se dévorer. Dernier survivant : même règle que le Classique."
           : id === "survival"
             ? "24 gourmands à 60 kg, un festin initial limité et une forêt à explorer. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
-            : "Une grande rue, des fourgons blancs et une course-poursuite de comédie horrifique. Capture les enfants pour grossir, évite les fourgons plus imposants et reste le dernier gourmand en piste.",
+            : "Une grande rue, des camions de glaces vus du dessus et une course-poursuite de comédie horrifique. Capture les enfants pour grossir, évite les camions plus imposants et reste le dernier gourmand en piste.",
   };
 CA.royal = {
   name: "Le Buffet du Roi",
@@ -1159,19 +1164,7 @@ function _e(e, g, o, u = 1) {
     ...Q,
   });
   if (e === "icecream") return [];
-  if (e === "survival")
-    return [
-      E(0.5, 0.5, 0.08, 0.065),
-      E(0.44, 0.43, 0.02, 0.17, -0.1),
-      E(0.56, 0.43, 0.02, 0.17, 0.1),
-      E(0.5, 0.406, 0.09, 0.023),
-      E(0.29, 0.19, 0.075, 0.07),
-      E(0.74, 0.2, 0.07, 0.08),
-      E(0.23, 0.55, 0.06, 0.09),
-      E(0.76, 0.64, 0.06, 0.09),
-      E(0.34, 0.83, 0.09, 0.065),
-      E(0.7, 0.91, 0.12, 0.045),
-    ];
+  if (e === "survival") return survivalObstacles(g, o);
   if (e === "cuisine")
     return [
       E(0.3, 0.44, 0.25, 24 / o, 0.58),
@@ -9545,8 +9538,8 @@ class zt {
             }
           }
         }
-      if (this.mapId === "hunger" || this.mode === "survival")
-        I = hungerStart(g, o, i, this.count);
+      if (this.mapId === "hunger") I = hungerStart(g, o, i, this.count);
+      if (this.mode === "survival") I = survivalStart(g, o, i, this.count);
       if (!I) throw new Error("Aucun point de départ libre");
       n.push(I);
     }

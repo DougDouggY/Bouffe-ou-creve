@@ -421,7 +421,10 @@ export class SecretRules {
             )
               risk = true;
             if (
-              distance({ x, y }, opponent.body.position) <
+              Math.hypot(
+                x - opponent.body.position.x,
+                y - opponent.body.position.y,
+              ) <
               r + opponent.body.circleRadius + 10
             )
               hit = true;
@@ -499,15 +502,20 @@ class Tournament {
     );
   }
   tick(ms) {
-    // Bounded work per frame; offscreen matches use the very same Game.step / Matter engine.
-    for (let i = 0; i < Math.min(3, this.matches.length - 1); i++) {
+    // One offscreen world during play; a short budget between rounds.
+    // Catch up between duels with the existing four physics substeps (at most 8.34 ms each).
+    const budget =
+        this.g.phase === "bracket" ? 7 : this.g.phase === "aim" ? 2 : 1,
+      started = performance.now();
+    for (let i = 0; i < Math.min(budget, this.matches.length - 1); i++) {
+      if (i > 0 && performance.now() - started > 2) break;
       this.backgroundCursor =
         1 + (this.backgroundCursor % (this.matches.length - 1));
       const match = this.matches[this.backgroundCursor];
-      if (match.phase === "ended") continue;
+      if (match.phase === "ended" || match.secretRules.lastResult) continue;
       if (match.phase === "aim" && match.secretRules.arrival === 0)
         match.launch(match.secretRules.plan(match.people[0]));
-      match.step(ms * 2);
+      match.step(Math.min(ms * 2, 1000 / 30));
     }
     if (
       this.g.phase === "bracket" &&
@@ -639,7 +647,7 @@ export function drawSecretPerson(ctx, g, p, time) {
     pop * 0.08;
   secretSprite(
     ctx,
-    "van-white",
+    "icecream-truck-top",
     p.body.position.x,
     p.body.position.y,
     radius * 2.2 * squash,
