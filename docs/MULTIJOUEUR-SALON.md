@@ -1,6 +1,6 @@
 # Salon privé : apparences, Dressing, cartes et revanche
 
-Le salon affiche les personnages équipés avec le même dessin et les mêmes ressources que le jeu. Le bouton « Le Dressing du Glouton » ouvre la véritable boutique au-dessus du salon, sans quitter le groupe. Les achats utilisent les points locaux existants. Fermer le Dressing synchronise l'équipement ; une modification retire le statut prêt.
+Le salon s’ouvre en grande carte de restaurant à deux pages : les convives et leurs tenues à gauche, la carte et les réglages à droite. Sur téléphone, les deux pages s’empilent. Le cadre évoque une reliure en cuir et les pages un papier crème. Les personnages équipés sont affichés en grand, avec un canevas de résolution doublée, leur pseudo et leur statut séparés, en utilisant le même dessin et les mêmes ressources que le jeu. Le bouton « Le Dressing du Glouton » ouvre la véritable boutique au-dessus du salon, sans quitter le groupe. Les achats utilisent les points locaux existants. Fermer le Dressing synchronise l'équipement ; une modification retire le statut prêt.
 
 L'hôte choisit parmi les cartes normales disponibles. Les cartes retirées, secrètes et en travaux sont exclues. La sélection est validée par le serveur, partagée et persistée dans le Durable Object. Changer de carte retire tous les statuts prêts. Les tailles utilisent les dimensions normales correspondantes. Les acteurs mobiles, les événements et les obstacles consommés sont partagés dans les états et restaurés avec le checkpoint ; les clients ne simulent pas la physique.
 

@@ -3500,3 +3500,259 @@ body.online-playing .character-badge[data-human="true"][data-player="true"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* The invitation opens into a leather-bound, two-page restaurant menu. */
+#multiplayer-dialog:has(#multiplayer-lobby:not([hidden])) {
+  width: 1160px;
+  max-width: calc(100vw - 28px);
+  max-height: 94dvh;
+  padding: 22px;
+  color: #f5e7c8;
+  border: 1px solid #8f704a;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(18deg, #ffffff03 0 1px, transparent 1px 4px),
+    linear-gradient(110deg, #4c3024, #281b16 48%, #4d3023);
+  box-shadow:
+    0 24px 80px #0009,
+    inset 0 0 0 5px #211811,
+    inset 0 0 0 6px #9a784a;
+}
+#multiplayer-dialog:has(#multiplayer-lobby:not([hidden])) > .menu-kicker {
+  color: #d5ba87;
+}
+#multiplayer-dialog:has(#multiplayer-lobby:not([hidden])) > h2 {
+  margin: 8px 0;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: 0.1em;
+}
+#multiplayer-dialog:has(#multiplayer-lobby:not([hidden]))
+  > #multiplayer-status {
+  margin: 6px 0 18px;
+  min-height: 0;
+  text-align: center;
+  color: #d9c5a7;
+  font-size: 13px;
+}
+#multiplayer-lobby:not([hidden]) {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 2px;
+  color: #50392a;
+  box-shadow: 0 8px 22px #0005;
+}
+.lobby-page {
+  min-width: 0;
+  padding: 26px 28px;
+  border: 1px solid #b69a6c;
+  background:
+    repeating-linear-gradient(0deg, #a47a3c04 0 1px, transparent 1px 3px),
+    #f5ecd6;
+}
+.lobby-guests {
+  border-radius: 3px 0 0 3px;
+  box-shadow: inset -12px 0 18px -14px #39271a99;
+}
+.lobby-order {
+  border-radius: 0 3px 3px 0;
+  box-shadow: inset 12px 0 18px -14px #39271a99;
+}
+.lobby-page-number {
+  margin: 0;
+  color: #8b6c40;
+  text-align: center;
+  text-transform: uppercase;
+  font:
+    11px Georgia,
+    serif;
+  letter-spacing: 0.2em;
+}
+#multiplayer-dialog .lobby-page h3 {
+  margin: 12px 0;
+  padding-bottom: 16px;
+  border-bottom: 3px double #b79a6c;
+  text-align: center;
+  font:
+    italic 30px Georgia,
+    serif;
+  color: #5d3028;
+}
+.lobby-page-intro {
+  text-align: center;
+  font:
+    italic 14px Georgia,
+    serif;
+  color: #887257;
+}
+#multiplayer-players {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-height: 610px;
+  overflow-y: auto;
+  scrollbar-color: #b59a70 #eee0c3;
+  padding: 6px;
+  margin: 18px 0;
+}
+#multiplayer-players li {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  gap: 2px;
+  padding: 10px 6px 16px;
+  border: 1px solid #c9b48c;
+  border-radius: 42% 42% 4px 4px / 24% 24% 4px 4px;
+  background: radial-gradient(ellipse at 50% 30%, #fffaf0, #e9dcbf);
+  box-shadow: 0 3px 7px #5b402013;
+  text-align: center;
+}
+#multiplayer-players li[data-self="true"] {
+  border-color: #a77d39;
+  box-shadow: 0 0 0 2px #c7a45b33;
+}
+#multiplayer-players .lobby-avatar {
+  width: 168px;
+  height: 210px;
+  max-width: 100%;
+  object-fit: contain;
+}
+#multiplayer-players .lobby-identity {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  line-height: 1.3;
+}
+#multiplayer-players .lobby-identity strong {
+  font:
+    bold 20px Georgia,
+    serif;
+  color: #4e3428;
+  overflow-wrap: anywhere;
+}
+#multiplayer-players .lobby-identity small {
+  font-size: 12px;
+  color: #8b6e4d;
+}
+#multiplayer-players li[data-ready="true"] .lobby-identity small {
+  color: #356440;
+  font-weight: 700;
+}
+#multiplayer-dialog .lobby-page button {
+  font:
+    bold 14px Georgia,
+    serif;
+  border: 1px solid #ad8a54;
+  border-radius: 3px;
+  background: #ede0c2;
+  color: #5a3827;
+}
+#multiplayer-dialog .lobby-page label {
+  font:
+    italic 18px Georgia,
+    serif;
+  margin-top: 24px;
+}
+#multiplayer-dialog .lobby-page select {
+  background: #fffaf0;
+  font:
+    16px Georgia,
+    serif;
+  border-color: #bca47a;
+}
+.lobby-invitation {
+  margin: 20px 0;
+  padding: 14px;
+  border: 1px dashed #baa17a;
+  background: #fff9eb88;
+}
+.lobby-invitation p {
+  margin: 0 0 8px;
+  text-align: center;
+  font:
+    italic 14px Georgia,
+    serif;
+}
+#multiplayer-dialog .lobby-invitation button {
+  min-height: 34px;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  font-weight: 400;
+}
+#multiplayer-dialog #multiplayer-fill {
+  font-size: 12px;
+  color: #8b6c40;
+  line-height: 1.5;
+}
+.lobby-service {
+  margin: 26px 0 18px;
+  padding-top: 16px;
+  border-top: 3px double #b79a6c;
+}
+#multiplayer-dialog #multiplayer-start {
+  background: #59362b;
+  color: #fff1cf;
+  border-color: #59362b;
+  min-height: 54px;
+}
+#multiplayer-dialog #multiplayer-ready {
+  background: #e2e5d1;
+  border-color: #8c9b72;
+  color: #425439;
+}
+.lobby-etiquette {
+  margin-top: 22px;
+  font:
+    italic 14px Georgia,
+    serif;
+  color: #826c50;
+}
+.lobby-etiquette summary {
+  cursor: pointer;
+}
+#multiplayer-dialog:has(#multiplayer-lobby:not([hidden])) #multiplayer-close {
+  display: block;
+  width: auto;
+  min-width: 190px;
+  margin: 18px auto 0;
+  color: #eddbb8;
+  background: transparent;
+  border-color: #977a51;
+  font:
+    14px Georgia,
+    serif;
+}
+@media (max-width: 760px) {
+  #multiplayer-dialog:has(#multiplayer-lobby:not([hidden])) {
+    padding: 16px 12px;
+    max-width: calc(100vw - 14px);
+  }
+  #multiplayer-lobby:not([hidden]) {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .lobby-page {
+    padding: 22px 16px;
+    border-radius: 2px;
+  }
+  #multiplayer-players {
+    max-height: 590px;
+    gap: 10px;
+  }
+  #multiplayer-players .lobby-avatar {
+    width: 150px;
+    height: 188px;
+  }
+  #multiplayer-players .lobby-identity strong {
+    font-size: 18px;
+  }
+}
+@media (max-width: 480px) {
+  #multiplayer-players {
+    grid-template-columns: 1fr;
+  }
+  #multiplayer-players .lobby-avatar {
+    width: 180px;
+    height: 225px;
+  }
+}

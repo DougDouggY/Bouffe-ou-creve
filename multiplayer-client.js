@@ -38,6 +38,11 @@ export function setupMultiplayer({
     eventIndex = 0,
     healthy = false;
   const dialog = $("#multiplayer-dialog");
+  function openDialog() {
+    dialog.showModal();
+    $("#multiplayer-title").focus({ preventScroll: true });
+    dialog.scrollTop = 0;
+  }
   const status = $("#multiplayer-status");
   for (const map of MULTIPLAYER_MAPS) {
     const option = document.createElement("option");
@@ -112,11 +117,18 @@ export function setupMultiplayer({
         li.title = [cosmetics.hat, cosmetics.outfit]
           .map((id) => COSMETIC_CATALOG.find((item) => item.id === id)?.name)
           .join(" · ");
+        li.dataset.self = String(m.id === ticket.memberId);
+        li.dataset.ready = String(m.ready);
         const label = document.createElement("span");
-        label.textContent = `${m.name}${m.id === room.host ? " · hôte" : ""}${m.id === ticket.memberId ? " · toi" : ""} — ${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
+        label.className = "lobby-identity";
+        const name = document.createElement("strong");
+        name.textContent = m.name;
+        const status = document.createElement("small");
+        status.textContent = `${m.id === room.host ? "Hôte · " : ""}${m.id === ticket.memberId ? "Toi · " : ""}${!m.connected ? "reconnexion…" : !m.alive ? "spectateur" : room.phase === "lobby" ? (m.ready ? "prêt" : "pas encore prêt") : m.locked ? "tir verrouillé" : "en jeu"}`;
+        label.append(name, status);
         const avatar = document.createElement("canvas");
-        avatar.width = 144;
-        avatar.height = 180;
+        avatar.width = 288;
+        avatar.height = 360;
         avatar.className = "lobby-avatar";
         avatar.setAttribute("aria-label", "Apparence de " + m.name);
         li.append(avatar, label);
@@ -153,7 +165,7 @@ export function setupMultiplayer({
       pendingTurn = null;
       ended = false;
       onLeave();
-      dialog.showModal();
+      openDialog();
       syncAppearance();
     }
     onRoster(data.members);
@@ -392,7 +404,7 @@ export function setupMultiplayer({
     }
   }
   $("#multiplayer-entry").onclick = () => {
-    dialog.showModal();
+    openDialog();
     update();
     if (!ticket) health();
   };

@@ -244,9 +244,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=lobby-26"));
-  assert(resources.has("style.css?v=lobby-26"));
-  assert(resources.has("multiplayer-client.js?v=lobby-26"));
+  assert(resources.has("game.js?v=restaurant-lobby-27"));
+  assert(resources.has("style.css?v=restaurant-lobby-27"));
+  assert(resources.has("multiplayer-client.js?v=restaurant-lobby-27"));
   assert(resources.has("multiplayer-protocol.js?v=lobby-26"));
   async function dress(page, hat, outfit) {
     await page.locator("#menu-shop").focus();
@@ -298,6 +298,27 @@ try {
       (n) => document.querySelectorAll("#multiplayer-players li").length === n,
       i + 1,
     );
+  }
+  for (const [i, page] of pages.entries()) {
+    const left = await page.locator(".lobby-guests").boundingBox();
+    const right = await page.locator(".lobby-order").boundingBox();
+    const portrait = await page.locator(".lobby-avatar").first().boundingBox();
+    assert(
+      portrait.width >= 140 && portrait.height >= 180,
+      "Portraits must be substantially larger than old 64x80 thumbnails",
+    );
+    if (sizes[i].width > 760) assert(right.x > left.x + left.width - 2);
+    else assert(right.y >= left.y + left.height);
+    assert(
+      await page
+        .locator("#multiplayer-dialog")
+        .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+    );
+    await page
+      .locator("#multiplayer-dialog")
+      .screenshot({
+        path: path.join(output, `restaurant-lobby-${sizes[i].width}.png`),
+      });
   }
   const host = pages[0];
   for (const count of [8, 50, 24]) {

@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Bouffe ou Crève — Le dernier repas</title>
     <script src="./display-mode.js?v=display-19"></script>
-    <script type="module" src="./game.js?v=lobby-26"></script>
+    <script type="module" src="./game.js?v=restaurant-lobby-27"></script>
 
-    <link rel="stylesheet" href="./style.css?v=lobby-26" />
+    <link rel="stylesheet" href="./style.css?v=restaurant-lobby-27" />
   </head>
   <body>
     <div id="app">
@@ -245,7 +245,7 @@
         </dialog>
         <dialog id="multiplayer-dialog" aria-labelledby="multiplayer-title">
           <p class="menu-kicker">La table des invités</p>
-          <h2 id="multiplayer-title">ENTRE GOURMANDS</h2>
+          <h2 id="multiplayer-title" tabindex="-1">ENTRE GOURMANDS</h2>
           <p id="multiplayer-status" role="status">
             Salons privés sur invitation.
           </p>
@@ -275,33 +275,62 @@
             <button id="multiplayer-join" disabled>Rejoindre le salon</button>
           </div>
           <div id="multiplayer-lobby" hidden>
-            <p>Code de ta table</p>
-            <strong id="multiplayer-code"></strong>
-            <button id="multiplayer-copy">Copier le code</button>
-            <ul id="multiplayer-players"></ul>
-            <button id="multiplayer-shop">🧢 Le Dressing du Glouton</button>
-            <label for="multiplayer-map">Carte</label>
-            <select id="multiplayer-map"></select>
-            <label for="multiplayer-size">Nombre de gourmands</label>
-            <select id="multiplayer-size">
-              <option value="8">8 gourmands</option>
-              <option value="24" selected>24 gourmands</option>
-              <option value="50">50 gourmands</option>
-            </select>
-            <p id="multiplayer-fill"></p>
-            <p class="multiplayer-help">
-              L’apparence de ton Dressing est partagée avec tes amis. Elle peut
-              changer dans le salon, puis reste figée jusqu’à la fin de la
-              partie.
-            </p>
-            <button id="multiplayer-ready">Je suis prêt</button>
-            <button id="multiplayer-start">Servir le festin · Lancer</button>
-            <p class="multiplayer-help">
-              Les tirs restent secrets jusqu’à ce que tout le monde ait joué.
-              Après 45 secondes, l’IA prend le relais d’un gourmand absent. Une
-              reconnexion est possible pendant 90 secondes. Un joueur éliminé
-              reste spectateur.
-            </p>
+            <section
+              class="lobby-page lobby-guests"
+              aria-labelledby="lobby-guests-title"
+            >
+              <p class="lobby-page-number">I · Les convives</p>
+              <h3 id="lobby-guests-title">À votre table</h3>
+              <p class="lobby-page-intro">
+                Les amis sont là. Les tenues sont de sortie.
+              </p>
+              <ul id="multiplayer-players"></ul>
+              <button id="multiplayer-shop">Le Dressing du Glouton</button>
+              <p class="multiplayer-help">
+                Change de tenue sans quitter la table. Tes amis verront ton
+                nouvel équipement.
+              </p>
+            </section>
+            <section
+              class="lobby-page lobby-order"
+              aria-labelledby="lobby-order-title"
+            >
+              <p class="lobby-page-number">II · La carte du festin</p>
+              <h3 id="lobby-order-title">Au menu ce soir</h3>
+              <div class="lobby-invitation">
+                <p>Votre table privée</p>
+                <strong id="multiplayer-code"></strong>
+                <button id="multiplayer-copy">Copier l’invitation</button>
+              </div>
+              <label for="multiplayer-map">Le lieu du festin</label>
+              <select id="multiplayer-map"></select>
+              <label for="multiplayer-size">Les couverts</label>
+              <select id="multiplayer-size">
+                <option value="8">8 gourmands</option>
+                <option value="24" selected>24 gourmands</option>
+                <option value="50">50 gourmands</option>
+              </select>
+              <p id="multiplayer-fill"></p>
+              <div class="lobby-service">
+                <button id="multiplayer-ready">Je suis prêt</button>
+                <button id="multiplayer-start">
+                  Servir le festin · Lancer
+                </button>
+              </div>
+              <details class="lobby-etiquette">
+                <summary>Les usages de la maison</summary>
+                <p class="multiplayer-help">
+                  L’hôte choisit la carte et les couverts. Les IA complètent les
+                  places. Changer de carte ou de tenue demande de confirmer à
+                  nouveau que vous êtes prêts.
+                </p>
+                <p class="multiplayer-help">
+                  Les tenues restent figées pendant la partie. Les tirs sont
+                  secrets ; après 45 secondes, l’IA prend le relais d’un absent.
+                  Une reconnexion est possible pendant 90 secondes.
+                </p>
+              </details>
+            </section>
           </div>
           <button id="multiplayer-close">Retour au burger</button>
         </dialog>

@@ -1,6 +1,6 @@
 import { mergeProfileProgress } from "./profile-storage.js?v=identity-22";
 import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=identity-22";
-import { setupMultiplayer } from "./multiplayer-client.js?v=lobby-26";
+import { setupMultiplayer } from "./multiplayer-client.js?v=restaurant-lobby-27";
 import {
   CA,
   Ee,
@@ -3228,6 +3228,7 @@ online = setupMultiplayer({
   renderAvatar(canvas, member) {
     const draw = () => {
       const ctx = canvas.getContext("2d");
+      ctx.setTransform(canvas.width / 144, 0, 0, canvas.height / 180, 0, 0);
       ctx.clearRect(0, 0, 144, 180);
       Se(
         ctx,
@@ -3235,7 +3236,7 @@ online = setupMultiplayer({
           id: -1,
           mass: 60,
           cosmetics: member.cosmetics,
-          body: { position: { x: 72, y: 118 }, circleRadius: 32, speed: 0 },
+          body: { position: { x: 72, y: 118 }, circleRadius: 46, speed: 0 },
         },
         0,
         member.cosmetics,
