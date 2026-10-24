@@ -5,7 +5,7 @@ import {
   validTeamSetup,
 } from "./teams.js?v=teams-31";
 import { royalRisk, insideRoyalMouth } from "./royal-rules.js?v=royal-29";
-import { REMOVED_MAPS } from "./map-catalog.js?v=teams-31";
+import { REMOVED_MAPS } from "./map-catalog.js?v=collection-37";
 // Shared headless engine: solo and authoritative private rooms use the same rules.
 import {
   SurvivalRules,
@@ -23,8 +23,8 @@ import {
   hungerZone,
   insideHungerZone,
 } from "./hunger-games.js?v=filmovore-15";
-import { arenaBorderBodies } from "./arena-bounds.js?v=hunger-18";
-import { ArenaMechanics } from "./arena-mechanics.js?v=podium-35";
+import { arenaBorderBodies } from "./arena-bounds.js?v=collection-37";
+import { ArenaMechanics } from "./arena-mechanics.js?v=collection-37";
 import { isVisible as xA } from "./visibility.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 const SECRET_MAP_MODE = (mode) => Object.hasOwn(SECRET_GAME_MODES, mode);
@@ -299,7 +299,7 @@ CA.trampoline = {
   meal: "burger",
   mealName: "Burgers",
   description:
-    "Des bumpers sur les côtés et au milieu ! Termine ton tour sur un trampoline pour être téléporté ailleurs. À l’arrivée, le plus gros peut dévorer le plus petit selon les règles habituelles.",
+    "Des murs entièrement rebondissants et des bumpers au milieu ! Termine ton tour sur un trampoline pour être téléporté ailleurs. À l’arrivée, le plus gros peut dévorer le plus petit selon les règles habituelles.",
 };
 CA.beach.name = "La Plage des Gourmands";
 CA.beach.description =
@@ -315,23 +315,12 @@ function _e(e, g, o, u = 1) {
   });
   if (e === "trampoline") {
     const r = Math.min(g, o) * 0.027;
-    const points = [0.15, 0.29, 0.43, 0.57, 0.71, 0.85]
-      .flatMap((y) => [
-        [0.065, y],
-        [0.935, y],
-      ])
-      .concat(
-        [0.2, 0.35, 0.5, 0.65, 0.8].flatMap((x) => [
-          [x, 0.065],
-          [x, 0.935],
-        ]),
-        [
-          [0.38, 0.43],
-          [0.62, 0.43],
-          [0.38, 0.68],
-          [0.62, 0.68],
-        ],
-      );
+    const points = [
+      [0.38, 0.43],
+      [0.62, 0.43],
+      [0.38, 0.68],
+      [0.62, 0.68],
+    ];
     return points.map(([x, y]) => ({
       x: x * g,
       y: y * o,
@@ -650,8 +639,8 @@ const ZA = (e) =>
         ? 2
         : e.type === "salad"
           ? e.size === "xl"
-            ? -45
-            : -18
+            ? -30
+            : -12
           : e.size === "chef"
             ? 120
             : e.size === "xl"
@@ -6731,9 +6720,28 @@ function Zt(e, g, o = Math.random) {
     const r = (s * Math.PI) / 6;
     i.push({ x: Math.cos(r) * 10, y: Math.sin(r) * 10, kind: "reposition" });
   }
+  const forecastFactors = Array.from(
+    { length: 105 },
+    (_, index) => 1 - Math.pow(pt, index * 2 + 2),
+  );
+  const projectionFrames = n.some(
+    (p) => u.mass > p.mass * wA || p.mass > u.mass * wA,
+  )
+    ? forecastFactors.map((F) =>
+        n.map((p) => ({
+          x: pA(p.x + p.forecast.x * F, p.r, e.w - p.r),
+          y: pA(p.y + p.forecast.y * F, p.r, e.h - p.r),
+        })),
+      )
+    : null;
+  const edible = e.food.filter(Fe),
+    nearestFood = edible.length
+      ? Math.min(...edible.map((food) => mA(u, food)))
+      : Infinity;
+  const evaluation = { projectionFrames, edible, nearestFood };
   let Q = null;
   for (const s of i) {
-    const r = xt(s, u, n, e, E);
+    const r = xt(s, u, n, e, E, evaluation);
     (!Q || r.score > Q.score) && (Q = { ...s, ...r });
   }
   const B = Math.hypot(Q.x, Q.y),
@@ -6748,7 +6756,7 @@ function Zt(e, g, o = Math.random) {
     score: Q.score,
   };
 }
-function xt(e, g, o, u, E) {
+function xt(e, g, o, u, E, evaluation) {
   const A = Math.hypot(e.x, e.y),
     n = Math.min(1, se / A) * E;
   let i = g.x,
@@ -6815,12 +6823,13 @@ function xt(e, g, o, u, E) {
           !d.has(p.flow ? "arm" + p.arm : p) &&
           Math.hypot(i - p.x, I - p.y) <= g.r + p.r &&
           (d.add(p.flow ? "arm" + p.arm : p), (B += Qe * G));
-    for (const p of o) {
-      const F = 1 - Math.pow(pt, m + 2),
-        b = pA(p.x + p.forecast.x * F, p.r, u.w - p.r),
-        U = pA(p.y + p.forecast.y * F, p.r, u.h - p.r),
+    for (let opponentIndex = 0; opponentIndex < o.length; opponentIndex++) {
+      const p = o[opponentIndex],
         N = g.r + p.r;
+      const projected = evaluation.projectionFrames?.[m / 2]?.[opponentIndex];
       if (g.mass > p.mass * wA && y > oI) {
+        const b = projected.x,
+          U = projected.y;
         const W = [
           { x: p.x, y: p.y, weight: 1 - p.forecast.confidence },
           { x: b, y: U, weight: p.forecast.confidence },
@@ -6836,6 +6845,8 @@ function xt(e, g, o, u, E) {
             (l.add(T), (k += (p.mass * 0.55 + 65) * X.weight * G));
         }
       } else if (p.mass > g.mass * wA) {
+        const b = projected.x,
+          U = projected.y;
         const W = Math.min(
           Math.hypot(i - p.x, I - p.y),
           Math.hypot(i - b, I - U),
@@ -6861,9 +6872,9 @@ function xt(e, g, o, u, E) {
     }
   if (u.royal) t += royalRisk({ x: i, y: I }, u.royal, u.h);
   let h = 0;
-  const c = u.food.filter(Fe);
+  const c = evaluation.edible;
   if (c.length) {
-    const m = Math.min(...c.map((J) => mA(g, J))),
+    const m = evaluation.nearestFood,
       Y = Math.min(...c.map((J) => Math.hypot(i - J.x, I - J.y)));
     h = pA((m - Y) * 0.04, -15, 15);
   }
@@ -7525,6 +7536,7 @@ class zt {
         i = (n > 17 ? 17 / n : 1) * propulsionFactor(E.mass, this.mode);
       (eA.setVelocity(E.body, { x: A.x * i, y: A.y * i }),
         eA.setAngularVelocity(E.body, 0));
+      if (n > 0.1) this.emit("slide", E);
     }
     return (
       (this.phase = "moving"),

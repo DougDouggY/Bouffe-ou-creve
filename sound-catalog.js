@@ -1,0 +1,54 @@
+export const SLIDE_SOUNDS = [
+  {
+    id: "slide_standard",
+    slot: "slide",
+    name: "Glissade de la maison",
+    price: 0,
+    file: "swish-soft.mp3",
+    art: 0,
+  },
+  {
+    id: "slide_spring",
+    slot: "slide",
+    name: "Le Ressort",
+    price: 180,
+    file: "move-spring.mp3",
+    art: 1,
+  },
+  {
+    id: "slide_soap",
+    slot: "slide",
+    name: "La Savonnette",
+    price: 200,
+    file: "zip-out-soft.mp3",
+    art: 2,
+  },
+  {
+    id: "slide_spin",
+    slot: "slide",
+    name: "La Toupie",
+    price: 220,
+    file: "move-spin.mp3",
+    art: 3,
+  },
+  {
+    id: "slide_rocket",
+    slot: "slide",
+    name: "Décollage express",
+    price: 240,
+    file: "whoosh-fast-medium.mp3",
+    art: 4,
+  },
+  {
+    id: "slide_prout",
+    slot: "slide",
+    name: "Le Prout",
+    price: 200,
+    file: null,
+    art: 5,
+    disabled: true,
+    note: "Échantillon à fournir avant la mise en vente.",
+  },
+];
+export const slideSound = (id) =>
+  SLIDE_SOUNDS.find((s) => s.id === id && !s.disabled) || SLIDE_SOUNDS[0];

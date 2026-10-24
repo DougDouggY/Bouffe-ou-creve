@@ -1,3 +1,4 @@
+import { effectsGain, watchEffects } from "./audio-settings.js?v=ceremony-38";
 // One menu jingle per page load. Browsers may require a first user gesture.
 export function isPlayerMeal(event, actor, victim) {
   return (
@@ -21,17 +22,18 @@ export function createGameAudio({
   const mealURL = new URL("./assets/bruitage-gourmand.m4a", import.meta.url)
     .href;
   const meals = new Set();
+  const mealPool = [];
   // A quiet shared budget prevents stacked mouthfuls from producing a loud burst.
-  const mealVolume = 0.06;
+  const mealVolume = () => 0.12 * effectsGain();
   const balanceMeals = () => {
-    for (const sound of meals) sound.volume = mealVolume / meals.size;
+    for (const sound of meals) sound.volume = mealVolume() / meals.size;
   };
   let muted = false;
   let played = false;
   let pending = false;
   jingle.loop = false;
   jingle.preload = "auto";
-  jingle.volume = 0.35;
+  jingle.volume = 0.35 * effectsGain();
 
   async function startJingle() {
     if (muted || played || pending || !isMenuVisible() || isShadowMenu())
@@ -51,6 +53,11 @@ export function createGameAudio({
       pending = false;
     }
   }
+  watchEffects(() => {
+    jingle.volume = 0.35 * effectsGain();
+    if (shadowJingle) shadowJingle.volume = 0.22 * effectsGain();
+    balanceMeals();
+  });
   let shadowJingle,
     shadowWanted = false,
     shadowPending = false,
@@ -68,7 +75,7 @@ export function createGameAudio({
       new URL("./assets/secrets/jingle.m4a", import.meta.url).href,
     );
     shadowJingle.loop = false;
-    shadowJingle.volume = 0.22;
+    shadowJingle.volume = 0.22 * effectsGain();
     shadowPending = true;
     try {
       await shadowJingle.play();
@@ -103,14 +110,30 @@ export function createGameAudio({
   startJingle();
 
   return {
+    prime() {
+      if (!mealPool.length) {
+        const voice = new AudioClass(mealURL);
+        voice.preload = "auto";
+        voice.loop = false;
+        mealPool.push(voice);
+      }
+    },
     event(event, actor, victim) {
       if (muted || !isPlayerMeal(event, actor, victim)) return;
       // Separate voices preserve rapid, distinct mouthfuls without restarting a sound.
-      const sound = new AudioClass(mealURL);
-      sound.loop = false;
+      let sound = mealPool.find((voice) => !meals.has(voice));
+      if (!sound) {
+        if (mealPool.length >= 4) return;
+        sound = new AudioClass(mealURL);
+        sound.loop = false;
+        mealPool.push(sound);
+      }
+      sound.currentTime = 0;
       meals.add(sound);
       balanceMeals();
       const release = () => {
+        sound.removeEventListener("ended", release);
+        sound.removeEventListener("error", release);
         meals.delete(sound);
         balanceMeals();
       };

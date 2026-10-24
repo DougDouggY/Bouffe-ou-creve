@@ -1,0 +1,42 @@
+[
+  {
+    "id": "whoosh-fast-medium",
+    "source": "https://github.com/wyzowl/sfx-kit/blob/main/sounds/whooshes/whoosh-fast-medium.wav",
+    "sha256_original": "b3cf3c589e738a62c1cc9bd3f620b69c831b64616427fdce57ba073d2a357a0d",
+    "license": "CC0-1.0",
+    "creator": "Wyzowl",
+    "duration": 0.252
+  },
+  {
+    "id": "swish-soft",
+    "source": "https://github.com/wyzowl/sfx-kit/blob/main/sounds/swishes-and-zips/swish-soft.wav",
+    "sha256_original": "c18c581c43ac848b10c946e2a3c402b79370d99b057c2399b832d39f9d9236ab",
+    "license": "CC0-1.0",
+    "creator": "Wyzowl",
+    "duration": 0.223
+  },
+  {
+    "id": "zip-out-soft",
+    "source": "https://github.com/wyzowl/sfx-kit/blob/main/sounds/swishes-and-zips/zip-out-soft.wav",
+    "sha256_original": "74afbc5315e43b0e5cb50dc7b3153decf5eca2cf94eddaf0d8138dffde9c917e",
+    "license": "CC0-1.0",
+    "creator": "Wyzowl",
+    "duration": 0.307
+  },
+  {
+    "id": "move-spin",
+    "source": "https://github.com/wyzowl/sfx-kit/blob/main/sounds/bounce-spin-zoom/move-spin.wav",
+    "sha256_original": "c90e45abcbd143b0742d03b45bce9f47f4e14a40928a108c69a3896d8ba1e2f2",
+    "license": "CC0-1.0",
+    "creator": "Wyzowl",
+    "duration": 1.138
+  },
+  {
+    "id": "move-spring",
+    "source": "https://github.com/wyzowl/sfx-kit/blob/main/sounds/bounce-spin-zoom/move-spring.wav",
+    "sha256_original": "c850f6e89bebd99ed63f632190ef3ec7d06650263d7cd6aaa61d98c4e2e12076",
+    "license": "CC0-1.0",
+    "creator": "Wyzowl",
+    "duration": 0.899
+  }
+]

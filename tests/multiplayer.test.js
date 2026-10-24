@@ -241,7 +241,7 @@ test("real Dressing IDs, slot validation, human seats and cosmetics survive chec
     COSMETIC_CATALOG.find((c) => c.id === "cap").name,
     "Bouteille de ketchup",
   );
-  for (const item of COSMETIC_CATALOG)
+  for (const item of COSMETIC_CATALOG.filter(item=>!item.disabled))
     assert.equal(
       normalizeCosmetics({ [item.slot]: item.id })[item.slot],
       item.id,

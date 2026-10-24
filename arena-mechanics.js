@@ -152,8 +152,9 @@ export class ArenaMechanics {
     }
     g.secretRules?.beginRound();
     if (["platform", "survival"].includes(g.mode)) return;
-    // Exactly one global roll per round. Douggy's independent food roll is untouched.
-    if (this.lastGlobalRollRound !== g.round) {
+    // Exactly one 3% roll per complete match. Douggy's food roll is independent.
+    if (!this.globalRareRolled && !this.lastGlobalRollRound) {
+      this.globalRareRolled = true;
       this.lastGlobalRollRound = g.round;
       const special = rollGlobalSpecial(g.random);
       if (special) this.spawnItem(special);
@@ -339,19 +340,34 @@ export class ArenaMechanics {
         key = "bumper" + bumper;
       if ((p[key] || 0) > this.clock) return;
       p[key] = this.clock + 220;
-      const dx = p.body.position.x - obstacle.x,
-        dy = p.body.position.y - obstacle.y,
-        d = Math.hypot(dx, dy) || 1;
-      const speed = Math.min(
-        48,
-        Math.max(23, length(this.api.Body.getVelocity(p.body)) * 2.8),
-      );
-      this.bumperImpulses.push({
-        person: p,
-        velocity: { x: (dx / d) * speed, y: (dy / d) * speed },
-      });
+      const incoming =
+        (obstacle.bumperWall
+          ? this.bumperImpulses.findLast((i) => i.person === p)?.velocity
+          : null) || this.api.Body.getVelocity(p.body);
+      let velocity;
+      if (obstacle.bumperWall) {
+        const normal = obstacle.wallNormal,
+          dot = incoming.x * normal.x + incoming.y * normal.y;
+        if (dot > 0.1) return;
+        const power = Math.min(48, Math.max(23, Math.abs(dot) * 2.8));
+        velocity = {
+          x: incoming.x + (power - dot) * normal.x,
+          y: incoming.y + (power - dot) * normal.y,
+        };
+        const factor = Math.min(1, 48 / (length(velocity) || 1));
+        velocity.x *= factor;
+        velocity.y *= factor;
+      } else {
+        const dx = p.body.position.x - obstacle.x,
+          dy = p.body.position.y - obstacle.y,
+          d = Math.hypot(dx, dy) || 1;
+        const speed = Math.min(48, Math.max(23, length(incoming) * 2.8));
+        velocity = { x: (dx / d) * speed, y: (dy / d) * speed };
+      }
+      this.bumperImpulses.push({ person: p, velocity });
       obstacle.hitUntil = this.clock + 360;
-      this.pulse(obstacle, "bumper");
+      g.emit("boing", p);
+      this.pulse(obstacle.bumperWall ? p.body.position : obstacle, "bumper");
     }
   }
   guardContact(person, agent) {

@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Les gourmands — Le dernier repas</title>
     <script src="./display-mode.js?v=phone-36"></script>
-    <script type="module" src="./game.js?v=phone-36"></script>
+    <script type="module" src="./game.js?v=ceremony-38"></script>
 
-    <link rel="stylesheet" href="./style.css?v=podium-35b" />
+    <link rel="stylesheet" href="./style.css?v=ceremony-38" />
   </head>
   <body>
     <div id="app">
@@ -146,22 +146,41 @@
                   DU GOURMAND
                 </text>
               </g>
+              <g
+                id="multiplayer-entry"
+                class="ingredient-button multiplayer-entry"
+                role="button"
+                tabindex="0"
+                aria-label="Multijoueur"
+                aria-haspopup="dialog"
+                aria-controls="multiplayer-dialog"
+              >
+                <path d="M610 930H926V1008H610Z" />
+                <image
+                  class="extra-menu-steak"
+                  href="./assets/menu-extra-steak.webp"
+                  x="610"
+                  y="926"
+                  width="316"
+                  height="106"
+                  aria-hidden="true"
+                />
+                <text
+                  class="multi-menu-label"
+                  x="768"
+                  y="976"
+                  text-anchor="middle"
+                >
+                  MULTIJOUEUR
+                </text>
+                <title>Multijoueur</title>
+              </g>
             </svg>
-            <button
-              id="multiplayer-entry"
-              class="multiplayer-entry"
-              type="button"
-              aria-haspopup="dialog"
-              aria-controls="multiplayer-dialog"
-            >
-              <strong>🍔 MULTIJOUEUR PRIVÉ</strong>
-              <span>Jouer avec mes amis</span>
-            </button>
-            <div class="title-wallet">
+          </div>
+          <div class="title-wallet">
               <span>🧈 <strong data-wallet>0</strong> points de graisse</span
               ><span id="menu-record"></span>
             </div>
-          </div>
 
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
@@ -338,6 +357,10 @@
               </div>
               <label for="multiplayer-map">Le lieu du festin</label>
               <select id="multiplayer-map"></select>
+              <button id="multiplayer-request-map" type="button" hidden>
+                Demander cette carte
+              </button>
+              <div id="multiplayer-map-requests" aria-live="polite"></div>
               <label for="multiplayer-team-size">La formule du festin</label>
               <select id="multiplayer-team-size">
                 <option value="1">Chacun pour soi</option>
@@ -388,130 +411,140 @@
           </div>
           <button id="multiplayer-close">Retour au burger</button>
         </dialog>
-        <dialog id="options-dialog">
-          <p class="menu-kicker">Les petits soins de la maison</p>
-          <h2>À TA SAUCE</h2>
-          <p>
-            Le son et le plein écran sont aussi accessibles pendant la partie.
-          </p>
-          <fieldset class="display-options">
-            <legend>Affichage</legend>
-            <div class="display-choices">
-              <label
-                ><input type="radio" name="display-mode" value="desktop" />
-                Ordinateur</label
-              >
-              <label
-                ><input type="radio" name="display-mode" value="phone" />
-                Téléphone</label
-              >
+        <dialog id="options-dialog" aria-labelledby="options-title">
+          <header class="options-heading">
+            <div>
+              <p class="menu-kicker">Les petits soins de la maison</p>
+              <h2 id="options-title">À TA SAUCE</h2>
             </div>
-            <p id="display-status" role="status"></p>
-            <p>
-              Sur téléphone : pose le doigt sur ton gourmand, tire vers
-              l’arrière puis relâche. Portrait et paysage sont disponibles.
-            </p>
-          </fieldset>
-          <details id="how-to-play" class="restaurant-guide">
-            <summary>Comment jouer ?</summary>
-            <p class="guide-intro">
-              Le dernier gourmand à table remporte le festin.
-            </p>
-            <ol>
-              <li>
-                <strong>Choisis ton menu.</strong> Classique : 8 gourmands.
-                États-Unis : 24 gourmands. Somalie : 50 gourmands dans la
-                savane. Choisis ensuite une carte.
-              </li>
-              <li>
-                <strong>Vise et relâche.</strong> Avec la souris ou le doigt,
-                pars de ton personnage, tire vers l’arrière puis relâche. Tous
-                les gourmands partent en même temps ! Les plus légers vont plus
-                loin.
-              </li>
-              <li>
-                <strong>Prends du poids.</strong> Les burgers donnent +15 kg,
-                les XL +40 kg. Les salades enlèvent 18 kg, les XL 45 kg.
-              </li>
-              <li>
-                <strong>Dévore les plus petits.</strong> Fonce avec de l’élan
-                sur un gourmand : tu dois être plus de 10 % plus lourd que lui.
-                Un simple contact à l’arrêt ne suffit pas. Méfie-toi des plus
-                gros !
-              </li>
-              <li>
-                <strong>Reste le dernier.</strong> Utilise les rebonds et les
-                effets de la carte pour survivre.
-              </li>
-            </ol>
-          </details>
-          <details class="restaurant-guide" id="special-objects-guide">
-            <summary>Les objets spéciaux et les nouvelles arènes</summary>
-            <p>
-              <strong>Objets rares : un seul tirage de 1 % par manche.</strong>
-              Si un objet apparaît, Burger Blindé et Piment de l’Enfer ont
-              chacun une chance sur deux. Le burger de Douggy garde sa propre
-              probabilité.
-            </p>
-            <p>
-              <strong>Burger Blindé :</strong> absorbe une dévoration, puis son
-              bouclier se brise. Ne protège ni des agents, ni du roi, ni du feu.
-            </p>
-            <p>
-              <strong>Piment de l’Enfer :</strong> le prochain tir trace du feu
-              jusqu’à la fin de la manche. Tout gourmand qui le traverse meurt,
-              <strong
-                >même son propriétaire s’il revient dans ses flammes.</strong
+            <button
+              id="close-options"
+              type="button"
+              aria-label="Fermer les options"
+            >
+              ×
+            </button>
+          </header>
+          <div class="options-layout">
+            <fieldset class="effects-options">
+              <legend>Effets sonores</legend>
+              <label for="effects-volume"
+                >Volume des effets
+                <output id="effects-volume-value">50 %</output></label
               >
-            </p>
-            <p>
-              <strong>Supermarché nocturne :</strong> lampe et protection
-              anti-sécurité sont des objets locaux, disponibles dès le départ
-              puis réapprovisionnés toutes les deux manches. La lampe agrandit
-              le halo pendant deux tirs complets ; le gant protège des agents
-              pendant un tir complet. Le tour du ramassage est offert.
-            </p>
-            <p>
-              <strong>Anticiper :</strong> les flèches des agents annoncent leur
-              propulsion ; le cône du roi annonce l’aspiration des manches
-              impaires. La vague monte depuis le bas toutes les trois manches. À
-              la fête foraine, les bumpers restent fixes.
-            </p>
-          </details>
-
-          <button id="shadow-entry">La face cachée du burger</button>
-          <button id="return-classic" hidden>Retour au burger classique</button>
-          <fieldset class="music-options">
-            <legend>♫ Musique d’ambiance</legend>
-            <label class="music-toggle"
-              ><input id="music-enabled" type="checkbox" /> Activer la
-              musique</label
-            >
-            <label class="music-track-label" for="music-track"
-              >Choisir une ambiance</label
-            >
-            <select id="music-track" aria-describedby="music-status"></select>
-            <label class="music-volume-label" for="music-volume"
-              >Volume de la musique
-              <output id="music-volume-value" for="music-volume"
-                >15 %</output
-              ></label
-            >
-            <input
-              id="music-volume"
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value="15"
-              aria-describedby="music-status"
-            />
-            <p id="music-status" role="status">Musique désactivée.</p>
-          </fieldset>
-          <button id="option-sound">Couper tous les sons</button
-          ><button id="option-fullscreen">Passer en plein écran</button
-          ><button id="chef-entry">Atelier du Chef · accès provisoire</button
-          ><button id="close-options">Retour au burger</button>
+              <input
+                id="effects-volume"
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+              />
+              <label
+                ><input id="other-slide-sounds" type="checkbox" checked />
+                Entendre les sons de glissade des autres joueurs</label
+              >
+              <button id="option-sound">Couper tous les sons</button>
+            </fieldset>
+            <fieldset class="music-options">
+              <legend>♫ Musique d’ambiance</legend>
+              <label class="music-toggle"
+                ><input id="music-enabled" type="checkbox" /> Activer la
+                musique</label
+              >
+              <label class="music-track-label" for="music-track"
+                >Choisir une ambiance</label
+              >
+              <select id="music-track" aria-describedby="music-status"></select>
+              <label class="music-volume-label" for="music-volume"
+                >Volume de la musique
+                <output id="music-volume-value" for="music-volume"
+                  >15 %</output
+                ></label
+              >
+              <input
+                id="music-volume"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="15"
+                aria-describedby="music-status"
+              />
+              <p id="music-status" role="status">Musique désactivée.</p>
+            </fieldset>
+            <fieldset class="display-options">
+              <legend>Affichage</legend>
+              <div class="display-choices">
+                <label
+                  ><input type="radio" name="display-mode" value="desktop" />
+                  Ordinateur</label
+                >
+                <label
+                  ><input type="radio" name="display-mode" value="phone" />
+                  Téléphone</label
+                >
+              </div>
+              <p id="display-status" role="status"></p>
+              <p>
+                Sur téléphone : pose le doigt sur ton gourmand, tire vers
+                l’arrière puis relâche. Portrait et paysage sont disponibles.
+              </p>
+            </fieldset>
+            <section class="options-help">
+              <details id="how-to-play" class="restaurant-guide">
+                <summary>Comment jouer ?</summary>
+                <p class="guide-intro">
+                  Le dernier gourmand à table remporte le festin.
+                </p>
+                <ol>
+                  <li>
+                    <strong>Choisis ton menu.</strong> Classique : 8 gourmands.
+                    Grand Banquet : 24 gourmands. États-Unis : 50 gourmands.
+                    Choisis ensuite une carte.
+                  </li>
+                  <li>
+                    <strong>Vise et relâche.</strong> Avec la souris ou le
+                    doigt, pars de ton personnage, tire vers l’arrière puis
+                    relâche. Tous les gourmands partent en même temps ! Les plus
+                    légers vont plus loin.
+                  </li>
+                  <li>
+                    <strong>Prends du poids.</strong> Les burgers donnent +15
+                    kg, les XL +40 kg. Les salades enlèvent 12 kg, les XL 30 kg.
+                  </li>
+                  <li>
+                    <strong>Dévore les plus petits.</strong> Fonce avec de
+                    l’élan sur un gourmand : tu dois être plus de 10 % plus
+                    lourd que lui. Un simple contact à l’arrêt ne suffit pas.
+                    Méfie-toi des plus gros !
+                  </li>
+                  <li>
+                    <strong>Reste le dernier.</strong> Utilise les rebonds et
+                    les effets de la carte pour survivre.
+                  </li>
+                </ol>
+              </details>
+              <p class="online-options-note">
+                En multijoueur, la partie continue pendant les réglages.
+              </p>
+            </section>
+            <fieldset class="menu-options">
+              <legend>La maison</legend>
+              <label for="multi-entry-style">Accès au multijoueur</label
+              ><select id="multi-entry-style">
+                <option value="characters">La tablée</option>
+                <option value="steak">Supplément steak</option>
+              </select>
+              <button id="shadow-entry">La face cachée du burger</button
+              ><button id="return-classic" hidden>
+                Retour au burger classique
+              </button>
+              <button id="option-fullscreen">Passer en plein écran</button
+              ><button id="chef-entry">
+                Atelier du Chef · accès provisoire
+              </button>
+            </fieldset>
+          </div>
         </dialog>
         <dialog id="rivalry-dialog" aria-labelledby="rivalry-title">
           <header>
@@ -608,6 +641,9 @@
               <p id="shop-context"></p>
               <button id="remove-hat">Enlever le chapeau</button
               ><button id="remove-outfit">Tenue de base</button>
+              <button id="preview-podium-animation" type="button">
+                Voir mon animation de podium
+              </button>
             </div>
           </div>
           <details id="growth-comparison">
@@ -681,6 +717,14 @@
               <option value="off">Désactivées</option>
             </select>
           </label>
+          <button
+            type="button"
+            data-cosmetics-filter="slide"
+            aria-pressed="false"
+          >
+            Sons de glissade
+          </button>
+          <p id="sound-preview-status" role="status"></p>
           <div id="shop-items" class="shop-items"></div>
         </dialog>
         <div id="play-area" hidden>
@@ -751,6 +795,7 @@
             <nav class="game-nav">
               <button id="tournament-open" hidden>Tableau du tournoi</button
               ><button id="back-menu">← Menu</button
+              ><button id="in-game-options" data-open-options>Options ⚙</button
               ><span
                 >🧈 <strong data-wallet>0</strong> · Partie +<b id="run-points"
                   >0</b

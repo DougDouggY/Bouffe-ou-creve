@@ -132,13 +132,23 @@ export function arenaBorderBodies(id, w, h) {
       dx = q.x - p.x,
       dy = q.y - p.y,
       d = Math.hypot(dx, dy);
-    return wall(
+    const boundary = wall(
       (p.x + q.x) / 2 + ((dy / d) * extent) / 2,
       (p.y + q.y) / 2 - ((dx / d) * extent) / 2,
       extent,
       extent,
       Math.atan2(dy, dx),
     );
+    return id === "trampoline"
+      ? {
+          ...boundary,
+          bumper: true,
+          bumperWall: true,
+          r: 0, // Older clients can safely ignore the empty round-bumper sprite.
+          wallNormal: { x: -dy / d, y: dx / d },
+          edge: { a: p, b: q },
+        }
+      : boundary;
   });
 }
 export function traceOutline(ctx, id, w, h) {

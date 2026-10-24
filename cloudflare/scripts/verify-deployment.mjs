@@ -165,6 +165,9 @@ export async function verifyDeployment(
       assert.deepEqual(health.teamSizes, [1, 2, 3, 4]);
       assert.equal(health.trophies, true);
       assert.equal(health.rivalries, true);
+      assert.equal(health.ceremony, true);
+      assert.equal(health.audioCosmetics, true);
+      assert.equal(health.economy, true);
       break;
     } catch {
       if (attempt === 5)
@@ -203,6 +206,7 @@ export async function verifyDeployment(
         outfit: "cook",
         aura: "aura_gold",
         podium: "podium_jump",
+        slide: "slide_spring",
         title: "title_3",
       },
     });
@@ -295,6 +299,7 @@ export async function verifyDeployment(
           outfit: "cook",
           aura: "aura_gold",
           podium: "podium_jump",
+          slide: "slide_spring",
           title: "title_3",
         },
       ],

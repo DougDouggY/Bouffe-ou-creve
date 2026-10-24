@@ -46,8 +46,27 @@ export function mergeProfileProgress(current, baseline, latest) {
         : a;
     result.online = structuredClone(result.online);
   }
+  result.onlineCredits = {};
+  for (const state of [latest, current])
+    for (const [id, amount] of Object.entries(state.onlineCredits || {}))
+      if (Number.isSafeInteger(amount) && amount >= 0)
+        result.onlineCredits[id] = Math.max(
+          result.onlineCredits[id] || 0,
+          amount,
+        );
+  const online = result.online;
+  if (online?.profileId && Number.isSafeInteger(online.pointsEarned)) {
+    const credited = result.onlineCredits[online.profileId] || 0;
+    const credit = Math.max(0, online.pointsEarned - credited);
+    result.points += credit;
+    result.earned = (result.earned || 0) + credit;
+    result.onlineCredits[online.profileId] = Math.max(
+      credited,
+      online.pointsEarned,
+    );
+  }
   result.equipped = { ...latest.equipped };
-  for (const slot of ["hat", "outfit", "aura", "podium", "title"])
+  for (const slot of ["hat", "outfit", "aura", "podium", "title", "slide"])
     if (!baseline || current.equipped?.[slot] !== baseline.equipped?.[slot])
       result.equipped[slot] = current.equipped?.[slot];
   return result;

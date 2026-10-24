@@ -174,6 +174,7 @@ export function onlineProfile(value = {}) {
     trophies: {},
     wins: 0,
     maxMass: 0,
+    pointsEarned: 0,
     rivals: {},
     teamWins: { 2: 0, 3: 0, 4: 0 },
   };
@@ -201,6 +202,8 @@ export function onlineProfile(value = {}) {
   for (const id of ONLINE_TROPHY_IDS)
     if (Number.isSafeInteger(value.trophies?.[id]) && value.trophies[id] > 0)
       result.trophies[id] = value.trophies[id];
+  if (Number.isSafeInteger(value.pointsEarned) && value.pointsEarned >= 0)
+    result.pointsEarned = value.pointsEarned;
   for (const size of [2, 3, 4])
     if (
       Number.isSafeInteger(value.teamWins?.[size]) &&

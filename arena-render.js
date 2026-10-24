@@ -1,3 +1,4 @@
+import { cosmeticMotion } from "./cosmetic-effects.js?v=ceremony-38";
 import { isVisible } from "./visibility.js?v=filmovore-15";
 import { hungerZone } from "./hunger-games.js?v=filmovore-15";
 const images = new Map();
@@ -123,6 +124,17 @@ export function drawArenaFloor(ctx, g, time) {
     for (const pad of g.zones.filter((z) => z.kind === "trampoline")) {
       ctx.save();
       ctx.translate(pad.x, pad.y);
+      const active = g.people.some(
+        (p) =>
+          p.alive &&
+          Math.hypot(p.body.position.x - pad.x, p.body.position.y - pad.y) <
+            pad.r + p.body.circleRadius,
+      );
+      const bounce =
+        cosmeticMotion() === "full"
+          ? Math.sin(time * 0.005 + pad.x * 0.002) * (active ? 0.09 : 0.025)
+          : 0;
+      const squash = 1 - bounce;
       ctx.shadowColor = "#0009";
       ctx.shadowBlur = 12;
       ctx.shadowOffsetY = 5;
@@ -134,10 +146,15 @@ export function drawArenaFloor(ctx, g, time) {
         ctx.strokeStyle = "#a2c0c8";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * (pad.r - 2), Math.sin(a) * (pad.r - 2));
+        ctx.moveTo(
+          Math.cos(a) * (pad.r - 2) * (1 + bounce * 0.3),
+          Math.sin(a) * (pad.r - 2) * squash,
+        );
         ctx.lineTo(Math.cos(a) * (pad.r + 7), Math.sin(a) * (pad.r + 7));
         ctx.stroke();
       }
+      ctx.save();
+      ctx.scale(1 + bounce * 0.3, squash);
       ellipse(ctx, 0, 0, pad.r, pad.r, "#ffab32");
       const bed = ctx.createRadialGradient(
         -pad.r * 0.25,
@@ -168,13 +185,61 @@ export function drawArenaFloor(ctx, g, time) {
       ctx.strokeStyle = "#68e5edaa";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, pad.r * 0.28, 0, Math.PI * 2);
+      ctx.arc(0, 0, pad.r * (0.28 + bounce * 0.5), 0, Math.PI * 2);
       ctx.stroke();
+      if (cosmeticMotion() === "full") {
+        const wave = (time * 0.00065 + pad.y * 0.001) % 1;
+        ctx.globalAlpha = (1 - wave) * 0.45;
+        ctx.strokeStyle = "#72f3ff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, pad.r * (0.3 + wave * 0.58), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+  if (g.mapId === "trampoline")
+    for (const wall of g.obstacles.filter((o) => o.bumperWall)) {
+      const { a, b } = wall.edge,
+        hit = Math.max(0, ((wall.hitUntil || 0) - rules.clock) / 360);
+      const bulge = Math.sin(hit * Math.PI) * 6;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#071925";
+      ctx.lineWidth = 38 + bulge;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.strokeStyle = hit ? "#ffd16c" : "#328fa6";
+      ctx.lineWidth = 28 + bulge;
+      ctx.stroke();
+      ctx.strokeStyle = "#85e5e6";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      const dx = b.x - a.x,
+        dy = b.y - a.y,
+        length = Math.hypot(dx, dy),
+        nx = -dy / length,
+        ny = dx / length;
+      ctx.strokeStyle = "#124b6277";
+      ctx.lineWidth = 2;
+      for (let distance = 45; distance < length; distance += 90) {
+        const t = distance / length,
+          x = a.x + dx * t,
+          y = a.y + dy * t;
+        ctx.beginPath();
+        ctx.moveTo(x - nx * 12, y - ny * 12);
+        ctx.lineTo(x + nx * 12, y + ny * 12);
+        ctx.stroke();
+      }
       ctx.restore();
     }
   if (["fair", "trampoline"].includes(g.mapId))
     for (const bumper of g.obstacles) {
-      if (!bumper.bumper) continue;
+      if (!bumper.bumper || bumper.bumperWall) continue;
       const compressed = Math.max(
         0,
         ((bumper.hitUntil || 0) - rules.clock) / 360,

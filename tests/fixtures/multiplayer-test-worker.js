@@ -53,7 +53,7 @@ export class PrivateRoom extends ProductionRoom {
         }
         game.phase = "ended";
         game.outcome = "draw";
-        game.results = recordResults(this.room.data.resultTracker, game, []);
+        game.results = recordResults(this.room.data.resultTracker, game, []) || game.results;
         this.room.data.phase = "ended";
         this.room.data.readyAt = Date.now();
         this.room.data.checkpoint = checkpoint(game);

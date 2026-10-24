@@ -68,7 +68,7 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  assert.equal(await page.locator(".ingredient-button").count(), 6);
+  assert.equal(await page.locator(".ingredient-button").count(), 7);
   assert.equal(
     await page.locator("html").getAttribute("data-display"),
     "desktop",
@@ -391,8 +391,8 @@ try {
   assert(await page.locator("#shadow-message").isVisible());
   await page.locator("#enter-shadow").click();
   assert(await page.locator("#multiplayer-entry").isVisible());
-  await page.locator("#multiplayer-entry").click();
-  assert(await page.locator("#multiplayer-dialog").isVisible());
+  await page.locator("#multiplayer-entry").press("Enter");
+  await page.locator("#multiplayer-dialog").waitFor({state:"visible"});
   await page.locator("#multiplayer-close").click();
   checks++;
   assert.equal(
@@ -444,7 +444,7 @@ try {
   await page.locator("#menu-shop").focus();
   await page.keyboard.press("Enter");
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
-  assert.equal(await page.locator(".shop-card").count(), 67);
+  assert.equal(await page.locator(".shop-card").count(), 76);
   await page.locator("#close-shop").click();
   checks++;
   await page.locator("#options-entry").focus();

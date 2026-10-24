@@ -129,7 +129,7 @@ test("new cosmetic slots validate real catalog IDs and preserve independent purc
   );
   assert.equal(
     COSMETIC_CATALOG.filter((c) => c.slot === "title" && c.price > 0).length,
-    8,
+    11,
   );
   const base = {
       points: 1000,

@@ -26,11 +26,11 @@ function make(mapId) {
   }
   return g;
 }
-test("Trampoline Park is a test arena with peripheral and middle physical bumpers and five pads", () => {
-  assert(mapGroups(CA)[1].maps.some(([id]) => id === "trampoline"));
+test("Trampoline Park is approved with continuous bumper walls, middle bumpers and five pads", () => {
+  assert(mapGroups(CA)[0].maps.some(([id]) => id === "trampoline"));
   const g = make("trampoline");
   assert.equal(g.zones.filter((z) => z.kind === "trampoline").length, 5);
-  assert.equal(g.obstacles.filter((o) => o.bumper).length, 26);
+  assert.equal(g.obstacles.filter((o) => o.bumper).length, 8);
   assert(g.obstacles.some((o) => o.x > g.w * 0.3 && o.x < g.w * 0.7));
   for (const pad of g.zones)
     assert(!g.obstacles.some((o) => RA(pad, pad.r, o)));
@@ -182,4 +182,57 @@ test("wave schedule and trampoline resolution survive authoritative checkpoints;
   assert.equal(restored.mechanics.trampolineResolvedRound, g.round);
   g.destroy();
   restored.destroy();
+});
+
+test("continuous trampoline walls rebound at multiple points along all four sides and in corners", () => {
+  for (const side of [0, 1, 2, 3])
+    for (const fraction of [0.2, 0.5, 0.8]) {
+      const g = make("trampoline"),
+        p = g.people[0],
+        walls = g.obstacles.filter((o) => o.bumperWall),
+        wall = walls[side];
+      assert.equal(walls.length, 4);
+      const n = wall.wallNormal,
+        a = wall.edge.a,
+        b = wall.edge.b;
+      g.launch(
+        null,
+        new Map([
+          [0, { x: 0, y: 0 }],
+          [1, { x: 0, y: 0 }],
+        ]),
+      );
+      Body.setPosition(g.people[1].body, { x: g.w * 0.5, y: g.h * 0.55 });
+      Body.setPosition(p.body, {
+        x: a.x + (b.x - a.x) * fraction + n.x * (p.body.circleRadius + 2),
+        y: a.y + (b.y - a.y) * fraction + n.y * (p.body.circleRadius + 2),
+      });
+      Body.setVelocity(p.body, { x: -n.x * 12, y: -n.y * 12 });
+      for (let i = 0; i < 4; i++) g.step(1000 / 60);
+      const velocity = Body.getVelocity(p.body);
+      assert(
+        velocity.x * n.x + velocity.y * n.y > 15,
+        `Side ${side}, fraction ${fraction}: ${JSON.stringify(velocity)}`,
+      );
+      assert(Math.hypot(velocity.x, velocity.y) <= 48.01);
+      g.destroy();
+    }
+  const g = make("trampoline"),
+    p = g.people[0];
+  g.launch(
+    null,
+    new Map([
+      [0, { x: 0, y: 0 }],
+      [1, { x: 0, y: 0 }],
+    ]),
+  );
+  Body.setPosition(g.people[1].body, { x: g.w * 0.5, y: g.h * 0.55 });
+  Body.setPosition(p.body, {
+    x: g.w * 0.03 + p.body.circleRadius + 2,
+    y: g.h * 0.03 + p.body.circleRadius + 2,
+  });
+  Body.setVelocity(p.body, { x: -12, y: -12 });
+  for (let i = 0; i < 4; i++) g.step(1000 / 60);
+  assert(p.body.velocity.x > 10 && p.body.velocity.y > 10);
+  g.destroy();
 });

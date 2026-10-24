@@ -1,11 +1,18 @@
+import { eventPoints, matchPoints, MATCH_POINTS_CAP } from "../../economy.js";
 import {
   ONLINE_TROPHY_IDS,
   onlineProfile,
-} from "../../multiplayer-trophy-catalog.js?v=rivalries-33";
+} from "../../multiplayer-trophy-catalog.js?v=ceremony-38";
 // Invoked only by the authoritative Room; never accepts client achievement claims.
 export function applyProfileGrant(previous, grant, now = Date.now()) {
   const p = onlineProfile(previous);
   p.revision++;
+  if (
+    Number.isSafeInteger(grant.currency) &&
+    grant.currency > 0 &&
+    grant.currency <= MATCH_POINTS_CAP
+  )
+    p.pointsEarned += grant.currency;
   if (Number.isFinite(grant.maxMass) && grant.maxMass >= 0)
     p.maxMass = Math.max(p.maxMass, grant.maxMass);
   for (const change of grant.rivals || []) {
@@ -51,6 +58,7 @@ function queue(room, profileId, awards = [], extra = {}) {
     !profileId ||
     (!awards.length &&
       !extra.win &&
+      !extra.currency &&
       !extra.rivals?.length &&
       !Number.isFinite(extra.maxMass))
   )
@@ -62,6 +70,7 @@ function queue(room, profileId, awards = [], extra = {}) {
   if (
     !awards.length &&
     !extra.win &&
+    !extra.currency &&
     !extra.rivals?.length &&
     !Number.isFinite(extra.maxMass)
   )
@@ -98,6 +107,7 @@ export function beginTrophyMatch(room) {
     alive: Object.fromEntries(g.people.map((p) => [p.id, true])),
     kills: {},
     allKills: {},
+    currency: {},
     burgers: {},
     earlyLone: {},
     peakSent: {},
@@ -125,6 +135,7 @@ export function trophyTurn(room, replay) {
     m = d.trophyMatch;
   if (!m || m.done) return;
   m.allKills ||= {};
+  m.currency ||= {};
   m.burgers ||= {};
   m.earlyLone ||= {};
   m.peakSent ||= {};
@@ -144,6 +155,11 @@ export function trophyTurn(room, replay) {
     g.people.filter((q) => q.teamId === p.teamId).map((q) => q.id);
   const human = (seat) => m.humans[seat];
   for (const event of replay.events) {
+    if (event.kind === "food" && event.food && event.person !== undefined)
+      m.currency[event.person] = Math.min(
+        MATCH_POINTS_CAP,
+        (m.currency[event.person] || 0) + eventPoints("food", event.food),
+      );
     if (event.kind === "food" && event.food?.type === "salad")
       m.salads[event.person] = true;
     if (event.kind === "food" && event.food?.type === "burger")
@@ -162,8 +178,13 @@ export function trophyTurn(room, replay) {
       k = killer?.human ? human(killer.id) : null;
     const opponents =
       killer && (g.teamSize === 1 || killer.teamId !== victim.teamId);
-    if (killer && opponents)
+    if (killer && opponents) {
       m.allKills[killer.id] = (m.allKills[killer.id] || 0) + 1;
+      m.currency[killer.id] = Math.min(
+        MATCH_POINTS_CAP,
+        (m.currency[killer.id] || 0) + eventPoints("eat"),
+      );
+    }
     if (v && killer && opponents) {
       const kills = (m.kills[killer.id] = (m.kills[killer.id] || 0) + 1);
       if (k) {
@@ -275,6 +296,14 @@ export function finishTrophyMatch(room) {
     }
     results.set(member.profileId, {
       win: win || previous?.win,
+      currency: Math.max(
+        previous?.currency || 0,
+        matchPoints(
+          m.currency?.[seat] || 0,
+          win,
+          g.count > 8 ? "gros" : "classic",
+        ),
+      ),
       awards: [...new Set([...(previous?.awards || []), ...ids])],
     });
   }
@@ -282,6 +311,7 @@ export function finishTrophyMatch(room) {
     queue(room, profileId, result.awards, {
       win: result.win,
       teamSize: g.teamSize,
+      currency: result.currency,
       rivals: [
         ...new Map(
           Object.values(m.humans)

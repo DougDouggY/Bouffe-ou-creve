@@ -1,4 +1,4 @@
-import { mapGroups } from "./map-catalog.js?v=teams-31";
+import { mapGroups } from "./map-catalog.js?v=collection-37";
 import { mapArtURL } from "./map-art.js?v=teams-31";
 export function modeUnlocked(mode, profile) {
   return (

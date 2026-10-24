@@ -387,8 +387,8 @@ try {
       g.round++;
       m.beginRound();
       check(
-        "new round has exactly one unsuccessful global roll",
-        draws === 1,
+        "a new shot round does not reroll match rarity",
+        draws === 0,
         draws,
       );
       g.destroy();
@@ -726,7 +726,7 @@ try {
     await page.locator("#map-screen").waitFor({ state: "visible" });
     await page
       .locator(
-        `[data-group="${["hunger", "trampoline"].includes(id) ? "in-progress" : "available"}"] .book-cover`,
+        `[data-group="${["hunger"].includes(id) ? "in-progress" : "available"}"] .book-cover`,
       )
       .click();
     await page.locator(`[data-map="${id}"]`).click();
@@ -776,12 +776,8 @@ try {
   );
   await mobile.locator("#options-entry").focus();
   await mobile.keyboard.press("Enter");
-  await mobile.locator("#special-objects-guide summary").click();
-  assert(
-    (await mobile.locator("#special-objects-guide").textContent()).includes(
-      "1 %",
-    ),
-  );
+  assert.equal(await mobile.locator("#special-objects-guide").count(), 0);
+  await mobile.locator("#effects-volume").waitFor({ state: "visible" });
   await mobile.screenshot({
     path: path.join(root, "test-results", "guide-pouvoirs-mobile.png"),
   });

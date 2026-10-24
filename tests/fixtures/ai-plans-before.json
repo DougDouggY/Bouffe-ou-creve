@@ -1,0 +1,218 @@
+[
+  {
+    "count": 8,
+    "mapId": "cantine",
+    "seed": 11,
+    "sha256": "e0924e057abf8304bfd528e0ca0ec0afe429d5c2a67dedf7ea7fd60fa1d93ec8"
+  },
+  {
+    "count": 8,
+    "mapId": "cantine",
+    "seed": 19,
+    "sha256": "7f49a82d87571d58a431828b04e9b0f41d5f9cf72bb5619186c1890464ffbf0a"
+  },
+  {
+    "count": 8,
+    "mapId": "cantine",
+    "seed": 77,
+    "sha256": "f33af98c83151318e2f32be5c3c0c661b3d774eb28c797d40c0688eb4cad6ffd"
+  },
+  {
+    "count": 8,
+    "mapId": "market",
+    "seed": 11,
+    "sha256": "4b5e698b546c92ec46fe27aecfef78425642b92f948bd5e3b52444d0d9353865"
+  },
+  {
+    "count": 8,
+    "mapId": "market",
+    "seed": 19,
+    "sha256": "42dfe2c3955e36cea2a3595d030fafe1144cb6c84b26cf9f503f2f789e71844c"
+  },
+  {
+    "count": 8,
+    "mapId": "market",
+    "seed": 77,
+    "sha256": "b5f5bef931216a57b9c1e1ec597bfb705b11ff75a5b6ee2810e1d84ee132337e"
+  },
+  {
+    "count": 8,
+    "mapId": "royal",
+    "seed": 11,
+    "sha256": "e468a883657ccbbb006a6289380b944020aac03923dd8f62a4e0611e5a366d72"
+  },
+  {
+    "count": 8,
+    "mapId": "royal",
+    "seed": 19,
+    "sha256": "6e69fb80f7c6dd3cc501d9f5208aca4751b92815a31caf40dce032422007081b"
+  },
+  {
+    "count": 8,
+    "mapId": "royal",
+    "seed": 77,
+    "sha256": "19fa91baf559a1c805212713d1dd5184aa208252bc0dcfbd6cda313596ae3c92"
+  },
+  {
+    "count": 8,
+    "mapId": "trampoline",
+    "seed": 11,
+    "sha256": "6b567f8f4c4a0743fc61c7c8d1db28d63f33e5b3d36bc1b5e77a56a540d607a9"
+  },
+  {
+    "count": 8,
+    "mapId": "trampoline",
+    "seed": 19,
+    "sha256": "245ae921c5a4bc736eafefea90815211f91527ff2f449b1c6ee5eedb9bd4c639"
+  },
+  {
+    "count": 8,
+    "mapId": "trampoline",
+    "seed": 77,
+    "sha256": "fff9ddce7207140b6b2c1c138f4fafa9601d775b65f32a22d8fe8674423f1516"
+  },
+  {
+    "count": 24,
+    "mapId": "cantine",
+    "seed": 11,
+    "sha256": "f3700972184ef06dca3bee38d89327f0317b86658fb0fc2300ee9cdf1b686edf"
+  },
+  {
+    "count": 24,
+    "mapId": "cantine",
+    "seed": 19,
+    "sha256": "67eaf9ad9909ffc2f795283e743988a17b1ada6ae21fedcdab57dea2d2f3fec9"
+  },
+  {
+    "count": 24,
+    "mapId": "cantine",
+    "seed": 77,
+    "sha256": "c0ed1d06a0b76a1c64ae97db7a4b20e4687cdd9127d67853e5f73b2c4094362c"
+  },
+  {
+    "count": 24,
+    "mapId": "market",
+    "seed": 11,
+    "sha256": "c91b560ba18b2e71ef0745eb367b666d2656dca2d8fff445d368e440da02301f"
+  },
+  {
+    "count": 24,
+    "mapId": "market",
+    "seed": 19,
+    "sha256": "e6f1e26f16d04e78f20aedb8ab3f01f4b97ed688fd374c78aac7794a6baeb06b"
+  },
+  {
+    "count": 24,
+    "mapId": "market",
+    "seed": 77,
+    "sha256": "c342e9ce544c40b68b443da5d75b138edd3c13e4b31f4e5a8c0de67107e31095"
+  },
+  {
+    "count": 24,
+    "mapId": "royal",
+    "seed": 11,
+    "sha256": "2215b15545aef960ca07615576814148367195a7236cc7ad241027a1f748bc21"
+  },
+  {
+    "count": 24,
+    "mapId": "royal",
+    "seed": 19,
+    "sha256": "5b049ada27b341fa34070fe594cbe67642ec7d809544f0688483c23461760b88"
+  },
+  {
+    "count": 24,
+    "mapId": "royal",
+    "seed": 77,
+    "sha256": "b03844ab5e8ba5bc742e8bcac6c6f53ccabe927dc0ef3699f400021d7f038708"
+  },
+  {
+    "count": 24,
+    "mapId": "trampoline",
+    "seed": 11,
+    "sha256": "17ca08e2939c72acdecbe2cf7440ba889b584316acd306fdf5e62899b5ae4dcd"
+  },
+  {
+    "count": 24,
+    "mapId": "trampoline",
+    "seed": 19,
+    "sha256": "f5fe86359a01ef7eb39f3da8ab94f98b17c050dd6a436e6b767b5436a08428d8"
+  },
+  {
+    "count": 24,
+    "mapId": "trampoline",
+    "seed": 77,
+    "sha256": "bbf1572e12847776c1bcc181e1e67fbcc2c3c500a00f551bf3797fdf84914f67"
+  },
+  {
+    "count": 50,
+    "mapId": "cantine",
+    "seed": 11,
+    "sha256": "d73e5ea57324f3c372c3f1a2369b6d691eec525610209842669140ee8cd9aef6"
+  },
+  {
+    "count": 50,
+    "mapId": "cantine",
+    "seed": 19,
+    "sha256": "545de969dee0114584c8eae69894d07c120e86b3c6b732e370076cdd65053e3e"
+  },
+  {
+    "count": 50,
+    "mapId": "cantine",
+    "seed": 77,
+    "sha256": "1445c1a2571ccf5a9bb8ea0f50a77cab07e31543f47ca1900347411b23167662"
+  },
+  {
+    "count": 50,
+    "mapId": "market",
+    "seed": 11,
+    "sha256": "4c8c4e5217a79640c209f45153950b426ac67df984ad49c58645bf2284f3a961"
+  },
+  {
+    "count": 50,
+    "mapId": "market",
+    "seed": 19,
+    "sha256": "bbd4a324304fd378f4b9c0eca70118ca80cda207c4e7f47a7ade70af89dc48e3"
+  },
+  {
+    "count": 50,
+    "mapId": "market",
+    "seed": 77,
+    "sha256": "db7dd4ea3b0ab3094bd5bb10302c3cb1d55ec01b736cae777d8e13306d617425"
+  },
+  {
+    "count": 50,
+    "mapId": "royal",
+    "seed": 11,
+    "sha256": "5d21d8490d6362f7b3eba4d4d4c146662cc9a01c72f66dc1e654716c25387562"
+  },
+  {
+    "count": 50,
+    "mapId": "royal",
+    "seed": 19,
+    "sha256": "45d77e92d4ea3e3eac2b54240b61be0a311814c047e3ff7cc0886cdc49d47ab6"
+  },
+  {
+    "count": 50,
+    "mapId": "royal",
+    "seed": 77,
+    "sha256": "01eafc6ad3102b1e6a06563d357581adda482543df14ef1cc9d081bc5dee7ac6"
+  },
+  {
+    "count": 50,
+    "mapId": "trampoline",
+    "seed": 11,
+    "sha256": "b5fc557c5a6c37d7d12149e9adb6e6939c1580da80fb8fc183d39a8070cd262a"
+  },
+  {
+    "count": 50,
+    "mapId": "trampoline",
+    "seed": 19,
+    "sha256": "a1083b8f5a749c64603a9e207fcf42610790dc82f312954cf59e34c671c59463"
+  },
+  {
+    "count": 50,
+    "mapId": "trampoline",
+    "seed": 77,
+    "sha256": "4ffa402bde14b0490ae18bf9150272617fbf130c348df97f0aaebb7f1352a592"
+  }
+]

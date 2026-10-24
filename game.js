@@ -1,3 +1,12 @@
+import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
+import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
+import { createMotionAudio } from "./motion-audio.js?v=ceremony-38";
+import {
+  bindEffectsControls,
+  effectsGain,
+} from "./audio-settings.js?v=ceremony-38";
+import { eventPoints, MATCH_POINTS_CAP } from "./economy.js?v=ceremony-38";
+import { drawShopArt } from "./shop-art.js?v=ceremony-38";
 import { gameplayViewport } from "./viewport.js?v=phone-36";
 import {
   COSMETIC_SLOTS,
@@ -6,19 +15,23 @@ import {
   cosmeticMotion,
   setCosmeticMotion,
   equippedTitle,
-} from "./cosmetic-effects.js?v=podium-35";
-import { showPodium, clearPodium } from "./podium.js?v=podium-35";
+} from "./cosmetic-effects.js?v=ceremony-38";
+import {
+  showPodium,
+  clearPodium,
+  podiumActive,
+} from "./podium.js?v=ceremony-38";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
   drawFittedHat,
-} from "./wardrobe-render.js?v=podium-35";
+} from "./wardrobe-render.js?v=ceremony-38";
 import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
-} from "./multiplayer-trophy-catalog.js?v=rivalries-33";
-import { mergeProfileProgress } from "./profile-storage.js?v=podium-35";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=podium-35";
+} from "./multiplayer-trophy-catalog.js?v=ceremony-38";
+import { mergeProfileProgress } from "./profile-storage.js?v=ceremony-38";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=ceremony-38";
 import {
   sameTeam,
   localTeamWon,
@@ -26,7 +39,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=podium-35";
+import { setupMultiplayer } from "./multiplayer-client.js?v=ceremony-38";
 import {
   CA,
   Ee,
@@ -39,7 +52,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=podium-35";
+} from "./simulation-core.js?v=ceremony-38";
 import { drawSurvivalFloor } from "./survival.js?v=hunger-18";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -57,32 +70,35 @@ import {
   secretTrophyEvent,
 } from "./secret-trophies.js?v=filmovore-15";
 
-import { arenaSize, drawArenaBorders } from "./arena-bounds.js?v=hunger-18";
+import { arenaSize, drawArenaBorders } from "./arena-bounds.js?v=collection-37";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=phone-36";
+} from "./restaurant-menu.js?v=collection-37";
 
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=teams-31";
+} from "./arena-render.js?v=ceremony-38";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=podium-35";
 import { drawMapArt, mapArtURL } from "./map-art.js?v=teams-31";
-import { WORK_IN_PROGRESS_MAPS, mapGroups } from "./map-catalog.js?v=teams-31";
+import {
+  WORK_IN_PROGRESS_MAPS,
+  mapGroups,
+} from "./map-catalog.js?v=collection-37";
 import {
   isVisible as xA,
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=burger-16";
-import { createGameAudio } from "./audio.js?v=shadow-jingle-34";
+import { setupBurgerMenu } from "./burger-menu.js?v=ceremony-38";
+import { createGameAudio } from "./audio.js?v=ceremony-38";
 import { setupMusicControls } from "./music.js?v=filmovore-15";
 
 const L = (e) => document.querySelector(e);
@@ -206,64 +222,7 @@ function FI(e, g = 1, o = 60) {
 const zI = "./assets/avatars.webp",
   DI = "./assets/volcano.webp",
   bI = "./assets/savanna.webp";
-function Be(e, g) {
-  const [o, u, E, A] = g,
-    n = document.createElement("canvas");
-  ((n.width = E - o), (n.height = A - u));
-  const i = n.getContext("2d", { willReadFrequently: !0 });
-  i.drawImage(e, o, u, n.width, n.height, 0, 0, n.width, n.height);
-  const I = i.getImageData(0, 0, n.width, n.height),
-    C = I.data,
-    Q = n.width,
-    B = n.height,
-    k = Q * B,
-    t = new Uint32Array(k),
-    a = new Uint32Array(k);
-  let s = 0,
-    r = 0,
-    d = 0;
-  for (let M = 0; M < k; M++) {
-    if (t[M] || C[M * 4 + 3] <= 40) continue;
-    const S = ++s;
-    let v = 0,
-      f = 1;
-    for (a[0] = M, t[M] = S; v < f;) {
-      const l = a[v++],
-        R = l % Q,
-        h = Math.floor(l / Q);
-      for (const c of [
-        R > 0 ? l - 1 : -1,
-        R < Q - 1 ? l + 1 : -1,
-        h > 0 ? l - Q : -1,
-        h < B - 1 ? l + Q : -1,
-      ])
-        c >= 0 && !t[c] && C[c * 4 + 3] > 40 && ((t[c] = S), (a[f++] = c));
-    }
-    f > d && ((r = S), (d = f));
-  }
-  for (let M = 0; M < k; M++) {
-    if (t[M] === r) continue;
-    let S = !1;
-    if (C[M * 4 + 3] <= 40 && C[M * 4 + 3] > 0) {
-      const v = M % Q,
-        f = Math.floor(M / Q);
-      for (let l = -2; l <= 2 && !S; l++)
-        for (let R = -2; R <= 2; R++)
-          if (
-            v + R >= 0 &&
-            v + R < Q &&
-            f + l >= 0 &&
-            f + l < B &&
-            t[M + l * Q + R] === r
-          ) {
-            S = !0;
-            break;
-          }
-    }
-    S || (C[M * 4 + 3] = 0);
-  }
-  return (i.putImageData(I, 0, 0), n);
-}
+const Be = extractSilhouette;
 const GA = [
     ["somalia-win", "Survivant de Somalie", "Remporter une partie en Somalie."],
     ["classic-win", "Poids moyen", "Remporter une partie en Classique."],
@@ -429,13 +388,21 @@ function Te() {
   return {
     trophies: {},
     online: onlineProfile(),
+    onlineCredits: {},
     shadow: secretProfile(),
     trophyTotals: Object.fromEntries(MI.map((e) => [e, 0])),
     modeWins: { classic: 0, gros: 0, usa: 0, somalia: 0 },
     points: 0,
     earned: 0,
     wins: 0,
-    owned: ["plain", "none", "aura_none", "podium_none", "title_none"],
+    owned: [
+      "plain",
+      "none",
+      "aura_none",
+      "podium_none",
+      "title_none",
+      "slide_standard",
+    ],
     equipped: { hat: "none", outfit: "plain" },
   };
 }
@@ -466,6 +433,14 @@ function Xe(e) {
       o.modeWins.gros = Math.max(1, o.modeWins.gros);
     }
     o.online = onlineProfile(g.online);
+    o.onlineCredits = Object.fromEntries(
+      Object.entries(g.onlineCredits || {}).filter(
+        ([id, total]) =>
+          /^[a-f0-9-]{36}$/.test(id) &&
+          Number.isSafeInteger(total) &&
+          total >= 0,
+      ),
+    );
     o.shadow = secretProfile(g.shadow);
     o.shadow.wins.somalia = Math.max(o.shadow.wins.somalia, o.modeWins.somalia);
     if (o.trophies["somalia-win"]) {
@@ -496,40 +471,14 @@ function Xe(e) {
 }
 function LI(e, g) {
   const o = KA.find((u) => u.id === g);
-  if (!o) return !1;
+  if (!o || o.disabled) return !1;
   if (!e.owned.includes(g)) {
     if (e.points < o.price) return !1;
     ((e.points -= o.price), e.owned.push(g));
   }
   return ((e.equipped[o.slot] = g), !0);
 }
-function je(e, g, o = "classic") {
-  return e === "food"
-    ? g?.type === "salad"
-      ? 0
-      : g?.size === "chef"
-        ? 12
-        : g?.size === "xl"
-          ? 4
-          : 2
-    : e === "eat"
-      ? 20
-      : e === "fondue"
-        ? 15
-        : e === "win"
-          ? o === "somalia"
-            ? 250
-            : o === "gros"
-              ? 150
-              : 100
-          : e === "truce"
-            ? o === "somalia"
-              ? 200
-              : o === "gros"
-                ? 120
-                : 80
-            : 0;
-}
+const je = eventPoints;
 function wI(e, g) {
   !Number.isSafeInteger(g) || g < 0 || ((e.points += g), (e.earned += g));
 }
@@ -644,33 +593,25 @@ function TI(e, g) {
     DA.complete || DA.addEventListener("load", o, { once: !0 }));
 }
 function drawEffectThumbnail(canvas, item) {
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (item.slot === "aura") {
-    ctx.save();
-    ctx.translate(70, 62);
-    ctx.scale(44, 44);
-    drawAura(ctx, item.id, 0, "simple");
-    ctx.restore();
-  } else {
-    ctx.font = "42px serif";
-    ctx.textAlign = "center";
-    ctx.fillText(item.icon, 70, 65);
-  }
+  drawShopArt(canvas, item);
 }
-function renderPodiumAvatar(canvas, person) {
+function renderPodiumAvatar(canvas, person, pose = null) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   Se(
     ctx,
     {
       ...person,
-      id: person.id,
+      id: person.human || person.cosmetics ? person.id : -1,
       preview: true,
+      presentationPose: pose,
       pop: 0,
       body: {
-        position: { x: canvas.width / 2, y: canvas.height * 0.77 },
-        circleRadius: canvas.width * 0.22,
+        position: {
+          x: canvas.width / 2,
+          y: canvas.height * 0.66 - (pose?.jump || 0),
+        },
+        circleRadius: canvas.width * 0.31,
         speed: 0,
       },
     },
@@ -678,104 +619,156 @@ function renderPodiumAvatar(canvas, person) {
     person.cosmetics || { hat: "none", outfit: "plain" },
   );
 }
-function Se(e, g, o = 0, u = { hat: "none", outfit: "plain" }) {
-  const { x: E, y: A } = g.body.position,
+function Se(e, g, time = 0, u = { hat: "none", outfit: "plain" }) {
+  const { x, y } = g.body.position,
     n = g.body.circleRadius,
-    i = g.skin || "#efc5a0",
-    I = Ze(g.mass ?? 60);
-  (e.save(), e.translate(E, A));
-  const C =
+    skin = g.skin || "#efc5a0",
+    shape = Ze(g.mass ?? 60),
+    pose = g.presentationPose;
+  e.save();
+  e.translate(x, y);
+  const bounce =
     1 +
-    Math.sin(o * 0.012 + (g.networkSeat ?? g.id)) *
+    Math.sin(time * 0.012 + (g.networkSeat ?? g.id)) *
       Math.min(0.035, (g.body.speed || 0) * 0.006) +
     (g.pop || 0) * 0.05;
-  e.scale(n * C, n / C);
-  drawAura(e, u.aura, o);
-  const Q = (r, d, M, S, v) => {
-    ((e.fillStyle = v),
-      e.beginPath(),
-      e.ellipse(r, d, M, S, 0, 0, Math.PI * 2),
-      e.fill());
+  e.scale(n * bounce, n / bounce);
+  drawAura(e, u.aura, pose?.time ?? time);
+  const ellipse = (x, y, rx, ry, color) => {
+    e.fillStyle = color;
+    e.beginPath();
+    e.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    e.fill();
   };
-  (Q(0.03, 0.85, 1.08, 0.27, "#172b3035"),
-    g.id === 0 &&
-      !g.preview &&
-      ((e.strokeStyle = g.human ? "#a6e4ff" : "#f0b75c"),
-      (e.lineWidth = (g.human ? 2.8 : 2) / n),
-      e.beginPath(),
-      e.arc(0, 0, 1 + 5 / n, 0, 7),
-      e.stroke()),
-    Q(
-      -0.37 - I.fullness * 0.07 + I.lean * 0.17,
-      0.83,
-      0.25 - 0.11 * I.lean,
-      0.23,
-      "#303c3e",
-    ),
-    Q(
-      0.37 + I.fullness * 0.07 - I.lean * 0.17,
-      0.83,
-      0.25 - 0.11 * I.lean,
-      0.23,
-      "#303c3e",
-    ),
-    u.outfit === "plain" &&
-      Q(-I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i),
-    u.outfit === "plain" &&
-      Q(I.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * I.lean, 0.27, i));
-  const B =
-      (g.id === 0 || g.cosmetics
-        ? KA.find((r) => r.id === u.outfit)?.color
-        : null) ||
-      g.color ||
-      "#eda052",
-    k =
-      "#" +
-      B.slice(1)
-        .match(/../g)
-        .map((r) =>
-          Math.round(parseInt(r, 16) * 0.72)
-            .toString(16)
-            .padStart(2, "0"),
-        )
-        .join(""),
-    t = e.createRadialGradient(-0.3, -0.1, 0, 0, 0.2, 1);
-  (t.addColorStop(0, B),
-    t.addColorStop(1, k),
-    g.id !== 0 &&
-      !g.cosmetics &&
-      u.outfit === "plain" &&
-      Q(0, 0.2, I.bodyWidth, I.bodyHeight, t));
-  const a = xI(1, g.mass ?? 60);
-  ((g.id === 0 || g.cosmetics || u.outfit !== "plain") &&
-    (u.outfit !== "plain"
-      ? drawTailoredOutfit(e, u.outfit, I, Ie)
-      : Ie(e, u.outfit, a.x, a.y, a.w, a.h)),
-    e.save(),
-    e.translate(0, I.headY),
-    e.scale(I.headScale, I.headScale));
-  const s = dI(u.hat);
-  (s && drawFittedHat(e, u.hat, s, Ie, "rear"),
-    !u.hat.startsWith("hat_") && Q(0, -0.39, 0.52, 0.51, "#724831"),
-    Q(0, -0.38, 0.49, 0.49, i),
-    Q(-0.42, -0.37, 0.13, 0.17, i),
-    Q(0.42, -0.37, 0.13, 0.17, i),
-    (s && u.hat !== "halo") ||
-      ((e.fillStyle = "#6b4632"),
-      e.beginPath(),
-      e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2),
-      e.fill()),
-    s && u.hat !== "halo" && drawFittedHat(e, u.hat, s, Ie, "front"),
-    Q(-0.17, -0.43, 0.055, 0.068, "#2c3028"),
-    Q(0.17, -0.43, 0.055, 0.068, "#2c3028"),
-    Q(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b"),
-    (e.strokeStyle = g.skin ? "#36251e" : "#804e3a"),
-    (e.lineWidth = Math.max(1 / n, 0.04)),
-    e.beginPath(),
-    e.arc(0, -0.24, 0.16, 0.1, Math.PI - 0.1),
-    e.stroke(),
-    e.restore(),
-    e.restore());
+  ellipse(0.03, 0.85, 1.08, 0.27, "#172b3035");
+  if (g.id === 0 && !g.preview) {
+    e.strokeStyle = g.human ? "#a6e4ff" : "#f0b75c";
+    e.lineWidth = (g.human ? 2.8 : 2) / n;
+    e.beginPath();
+    e.arc(0, 0, 1 + 5 / n, 0, 7);
+    e.stroke();
+  }
+  for (const side of [-1, 1]) {
+    if (pose) {
+      e.save();
+      e.translate(side * 0.27, 0.42);
+      e.rotate(side < 0 ? pose.legL || 0 : pose.legR || 0);
+      ellipse(side * 0.1, 0.42, 0.23, 0.18, "#303c3e");
+      e.restore();
+    } else
+      ellipse(
+        side * (0.37 + shape.fullness * 0.07 - shape.lean * 0.17),
+        0.83,
+        0.25 - 0.11 * shape.lean,
+        0.23,
+        "#303c3e",
+      );
+  }
+  if (u.outfit === "plain" && !pose) {
+    ellipse(
+      -shape.bodyWidth * 0.91,
+      0.22,
+      0.17 - 0.06 * shape.lean,
+      0.27,
+      skin,
+    );
+    ellipse(shape.bodyWidth * 0.91, 0.22, 0.17 - 0.06 * shape.lean, 0.27, skin);
+  }
+  const color =
+    (g.id === 0 || g.cosmetics
+      ? KA.find((item) => item.id === u.outfit)?.color
+      : null) ||
+    g.color ||
+    "#eda052";
+  const dark =
+    "#" +
+    color
+      .slice(1)
+      .match(/../g)
+      .map((v) =>
+        Math.round(parseInt(v, 16) * 0.72)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("");
+  const gradient = e.createRadialGradient(-0.3, -0.1, 0, 0, 0.2, 1);
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(1, dark);
+  const bodyWidth =
+      1.98 * (1 + shape.fullness * 0.32) * (1 - shape.lean * 0.48),
+    bodyHeight = 1.44 + shape.fullness * 0.1,
+    bodyTop = shape.headY + 0.11 * shape.headScale - bodyHeight * 0.14;
+  const drawHands = () => {
+    for (const side of [-1, 1]) {
+      e.save();
+      e.translate(side * bodyWidth * 0.27, bodyTop + bodyHeight * 0.17);
+      e.rotate(side < 0 ? pose.armL || 0 : pose.armR || 0);
+      if (u.outfit === "plain" && !g.cosmetics && g.id !== 0) {
+        e.strokeStyle = color;
+        e.lineWidth = 0.22;
+        e.lineCap = "round";
+        e.beginPath();
+        e.moveTo(0, 0);
+        e.lineTo(side * bodyWidth * 0.15, bodyHeight * 0.4);
+        e.stroke();
+      }
+      ellipse(side * bodyWidth * 0.15, bodyHeight * 0.48, 0.12, 0.14, skin);
+      e.restore();
+    }
+  };
+  if (g.id !== 0 && !g.cosmetics && u.outfit === "plain")
+    ellipse(
+      0,
+      0.2,
+      shape.bodyWidth * (1 + (pose?.breath || 0) * 0.02),
+      shape.bodyHeight,
+      gradient,
+    );
+  else if (u.outfit !== "plain" || pose)
+    drawTailoredOutfit(e, u.outfit, shape, Ie, pose);
+  else {
+    const bounds = xI(1, g.mass ?? 60);
+    Ie(e, u.outfit, bounds.x, bounds.y, bounds.w, bounds.h);
+  }
+  if (pose && !pose.coverFace) drawHands();
+  e.save();
+  e.translate(0, shape.headY + (pose?.headBob || 0));
+  e.rotate(pose?.headTurn || 0);
+  e.scale(shape.headScale, shape.headScale);
+  const hat = dI(u.hat);
+  if (hat) drawFittedHat(e, u.hat, hat, Ie, "rear");
+  if (!u.hat.startsWith("hat_")) ellipse(0, -0.39, 0.52, 0.51, "#724831");
+  ellipse(0, -0.38, 0.49, 0.49, skin);
+  ellipse(-0.42, -0.37, 0.13, 0.17, skin);
+  ellipse(0.42, -0.37, 0.13, 0.17, skin);
+  if (!hat || u.hat === "halo") {
+    e.fillStyle = "#6b4632";
+    e.beginPath();
+    e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2);
+    e.fill();
+  }
+  if (hat && u.hat !== "halo") drawFittedHat(e, u.hat, hat, Ie, "front");
+  const eyeHeight = Math.max(0.006, 0.068 * (1 - (pose?.blink || 0))),
+    look = pose?.look || 0;
+  ellipse(-0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
+  ellipse(0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
+  ellipse(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b");
+  e.strokeStyle = g.skin ? "#36251e" : "#804e3a";
+  e.lineWidth = Math.max(1 / n, 0.04);
+  e.beginPath();
+  if ((pose?.mouth || 0) > 0.2)
+    ellipse(0, -0.12, 0.13, 0.04 + pose.mouth * 0.1, "#653127");
+  else if (pose?.sad) {
+    e.moveTo(-0.14, -0.06);
+    e.quadraticCurveTo(0, -0.22, 0.14, -0.06);
+    e.stroke();
+  } else {
+    e.arc(0, -0.24, 0.16, 0.1, Math.PI - 0.1);
+    e.stroke();
+  }
+  e.restore();
+  if (pose?.coverFace) drawHands();
+  e.restore();
 }
 const jA = new Image();
 jA.src = KI;
@@ -1490,6 +1483,12 @@ function showWeightRecord(mass) {
 function II() {
   (clearTimeout(Ye), (document.querySelector("#trophy-toast").hidden = !0));
 }
+function openGameOptions() {
+  const dialog = L("#options-dialog");
+  (document.fullscreenElement || document.body).append(dialog);
+  if (!dialog.open) dialog.showModal();
+  L("#close-options").focus({ preventScroll: true });
+}
 function Qt({ start: e, appearance: g }) {
   let o, journey;
   function storedProfile(fallback = Te()) {
@@ -1533,6 +1532,10 @@ function Qt({ start: e, appearance: g }) {
     ));
   const B = () => (I ? C : o.equipped);
   function k() {
+    L("#preview-podium-animation").disabled =
+      !B().podium ||
+      B().podium === "podium_none" ||
+      cosmeticMotion() !== "full";
     const l = L("#avatar-preview"),
       R = l.getContext("2d");
     (R.clearRect(0, 0, 320, 320),
@@ -1579,6 +1582,19 @@ function Qt({ start: e, appearance: g }) {
         c.fillText(Y.toLocaleString("fr-FR") + " kg", J, 310));
     }
   }
+  L("#preview-podium-animation").onclick = () => {
+    const canvas = L("#avatar-preview"),
+      animation = B().podium;
+    canvas.className = "";
+    if (
+      cosmeticMotion() === "full" &&
+      animation &&
+      animation !== "podium_none"
+    ) {
+      void canvas.offsetWidth;
+      canvas.className = "podium-animation " + animation;
+    }
+  };
   L("#wardrobe-weight").oninput = k;
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
   document.addEventListener("extra-cosmetics-loaded", k);
@@ -1591,16 +1607,22 @@ function Qt({ start: e, appearance: g }) {
       g(B()),
       (L("#menu-record").textContent =
         `${o.wins} victoire${o.wins > 1 ? "s" : ""}`),
-      k());
+      L("#shop-dialog").open && k());
   }
   function a(verifiedOnline = null) {
+    const saveStart = performance.now();
     try {
       const merged = Xe(
         JSON.stringify(
           mergeProfileProgress(o, savedProfile, storedProfile(savedProfile)),
         ),
       );
-      if (verifiedOnline) merged.online = onlineProfile(verifiedOnline);
+      if (
+        verifiedOnline &&
+        (merged.online?.profileId !== verifiedOnline.profileId ||
+          verifiedOnline.revision >= merged.online.revision)
+      )
+        merged.online = onlineProfile(verifiedOnline);
       Object.assign(o, merged);
       const serialized = JSON.stringify(o);
       localStorage.setItem(Oe, serialized);
@@ -1615,7 +1637,26 @@ function Qt({ start: e, appearance: g }) {
         "Sauvegarde indisponible : progression conservée pendant cette session.";
     }
     t();
+    recordPerformance("profile-save", performance.now() - saveStart);
   }
+  let progressSaveQueued = false;
+  function progressSave(immediate = false) {
+    if (immediate) {
+      progressSaveQueued = false;
+      a();
+      return;
+    }
+    if (progressSaveQueued) return;
+    progressSaveQueued = true;
+    queueMicrotask(() => {
+      if (!progressSaveQueued) return;
+      progressSaveQueued = false;
+      a();
+    });
+  }
+  window.addEventListener("pagehide", () => {
+    if (progressSaveQueued) progressSave(true);
+  });
   function s(l) {
     if (!I) {
       try {
@@ -1635,7 +1676,9 @@ function Qt({ start: e, appearance: g }) {
       } catch {}
     }
     const R = KA.find((h) => h.id === l);
-    R && (I ? ((C[R.slot] = l), t(), r()) : LI(o, l) && (a(), r()));
+    R &&
+      !R.disabled &&
+      (I ? ((C[R.slot] = l), t(), r()) : LI(o, l) && (a(), r()));
   }
   const motionControl = L("#cosmetic-motion");
   motionControl.value = cosmeticMotion();
@@ -1653,7 +1696,7 @@ function Qt({ start: e, appearance: g }) {
   function r() {
     L("#shop-context").textContent = I
       ? "Atelier solo : tout essayer librement. Tes achats et ton solde restent inchangés."
-      : "Les miniatures et les équipements en jeu utilisent exactement les mêmes images.";
+      : "Chapeaux, tenues et petits suppléments : compose ton look gourmand.";
     const l = L("#shop-items");
     document
       .querySelectorAll("[data-cosmetics-filter]")
@@ -1668,17 +1711,20 @@ function Qt({ start: e, appearance: g }) {
       const h = o.owned.includes(R.id) || R.price === 0,
         c =
           (B()[R.slot] ||
-            { aura: "aura_none", podium: "podium_none", title: "title_none" }[
-              R.slot
-            ]) === R.id,
+            {
+              aura: "aura_none",
+              podium: "podium_none",
+              title: "title_none",
+              slide: "slide_standard",
+            }[R.slot]) === R.id,
         m = document.createElement("article");
       m.className = "shop-card";
       m.dataset.slot = R.slot;
       m.dataset.cosmetic = R.id;
       m.hidden = cosmeticFilter !== "all" && R.slot !== cosmeticFilter;
       const Y = document.createElement("canvas");
-      ((Y.width = 140),
-        (Y.height = 126),
+      ((Y.width = COSMETIC_SLOTS.slice(2).includes(R.slot) ? 280 : 140),
+        (Y.height = COSMETIC_SLOTS.slice(2).includes(R.slot) ? 252 : 126),
         (Y.className = "equipment-thumb"),
         Y.setAttribute("aria-label", R.name),
         COSMETIC_SLOTS.slice(2).includes(R.slot)
@@ -1689,18 +1735,39 @@ function Qt({ start: e, appearance: g }) {
       ((J.innerHTML = `<small>${SLOT_LABELS[R.slot]}</small><h3>${R.name}</h3>${R.isNew ? '<small class="new-cosmetic">NOUVEAU</small>' : ""}<p>${I ? "ESSAI LIBRE" : h ? "Dans ton vestiaire" : R.price + " points de graisse"}</p>`),
         m.append(J));
       const Z = document.createElement("button");
-      ((Z.textContent = c
-        ? "Équipé ✓"
-        : I
-          ? "Essayer"
-          : h
-            ? "Équiper"
-            : `Acheter · ${R.price}`),
-        (Z.disabled = c || (!I && !h && o.points < R.price)),
+      ((Z.textContent = R.disabled
+        ? "Échantillon attendu"
+        : c
+          ? "Équipé ✓"
+          : I
+            ? "Essayer"
+            : h
+              ? "Équiper"
+              : `Acheter · ${R.price}`),
+        (Z.disabled = R.disabled || c || (!I && !h && o.points < R.price)),
         (Z.dataset.item = R.id),
         (Z.onclick = () => s(R.id)),
         m.append(Z),
         l.append(m));
+      if (R.slot === "slide") {
+        const listen = document.createElement("button");
+        listen.type = "button";
+        listen.className = "sound-listen";
+        listen.textContent = "Écouter";
+        listen.disabled = !!R.disabled;
+        listen.onclick = () => {
+          const played = motionAudio.preview(R.id);
+          L("#sound-preview-status").textContent = played
+            ? "À l’écoute : " + R.name
+            : "Active le son et monte le volume des effets dans les options.";
+        };
+        m.append(listen);
+        if (R.note) {
+          const note = document.createElement("small");
+          note.textContent = R.note;
+          m.append(note);
+        }
+      }
     }
     k();
   }
@@ -1771,7 +1838,7 @@ function Qt({ start: e, appearance: g }) {
       }
       (L("#chef-dialog").close(), S("chef"));
     }),
-    (L("#options-entry").onclick = () => L("#options-dialog").showModal()),
+    (L("#options-entry").onclick = openGameOptions),
     (L("#close-options").onclick = () => L("#options-dialog").close()),
     (L("#option-sound").onclick = () => L("#sound").click()),
     (L("#option-fullscreen").onclick = async () => {
@@ -1866,8 +1933,19 @@ function Qt({ start: e, appearance: g }) {
         const ids = Object.keys(verified.trophies).filter(
           (id) => !previous[id],
         );
+        const currency = Math.max(
+          0,
+          verified.pointsEarned -
+            (latest.onlineCredits?.[verified.profileId] || 0),
+        );
         o.online = verified;
         a(verified);
+        if (L("#shop-dialog").open) r();
+        if (notify && currency > 0) {
+          L("#result-reward").hidden = false;
+          L("#result-reward").textContent =
+            `+${currency} points de graisse · La maison régale !`;
+        }
         if (L("#trophies-dialog").open) et(o);
         if (notify) {
           tt(ids);
@@ -1920,6 +1998,7 @@ function Qt({ start: e, appearance: g }) {
             ["win", "truce"].includes(c.outcome) &&
               !SECRET_MODES.has(c.mode) &&
               o.wins++),
+          (m = Math.min(m, Math.max(0, MATCH_POINTS_CAP - A))),
           m && ((A += m), wI(o, m)));
         const Y = UI(o, l, R, h, c);
         if (
@@ -1929,7 +2008,7 @@ function Qt({ start: e, appearance: g }) {
             Y.length ||
             l === "end" ||
             (R?.id === 0 && ["food", "eat", "fondue"].includes(l))) &&
-            a(),
+            progressSave(l === "end"),
           l === "end")
         ) {
           L("#result-reward").textContent =
@@ -2873,6 +2952,15 @@ const gameAudio = createGameAudio({
   isShadowMenu: () => document.body.classList.contains("shadow-realm"),
   isMenuVisible: () => !w("#main-menu").hidden && !w("#title-screen").hidden,
 });
+document
+  .querySelectorAll("[data-open-options]")
+  .forEach((button) => (button.onclick = openGameOptions));
+gameAudio.prime();
+const motionAudio = createMotionAudio();
+document.addEventListener("pointerdown", () => motionAudio.unlock(), {
+  capture: true,
+});
+bindEffectsControls();
 const ambientMusic = setupMusicControls();
 function ye(e) {
   if (!Ce)
@@ -2891,7 +2979,7 @@ function ye(e) {
           60,
           dA.currentTime + (e === "burp" ? 0.65 : 0.13),
         ),
-        o.gain.setValueAtTime(0.018, dA.currentTime),
+        o.gain.setValueAtTime(0.018 * effectsGain(), dA.currentTime),
         o.gain.exponentialRampToValueAtTime(
           0.001,
           dA.currentTime + (e === "burp" ? 0.8 : 0.18),
@@ -2904,6 +2992,8 @@ function ye(e) {
 }
 function OA() {
   if (online?.active) return;
+  motionAudio.reset();
+  motionAudio.prime([WA.equipped]);
   (clearTimeout(Re),
     (w("#discovery").hidden = !0),
     WA?.newRun(),
@@ -2969,6 +3059,15 @@ function OA() {
     (w("#overlay").hidden = !0),
     (w("#hint").style.display = nA === "chef" ? "none" : ""),
     (K.onEvent = (g, o, u) => {
+      if (g === "slide") {
+        motionAudio.slide({ ...o, cosmetics: equippedFor(o) }, K.round);
+        return;
+      }
+      if (g === "boing") {
+        motionAudio.bounce();
+        return;
+      }
+      if (g === "bounce") motionAudio.bounce();
       if (
         (WA?.event(g, o, u, K),
         g === "discovery" &&
@@ -2976,7 +3075,7 @@ function OA() {
           clearTimeout(Re),
           (Re = setTimeout(() => (w("#discovery").hidden = !0), 8e3))),
         gameAudio.event(g, o, u),
-        ["launch", "truce", "burp", "burn"].includes(g) && ye(g),
+        ["truce", "burp", "burn"].includes(g) && ye(g),
         g === "truce" &&
           ((q = null),
           (w("#hint").style.display = "none"),
@@ -3213,7 +3312,11 @@ oA.addEventListener("pointerup", (e) => {
     const o = Math.min(17, g * 0.12);
     const vector = { x: (q.dx / distance) * o, y: (q.dy / distance) * o };
     if (online?.active) online.shoot(vector);
-    else K.launch(vector);
+    else {
+      const launchStart = performance.now();
+      K.launch(vector);
+      recordPerformance("launch", performance.now() - launchStart);
+    }
   }
   q = null;
 });
@@ -3268,6 +3371,7 @@ w("#again").onclick = OA;
 w("#sound").onclick = () => {
   ((Ce = !Ce),
     gameAudio.setMuted(Ce),
+    motionAudio.setMuted(Ce),
     ambientMusic.setMuted(Ce),
     (w("#option-sound").textContent = Ce
       ? "Activer tous les sons"
@@ -3528,7 +3632,12 @@ function bt(e) {
   x.restore();
 }
 function Ge(e) {
-  if (document.hidden || WA?.paused) {
+  if (
+    document.hidden ||
+    WA?.paused ||
+    podiumActive() ||
+    (!online?.active && L("#options-dialog").open)
+  ) {
     ((HA = e), requestAnimationFrame(Ge));
     return;
   }
@@ -3549,7 +3658,9 @@ function Ge(e) {
       }
     } else K.teamAutoAt = null;
   }
+  const renderStart = performance.now();
   ((QA = mI(K, gA, sA)), bt(e), ze(), requestAnimationFrame(Ge));
+  recordPerformance("game-render", performance.now() - renderStart);
 }
 const De = w("#map-select");
 De.replaceChildren();
@@ -3621,12 +3732,17 @@ online = setupMultiplayer({
     WA?.onlineProgress(state, options);
   },
   onRoster(members) {
+    motionAudio.prime(members.map((m) => m.cosmetics));
     onlineMembers = new Map(members.map((member) => [member.id, member]));
     if (online?.active)
       for (const person of onlinePeople)
         person.human = onlineMembers.has(person.memberId);
   },
   onStart(state, seat) {
+    motionAudio.reset();
+    motionAudio.prime(
+      state.people.filter((p) => p.human).map((p) => p.cosmetics),
+    );
     clearPodium();
     clearTimeout(Re);
     K?.destroy();
@@ -3747,6 +3863,7 @@ online = setupMultiplayer({
     WA.backToMenu();
   },
   onEnd(state) {
+    if (state.phase === "ended") motionAudio.reset();
     w("#continue-spectating").hidden =
       state.phase === "ended" || !state.people.some((p) => p.alive);
     const winner =
@@ -3776,6 +3893,15 @@ online = setupMultiplayer({
     w("#overlay").hidden = false;
   },
   onEvent(event) {
+    if (event.kind === "slide") {
+      const person = onlinePeople[event.person];
+      if (person) motionAudio.slide(person, K.round);
+      return;
+    }
+    if (["boing", "bounce"].includes(event.kind)) {
+      motionAudio.bounce();
+      return;
+    }
     if (event.kind === "elimination") {
       const row = deathNotice(event, onlinePeople, K.teamSize);
       const feed = w("#kill-feed");

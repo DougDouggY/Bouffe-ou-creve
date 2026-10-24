@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import WebSocket from "../cloudflare/node_modules/ws/index.js";
 import { SIMULATION_VERSION } from "../multiplayer-simulation.js";
 import { decodeFrame } from "../multiplayer-protocol.js";
+const humans = Number(process.env.HUMANS || 4);
 const base = process.env.WORKER_BASE_URL || "http://127.0.0.1:8797",
   origin = "https://dougdouggy.github.io";
 async function post(path, body) {
@@ -55,11 +56,12 @@ for (const count of [8, 24, 50]) {
         outfit: "cook",
         aura: "aura_gold",
         podium: "podium_jump",
+        slide: "slide_spring",
         title: "title_0",
       },
     });
     peers.push(await peer(host));
-    for (let i = 1; i < 4; i++)
+    for (let i = 1; i < humans; i++)
       peers.push(
         await peer(
           await post("/api/join", {
@@ -69,6 +71,7 @@ for (const count of [8, 24, 50]) {
               hat: "hat_pancakes",
               outfit: "outfit_royal",
               aura: "aura_ketchup",
+              slide: "slide_soap",
             },
           }),
         ),
@@ -76,11 +79,17 @@ for (const count of [8, 24, 50]) {
     await peers[0].wait(
       (p) =>
         p.type === "room" &&
-        p.room.members.length === 4 &&
+        p.room.members.length === humans &&
         p.room.members.every((m) => m.connected),
     );
     peers[0].send({ type: "size", count });
     await peers[0].wait((p) => p.type === "room" && p.room.count === count);
+    if (process.env.TEST_MAP) {
+      peers[0].send({ type: "map", mapId: process.env.TEST_MAP });
+      await peers[0].wait(
+        (p) => p.type === "room" && p.room.mapId === process.env.TEST_MAP,
+      );
+    }
     for (const p of peers) p.send({ type: "ready", ready: true });
     await peers[0].wait(
       (p) =>
@@ -93,6 +102,7 @@ for (const count of [8, 24, 50]) {
       peers.map((p) => p.wait((p) => p.type === "state")),
     );
     for (const p of starts) assert.deepEqual(p.state, starts[0].state);
+    assert.equal(starts[0].state.people[0].cosmetics.slide, "slide_spring");
     for (const [i, p] of peers.entries())
       p.send({ type: "shot", turn: 1, x: i % 2 ? 12 : -12, y: 3 });
     const resolutions = await Promise.all(
@@ -112,8 +122,8 @@ for (const count of [8, 24, 50]) {
     console.log(
       JSON.stringify({
         count,
-        humans: 4,
-        ai: count - 4,
+        humans,
+        ai: count - humans,
         sharedFinal: true,
         cosmetics: starts[0].state.people[0].cosmetics,
         metrics: resolutions[0].metrics,

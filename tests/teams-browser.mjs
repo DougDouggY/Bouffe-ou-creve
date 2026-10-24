@@ -74,7 +74,7 @@ try {
     await page.locator('[data-actual-mode="classic"]').focus();
     await page.keyboard.press("Enter");
     await page.locator("#solo-team-size").selectOption(String(size));
-    await page.locator('[data-group="in-progress"] .book-cover').click();
+    await page.locator('[data-group="available"] .book-cover').click();
     await page.locator('[data-map="trampoline"]').click();
     await page.locator("#start-game").click();
     await page.locator("#close-briefing").click();

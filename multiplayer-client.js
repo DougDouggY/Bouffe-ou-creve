@@ -1,4 +1,4 @@
-import { equippedTitle } from "./cosmetic-effects.js?v=podium-35";
+import { equippedTitle } from "./cosmetic-effects.js?v=ceremony-38";
 import { ReplayClock } from "./replay-clock.js?v=podium-35";
 import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=rivalries-33";
 import {
@@ -6,11 +6,11 @@ import {
   teamColor,
   teamSurface,
 } from "./teams.js?v=rivalries-33";
-import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=podium-35";
+import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=collection-37";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
-} from "./cosmetic-catalog.js?v=podium-35";
+} from "./cosmetic-catalog.js?v=ceremony-38";
 import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
 const VERSION = "multi-21";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
@@ -48,6 +48,8 @@ export function setupMultiplayer({
     healthy = false,
     lastChatKey = "",
     lastRosterKey = "";
+  let requestedMap = null,
+    lastRequests = "";
   const dialog = $("#multiplayer-dialog");
   function openDialog() {
     dialog.showModal();
@@ -212,9 +214,35 @@ export function setupMultiplayer({
       teamSelect.dataset.roster = teamKey;
     }
     teamSelect.value = String(self?.team ?? "");
-    $("#multiplayer-map").value = room?.mapId || "cantine";
-    $("#multiplayer-map").disabled =
-      room?.host !== self?.id || room?.phase !== "lobby";
+    const host = room?.host === self?.id;
+    $("#multiplayer-map").value =
+      !host && requestedMap ? requestedMap : room?.mapId || "cantine";
+    $("#multiplayer-map").disabled = room?.phase !== "lobby";
+    $("#multiplayer-request-map").hidden = host || room?.phase !== "lobby";
+    const requestsKey = JSON.stringify([room?.host, room?.mapRequests || []]);
+    if (requestsKey !== lastRequests) {
+      lastRequests = requestsKey;
+      const list = $("#multiplayer-map-requests");
+      list.replaceChildren();
+      for (const request of room?.mapRequests || []) {
+        const row = document.createElement("div"),
+          label = document.createElement("span");
+        label.textContent =
+          request.name +
+          " propose " +
+          (MULTIPLAYER_MAPS.find((map) => map.id === request.mapId)?.name ||
+            "une carte");
+        row.append(label);
+        if (host) {
+          const accept = document.createElement("button");
+          accept.type = "button";
+          accept.textContent = "Choisir";
+          accept.onclick = () => send({ type: "map", mapId: request.mapId });
+          row.append(accept);
+        }
+        list.append(row);
+      }
+    }
     $("#multiplayer-shop").hidden = room?.phase !== "lobby";
     const canRematch = active && !!room?.canRematch;
     $("#multiplayer-rematch").hidden = !canRematch;
@@ -629,8 +657,13 @@ export function setupMultiplayer({
     update();
     if (!ticket) health();
   };
-  $("#multiplayer-map").onchange = () =>
-    send({ type: "map", mapId: $("#multiplayer-map").value });
+  $("#multiplayer-map").onchange = () => {
+    const mapId = $("#multiplayer-map").value;
+    if (room?.host === ticket?.memberId) send({ type: "map", mapId });
+    else requestedMap = mapId;
+  };
+  $("#multiplayer-request-map").onclick = () =>
+    send({ type: "map-request", mapId: $("#multiplayer-map").value });
   $("#multiplayer-rematch").onclick = () =>
     send({
       type: "rematch",

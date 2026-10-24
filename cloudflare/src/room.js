@@ -6,8 +6,8 @@ import {
   finishTrophyMatch,
 } from "./trophy-rules.js";
 import { validTeamSetup } from "../../teams.js?v=rivalries-33";
-import { validMultiplayerMap } from "../../multiplayer-maps.js?v=podium-35";
-import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=podium-35";
+import { validMultiplayerMap } from "../../multiplayer-maps.js?v=collection-37";
+import { normalizeCosmetics } from "../../cosmetic-catalog.js?v=ceremony-38";
 import {
   createSimulation,
   resolveTurn,
@@ -207,6 +207,14 @@ export class Room {
       deadline: d.deadline,
       serverTime: this.now(),
       expiresAt: d.expiresAt,
+      mapRequests: (d.mapRequests || [])
+        .filter((request) =>
+          d.members.some((member) => member.id === request.memberId),
+        )
+        .map((request) => ({
+          ...request,
+          name: d.members.find((member) => member.id === request.memberId).name,
+        })),
       members: d.members.map(
         ({
           id,
@@ -314,6 +322,9 @@ export class Room {
       if (!validMultiplayerMap(message.mapId))
         fail("MAP", "Carte multijoueur indisponible.");
       d.mapId = message.mapId;
+      d.mapRequests = (d.mapRequests || []).filter(
+        (request) => request.mapId !== message.mapId,
+      );
       d.members.forEach((m) => {
         m.ready = false;
       });
@@ -376,6 +387,18 @@ export class Room {
       d.readyAt = this.now();
       d.deadline = this.now() + TURN_MS;
       d.checkpoint = checkpoint(this.game);
+    } else if (message.type === "map-request") {
+      if (d.phase !== "lobby")
+        fail("PHASE", "Les demandes de carte se font au salon.");
+      if (!validMultiplayerMap(message.mapId))
+        fail("MAP", "Carte indisponible.");
+      if (member.lastMapRequest && this.now() - member.lastMapRequest < 2500)
+        fail("MAP_REQUEST_RATE", "Laisse le chef lire ta suggestion.");
+      member.lastMapRequest = this.now();
+      d.mapRequests = (d.mapRequests || []).filter(
+        (request) => request.memberId !== member.id,
+      );
+      d.mapRequests.push({ memberId: member.id, mapId: message.mapId });
     } else if (message.type === "shot") {
       if (d.phase !== "playing" || this.game.phase !== "aim")
         fail("PHASE", "Aucun tir attendu.");

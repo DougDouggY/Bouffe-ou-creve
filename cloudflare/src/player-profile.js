@@ -2,7 +2,7 @@ import { applyProfileGrant } from "./trophy-rules.js";
 import {
   onlineProfile,
   clientProfile,
-} from "../../multiplayer-trophy-catalog.js?v=rivalries-33";
+} from "../../multiplayer-trophy-catalog.js?v=ceremony-38";
 import { RoomError } from "./room.js";
 export const validProfileId = (id) =>
   typeof id === "string" && /^[a-f0-9-]{36}$/.test(id);

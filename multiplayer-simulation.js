@@ -1,7 +1,7 @@
 import { validTeamSetup } from "./teams.js?v=rivalries-33";
-import { validMultiplayerMap } from "./multiplayer-maps.js?v=podium-35";
-import { arenaSize } from "./arena-bounds.js?v=filmovore-15";
-import { normalizeCosmetics } from "./cosmetic-catalog.js?v=podium-35";
+import { validMultiplayerMap } from "./multiplayer-maps.js?v=collection-37";
+import { arenaSize } from "./arena-bounds.js?v=collection-37";
+import { normalizeCosmetics } from "./cosmetic-catalog.js?v=ceremony-38";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
   zt as Game,
@@ -9,7 +9,7 @@ import {
   XA as World,
   he as Engine,
   yA as Bodies,
-} from "./simulation-core.js?v=podium-35";
+} from "./simulation-core.js?v=ceremony-38";
 
 export const SIMULATION_VERSION = "multi-21";
 export function seededRandom(seed) {
@@ -239,7 +239,18 @@ export function resolveTurn(game, shots) {
       recordElimination(food);
     }
     if (["hazard", "burn"].includes(kind)) recordElimination(person);
-    if (["food", "eat", "burn", "power", "end"].includes(kind))
+    if (
+      [
+        "food",
+        "eat",
+        "burn",
+        "power",
+        "end",
+        "slide",
+        "boing",
+        "bounce",
+      ].includes(kind)
+    )
       events.push({
         t: time,
         kind,
@@ -247,7 +258,9 @@ export function resolveTurn(game, shots) {
         food: food && { type: food.type, size: food.size, id: food.id },
       });
   };
+  const launchStart = performance.now();
   if (!game.launch(null, shots)) throw new Error("Cannot resolve turn");
+  const planningMs = performance.now() - launchStart;
   recordEliminations();
   const frames = [{ t: 0, state: clone(snapshot(game)) }];
   // Fixed 60 Hz, exactly the same Matter/rules as solo; render at 10 Hz + interpolation.
@@ -276,6 +289,7 @@ export function resolveTurn(game, shots) {
     massPeaks,
     metrics: {
       simulationMs: performance.now() - measuredStart,
+      planningMs,
       frames: frames.length,
       events: events.length,
     },

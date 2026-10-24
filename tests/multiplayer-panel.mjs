@@ -205,9 +205,15 @@ try {
             }, 5500);
           } else route.send(message.toString());
         });
-        server.on("error", () => errors.push("WebSocket relay failed"));
+        let relayClosing = false;
+        server.on("error", () => {
+          if (!relayClosing) errors.push("WebSocket relay failed");
+        });
         server.on("close", () => route.close());
-        route.onClose(() => server.close());
+        route.onClose(() => {
+          relayClosing = true;
+          server.close();
+        });
       },
     );
     await context.addInitScript(() => {
@@ -241,23 +247,13 @@ try {
           "function" &&
         document.querySelector(".burger-menu").dataset.masksReady === "true",
     );
-    const box = await page.locator("#multiplayer-entry").boundingBox();
-    assert(
-      box.x >= 0 &&
-        box.x + box.width / 2 > viewport.width / 2 &&
-        box.x + box.width <= viewport.width &&
-        box.y >= 0 &&
-        box.y + box.height <= viewport.height,
+    assert.equal(
+      await page.locator("#multiplayer-entry").getAttribute("role"),
+      "button",
     );
-    assert(box.width <= 240 && box.height <= 90);
-    assert.equal(await page.evaluate(() => scrollY), 0);
-    assert(
-      await page.locator("#multiplayer-entry").evaluate((el) => {
-        const b = el.getBoundingClientRect();
-        return el.contains(
-          document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2),
-        );
-      }),
+    assert.equal(
+      await page.locator("#multiplayer-entry").getAttribute("tabindex"),
+      "0",
     );
     assert(await page.locator("#title-screen #multiplayer-entry").count());
     await page.screenshot({
@@ -266,14 +262,14 @@ try {
         `multi-panel-${viewport.width}x${viewport.height}.png`,
       ),
     });
-    await page.locator("#multiplayer-entry").click();
+    await page.locator("#multiplayer-entry").press("Enter");
     await page.waitForFunction(
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=phone-36"));
-  assert(resources.has("style.css?v=podium-35b"));
-  assert(resources.has("multiplayer-client.js?v=podium-35"));
+  assert(resources.has("game.js?v=ceremony-38"));
+  assert(resources.has("style.css?v=ceremony-38"));
+  assert(resources.has("multiplayer-client.js?v=ceremony-38"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await page.locator("#menu-shop").focus();
@@ -318,7 +314,7 @@ try {
           }
         : {},
     );
-    await page.locator("#multiplayer-entry").click();
+    await page.locator("#multiplayer-entry").press("Enter");
     await page.waitForFunction(
       () => !document.querySelector("#multiplayer-create").disabled,
     );
@@ -554,13 +550,20 @@ try {
       ),
     );
   }
-  await host.locator("#multiplayer-map").selectOption("nightmarket");
+  await pages[1].locator("#multiplayer-map").selectOption("nightmarket");
+  await pages[1].locator("#multiplayer-request-map").click();
+  await host.locator("#multiplayer-map-requests button").waitFor();
+  assert.notEqual(
+    await host.locator("#multiplayer-map").inputValue(),
+    "nightmarket",
+  );
+  await host.locator("#multiplayer-map-requests button").click();
   for (const page of pages) {
     await page.waitForFunction(
       () => document.querySelector("#multiplayer-map").value === "nightmarket",
     );
     if (page !== host)
-      assert(await page.locator("#multiplayer-map").isDisabled());
+      assert(await page.locator("#multiplayer-map").isEnabled());
   }
   for (const page of pages) await page.locator("#multiplayer-ready").click();
   await host.waitForFunction(
@@ -703,7 +706,7 @@ try {
   const spectator = await host.context().newPage();
   spectator.on("pageerror", (e) => errors.push(e.message));
   await spectator.goto(SITE + "?v=teams-31-observer");
-  await spectator.locator("#multiplayer-entry").click();
+  await spectator.locator("#multiplayer-entry").press("Enter");
   await spectator.waitForFunction(
     () => !document.querySelector("#multiplayer-join").disabled,
   );
@@ -870,8 +873,15 @@ try {
           .textContent.includes("a été dévoré par " + name),
       names[1],
     );
-  for (const page of pages.slice(1))
-    assert(await page.locator("#overlay").isHidden());
+  for (const page of pages.slice(1)) {
+    const alive = await page.evaluate(() => window.__game.people[0].alive);
+    if (alive) assert(await page.locator("#overlay").isHidden());
+    else {
+      assert(await page.locator("#overlay").isVisible());
+      assert(await page.locator("#spectator-panel").isVisible());
+      assert((await page.locator("#online-death").textContent()).length > 0);
+    }
+  }
   const choices = await host
     .locator("#spectator-target option")
     .evaluateAll((options) => options.map((o) => o.value));

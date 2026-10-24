@@ -1,12 +1,22 @@
-export const COSMETIC_SLOTS = ["hat", "outfit", "aura", "podium", "title"];
+import { SLIDE_SOUNDS } from "./sound-catalog.js?v=ceremony-38";
+export const COSMETIC_SLOTS = [
+  "hat",
+  "outfit",
+  "aura",
+  "podium",
+  "title",
+  "slide",
+];
 export const SLOT_LABELS = {
   hat: "CHAPEAU",
   outfit: "TENUE",
   aura: "AURA",
   podium: "ANIMATION DE PODIUM",
   title: "SURNOM",
+  slide: "SON DE GLISSADE",
 };
 export const EFFECT_COSMETICS = [
+  ...SLIDE_SOUNDS,
   { id: "aura_none", slot: "aura", name: "Sans aura", price: 0, icon: "◌" },
   ...[
     ["ketchup", "Cercle de ketchup", "#c74b39"],
@@ -50,8 +60,11 @@ export const EFFECT_COSMETICS = [
     "Roi du Ketchup",
     "Estomac sur pattes",
     "La Faim du Monde",
-    "Le Buffet Humain",
+    "L’Abonné du buffet",
     "Gros Dossier",
+    "La Boule",
+    "Produit par MVP",
+    "Celui qui a accepté les cookies",
   ].map((name, i) => ({
     id: "title_" + i,
     slot: "title",
@@ -85,35 +98,49 @@ export function drawAura(ctx, id, time = 0, mode = cosmeticMotion()) {
   const item = EFFECT_COSMETICS.find((c) => c.id === id && c.slot === "aura");
   if (!item) return;
   ctx.save();
-  ctx.translate(0, 0.86);
-  ctx.scale(1, 0.25);
-  ctx.strokeStyle = item.color;
-  ctx.globalAlpha = 0.65;
-  ctx.lineWidth = 0.07;
+  const transform = ctx.getTransform();
+  const pixels = Math.max(1, Math.hypot(transform.a, transform.b));
+  const width = Math.max(0.15, 1.8 / pixels),
+    rx = 1.42,
+    ry = 0.43,
+    cy = 0.87;
   ctx.beginPath();
-  ctx.ellipse(0, 0, 1.16, 1.16, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fillStyle = item.color;
+  ctx.globalAlpha = 0.16;
+  ctx.fill();
+  ctx.strokeStyle = "#172219";
+  ctx.globalAlpha = 0.8;
+  ctx.lineWidth = width + 0.12;
+  ctx.stroke();
+  ctx.strokeStyle = item.color;
+  ctx.globalAlpha = 0.98;
+  ctx.lineWidth = width;
   ctx.stroke();
   if (id === "aura_flame") {
-    for (let i = 0; i < 6; i++) {
-      const angle = (i * Math.PI) / 3;
+    ctx.fillStyle = item.color;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * 1.12, Math.sin(angle) * 1.12);
-      ctx.lineTo(Math.cos(angle + 0.08) * 1.45, Math.sin(angle + 0.08) * 1.45);
-      ctx.lineTo(Math.cos(angle + 0.18) * 1.12, Math.sin(angle + 0.18) * 1.12);
-      ctx.fillStyle = item.color;
+      ctx.moveTo(Math.cos(a) * 1.3, cy + Math.sin(a) * 0.4);
+      ctx.lineTo(Math.cos(a + 0.08) * 1.7, cy + Math.sin(a + 0.08) * 0.57);
+      ctx.lineTo(Math.cos(a + 0.2) * 1.3, cy + Math.sin(a + 0.2) * 0.4);
       ctx.fill();
     }
   }
   if (mode === "full") {
-    ctx.globalAlpha = 0.8;
-    ctx.lineWidth = 0.11;
-    ctx.beginPath();
+    ctx.strokeStyle = "#fff7cc";
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = width * 0.55;
+    ctx.lineCap = "round";
     const a = time * 0.001;
-    ctx.arc(0, 0, 1.16, a, a + 1.2);
+    ctx.beginPath();
+    ctx.ellipse(0, cy, rx, ry, 0, a, a + 1.2);
     ctx.stroke();
   }
   ctx.restore();
 }
+
 export function equippedTitle(cosmetics) {
   return (
     EFFECT_COSMETICS.find(

@@ -122,7 +122,7 @@ try {
       }),
     );
     await page.goto(url);
-    await page.locator("#multiplayer-entry").click();
+    await page.locator("#multiplayer-entry").press("Enter");
     await page.locator("#multiplayer-create").waitFor({ state: "visible" });
     await page.waitForFunction(
       () => !document.querySelector("#multiplayer-create").disabled,

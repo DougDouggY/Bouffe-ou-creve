@@ -1,7 +1,7 @@
 import {
   EFFECT_COSMETICS,
   COSMETIC_SLOTS,
-} from "./cosmetic-effects.js?v=podium-35";
+} from "./cosmetic-effects.js?v=ceremony-38";
 // The Dressing catalog is shared by solo, multiplayer clients and server validation.
 import { EXTRA_COSMETICS } from "./cosmetics.js?v=podium-35";
 export const COSMETIC_CATALOG = [
@@ -109,7 +109,8 @@ export function normalizeCosmetics(value) {
   for (const slot of COSMETIC_SLOTS.slice(2))
     if (
       COSMETIC_CATALOG.some(
-        (item) => item.slot === slot && item.id === value?.[slot],
+        (item) =>
+          item.slot === slot && item.id === value?.[slot] && !item.disabled,
       )
     )
       extra[slot] = value[slot];
