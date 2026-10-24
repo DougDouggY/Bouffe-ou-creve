@@ -80,7 +80,7 @@ export function createRestaurantMenu(catalog, onSelect) {
     return group.maps.filter(
       ([id, map]) =>
         (mode === "platform"
-          ? ["platform", "survival"].includes(id)
+          ? id === "platform"
           : ["cannibal", "icecream", "survival"].includes(mode)
             ? id === mode
             : mode === "somalia"
@@ -138,15 +138,15 @@ export function createRestaurantMenu(catalog, onSelect) {
       item.page.querySelector("h3").textContent = map.name;
       item.page.querySelector(".page-kicker").textContent =
         selected === "platform"
-          ? "FILMOVORE · 16 GOURMANDS · DUELS À 2"
+          ? "LE PLATEAU · 16 GOURMANDS · DUELS À 2"
           : selected === "survival"
-            ? "FILMOVORE · 24 GOURMANDS"
+            ? "BURGER GAMES · 24 GOURMANDS"
             : selected === "icecream" || selected === "cannibal"
               ? "16 GOURMANDS"
               : "LE FESTIN DU JOUR";
       const figure = item.page.querySelector("figure");
       figure.replaceChildren();
-      const url = `./assets/previews/${selected}.webp?v=hunger-18`;
+      const url = `./assets/previews/${selected}.webp?v=secret-42`;
       const img = new Image();
       img.className = "map-preview";
       img.alt = `Aperçu de ${map.name}`;
@@ -215,7 +215,7 @@ export function setupSecretBurger({ profile, choose, backToMenu }) {
       ? ["somalia", "platform", "cannibal", "icecream"]
       : ["classic", "gros", "usa", "shop"];
     const titles = secret
-      ? ["SOMALIE", "FILMOVORE", "LE FESTIN CANNIBALE", "LE MARCHAND DE GLACES"]
+      ? ["SOMALIE", "LE PLATEAU", "LE FESTIN CANNIBALE", "LE MARCHAND DE GLACES"]
       : ["CLASSIQUE", "GRAND BANQUET", "ÉTATS-UNIS", "LE DRESSING DU GLOUTON"];
     const counts = secret
       ? ["50 gourmands", "16 ou 24 gourmands", "16 gourmands", "16 gourmands"]

@@ -17,7 +17,7 @@ import {
   SECRET_GAME_MODES,
   physicalMass,
   propulsionFactor,
-} from "./secret-modes.js?v=arena-17";
+} from "./secret-modes.js?v=secret-42";
 import {
   hungerStart,
   hungerZone,
@@ -254,7 +254,7 @@ for (const [e, g, o, u, E] of PI) {
   };
 }
 CA.hunger = {
-  name: "Hunger Games",
+  name: "Burger Games",
   icon: "🌲",
   floor: "#67764b",
   experimental: true,

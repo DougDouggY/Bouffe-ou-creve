@@ -1,5 +1,5 @@
 import { survivalLayout } from "./survival.js?v=hunger-18";
-import { shaft, secretSprite } from "./secret-modes.js?v=arena-17";
+import { shaft, secretSprite } from "./secret-modes.js?v=secret-42";
 export const ILLUSTRATED_MAPS = [
   "survival",
   "platform",
@@ -30,6 +30,9 @@ const platformFloors = new WeakMap();
 const survivalPatterns = new WeakMap();
 export function mapArtURL(id) {
   if (!ILLUSTRATED_MAPS.includes(id)) return null;
+  if (id === "platform")
+    return new URL("./assets/secrets/plateau-restaurant.webp", import.meta.url)
+      .href;
   if (id === "survival")
     return new URL("./assets/secrets/survival-ground.webp", import.meta.url)
       .href;
@@ -113,8 +116,8 @@ export function drawMapArt(context, game) {
       floor.height = game.h;
       const floorContext = floor.getContext("2d");
       const s = shaft(game),
-        sx = [0, 0.365, 0.638, 1].map((n) => n * image.naturalWidth),
-        sy = [0, 0.294, 0.633, 1].map((n) => n * image.naturalHeight);
+        sx = [0, 0.36, 0.638, 1].map((n) => n * image.naturalWidth),
+        sy = [0, 0.287, 0.638, 1].map((n) => n * image.naturalHeight);
       const dx = [0, s.x - s.half, s.x + s.half, game.w],
         dy = [0, s.y - s.half, s.y + s.half, game.h];
       for (let y = 0; y < 3; y++)

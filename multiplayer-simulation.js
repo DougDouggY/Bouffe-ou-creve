@@ -9,7 +9,7 @@ import {
   XA as World,
   he as Engine,
   yA as Bodies,
-} from "./simulation-core.js?v=ceremony-38";
+} from "./simulation-core.js?v=secret-42";
 
 export const SIMULATION_VERSION = "multi-21";
 export function seededRandom(seed) {

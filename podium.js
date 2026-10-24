@@ -7,6 +7,7 @@ export function podiumActive() {
 export function clearPodium() {
   if (scene) {
     cancelAnimationFrame(scene.raf);
+    scene.webgl?.dispose();
     clearTimeout(scene.timer);
     document.removeEventListener("extra-cosmetics-loaded", scene.redraw);
     scene = null;
@@ -96,6 +97,7 @@ export function showPodium(results, people, renderAvatar) {
   const root = document.querySelector("#match-podium");
   if (!root || !results) return;
   root.hidden = false;
+  root.dataset.renderer = "canvas";
   root.dataset.motion = cosmeticMotion();
   root.dataset.intro = cosmeticMotion() === "full" ? "playing" : "done";
   document.body.classList.add("ceremony-open");
@@ -161,7 +163,7 @@ export function showPodium(results, people, renderAvatar) {
   for (const [index, [kind, title, ids, note]] of definitions.entries()) {
     const card = document.createElement("article");
     card.className = "podium-course podium-course--" + kind;
-    card.dataset.members=ids.length;
+    card.dataset.members = ids.length;
     card.style.setProperty(
       "--reveal",
       index === 0 ? ".7s" : index === 1 ? "1.05s" : "1.4s",
@@ -257,11 +259,13 @@ export function showPodium(results, people, renderAvatar) {
       confetti.append(piece);
     }
   root.append(confetti);
+  let skippedByUser = false;
   const finish = () => {
     root.dataset.intro = "done";
     skip.hidden = true;
   };
   skip.onclick = () => {
+    skippedByUser = true;
     finish();
     for (const actor of actors) actor.celebrateAt = performance.now();
   };
@@ -269,12 +273,16 @@ export function showPodium(results, people, renderAvatar) {
     if (!scene) return;
     if (time - scene.lastFrame >= 33) {
       scene.lastFrame = time;
-      for (const actor of actors)
-        renderAvatar(
-          actor.canvas,
-          actor.person,
-          cosmeticMotion() === "full" ? poseAt(actor, time) : null,
-        );
+      if (scene.webgl?.disposed) scene.webgl = null;
+      if (scene.webgl)
+        scene.webgl.frame(time, poseAt, cosmeticMotion() === "full");
+      else
+        for (const actor of actors)
+          renderAvatar(
+            actor.canvas,
+            actor.person,
+            cosmeticMotion() === "full" ? poseAt(actor, time) : null,
+          );
     }
     if (cosmeticMotion() === "full") scene.raf = requestAnimationFrame(draw);
   };
@@ -295,4 +303,44 @@ export function showPodium(results, people, renderAvatar) {
   document.addEventListener("extra-cosmetics-loaded", scene.redraw);
   scene.redraw();
   scene.raf = requestAnimationFrame(draw);
+  const owner = scene;
+  import("./podium-3d.js?v=secret-42")
+    .then(({ createCeremony3D }) => {
+      if (scene !== owner) return null;
+      return createCeremony3D(
+        root,
+        actors,
+        renderAvatar,
+        () => scene === owner,
+      );
+    })
+    .then((webgl) => {
+      if (!webgl) return;
+      if (scene !== owner) {
+        webgl.dispose();
+        return;
+      }
+      owner.webgl = webgl;
+      webgl.frame(performance.now(), poseAt, false);
+      // The first shader compilation must finish before timing the visible intro.
+      if (!skippedByUser && cosmeticMotion() === "full") {
+        root.dataset.intro = "playing";
+        skip.hidden = false;
+        const readyAt = performance.now();
+        webgl.restart(readyAt);
+        for (const actor of actors)
+          actor.celebrateAt =
+            readyAt +
+            (actor.kind === "champion"
+              ? 900
+              : actor.kind === "predator"
+                ? 1200
+                : 1500);
+        clearTimeout(owner.timer);
+        owner.timer = setTimeout(finish, 2900);
+      }
+    })
+    .catch(() => {
+      root.dataset.renderer = "canvas";
+    });
 }

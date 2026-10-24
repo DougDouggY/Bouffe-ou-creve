@@ -12,7 +12,7 @@ const groups = {
       "Bon appétit, connard",
       "Manger son premier aliment sur la plateforme.",
     ],
-    ["win", "Dernier étage", "Remporter le tournoi de La Plateforme."],
+    ["win", "Dernier étage", "Remporter le tournoi de Le Plateau."],
     [
       "fast",
       "J’ai pas faim",

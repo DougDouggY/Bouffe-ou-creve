@@ -5110,3 +5110,92 @@ body.shadow-realm .home-mode-page {background:#d8cabe;color:#372831;}
 #options-dialog #option-fullscreen {float:right;}
 body.playing #options-dialog .options-help {grid-row:2;grid-column:2;}
 @media(max-width:650px){#options-dialog .menu-options,#options-dialog .display-options,#options-dialog .options-help,body.playing #options-dialog .options-help{grid-column:1;grid-row:auto;}}
+
+/* A real WebGL stage replaces the individual 2D render surfaces when supported. */
+.ceremony-webgl {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  touch-action: pan-y;
+}
+#match-podium.ceremony-is-3d {
+  padding: 0 0 14px;
+  background: #1b1021;
+}
+.ceremony-is-3d .ceremony-marquee,
+.ceremony-is-3d .ceremony-lights,
+.ceremony-is-3d .ceremony-confetti {
+  display: none;
+}
+.ceremony-is-3d .ceremony-skip {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  margin: 0 !important;
+}
+.ceremony-is-3d .ceremony-stage {
+  margin: -34px 12px 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  gap: 14px;
+}
+.ceremony-is-3d .podium-stage {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+.ceremony-is-3d .ceremony-person canvas,
+.ceremony-is-3d .ceremony-buns {
+  display: none;
+}
+.ceremony-is-3d .ceremony-person {
+  min-height: 18px;
+  animation: none;
+}
+.ceremony-is-3d .ceremony-plinth {
+  margin-top: 4px;
+  min-height: 70px;
+  background: #342333;
+  border: 1px solid #b38a4f;
+  box-shadow: 0 3px 0 #130e17;
+}
+.ceremony-is-3d .ceremony-plinth::before,
+.ceremony-is-3d .ceremony-plinth::after {
+  display: none;
+}
+.ceremony-is-3d .ceremony-plinth h3 {
+  font-size: clamp(10px, 1.2vw, 16px);
+}
+.ceremony-is-3d .ceremony-plinth p {
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .ceremony-is-3d .ceremony-stage {
+    gap: 5px;
+    margin-left: 4px;
+    margin-right: 4px;
+    grid-template-columns: 1fr 1.2fr 1fr;
+  }
+  .ceremony-is-3d .ceremony-stage > .podium-course {
+    order: initial;
+  }
+  .ceremony-is-3d .podium-course--predator {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .ceremony-is-3d .podium-course--champion {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .ceremony-is-3d .podium-course--first {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+#match-podium .ceremony-webgl {
+  position: relative;
+  z-index: 0;
+}
+#match-podium.ceremony-is-3d .ceremony-skip {
+  z-index: 10;
+}

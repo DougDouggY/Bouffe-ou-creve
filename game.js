@@ -10,7 +10,7 @@ import {
   awardCumulativeTrophies,
   restoreModeWins,
 } from "./trophy-progress.js?v=wardrobe-41";
-import { setupRestaurantHome } from "./restaurant-home.js?v=wardrobe-41";
+import { setupRestaurantHome } from "./restaurant-home.js?v=secret-42";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
 import { createMotionAudio } from "./motion-audio.js?v=wardrobe-41";
@@ -33,7 +33,7 @@ import {
   showPodium,
   clearPodium,
   podiumActive,
-} from "./podium.js?v=wardrobe-41";
+} from "./podium.js?v=secret-42";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
@@ -65,7 +65,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=ceremony-38";
+} from "./simulation-core.js?v=secret-42";
 import { drawSurvivalFloor } from "./survival.js?v=hunger-18";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -75,20 +75,20 @@ import {
   drawSecretPerson,
   drawSecretFood,
   drawSecretFalls,
-} from "./secret-modes.js?v=arena-17";
+} from "./secret-modes.js?v=secret-42";
 import {
   SECRET_MODES,
   SECRET_TROPHIES,
   secretProfile,
   secretTrophyEvent,
-} from "./secret-trophies.js?v=filmovore-15";
+} from "./secret-trophies.js?v=secret-42";
 
 import { arenaSize, drawArenaBorders } from "./arena-bounds.js?v=collection-37";
 import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=wardrobe-41";
+} from "./restaurant-menu.js?v=secret-42";
 
 import {
   drawArenaFloor,
@@ -100,7 +100,7 @@ import {
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=podium-35";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=teams-31";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=secret-42";
 import {
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
@@ -110,7 +110,7 @@ import {
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=wardrobe-41";
+import { setupBurgerMenu } from "./burger-menu.js?v=secret-42";
 import { createGameAudio } from "./audio.js?v=ceremony-38";
 import { setupMusicControls } from "./music.js?v=wardrobe-41";
 
@@ -1843,7 +1843,7 @@ function Qt({ start: e, appearance: g }) {
         E === "chef"
           ? "MODE CHEF · ATELIER SOLO"
           : E === "platform"
-            ? "FILMOVORE · LA PLATEFORME / HUNGER GAMES"
+            ? "LE PLATEAU · 16 GOURMANDS"
             : `${me[E].name.toUpperCase()} · ${me[E].count} GOURMANDS`),
       L("#map-screen").scrollIntoView({ block: "start" }));
   }

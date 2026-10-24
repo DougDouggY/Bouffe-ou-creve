@@ -1,4 +1,4 @@
-import { modeUnlocked } from "./restaurant-menu.js?v=wardrobe-41";
+import { modeUnlocked } from "./restaurant-menu.js?v=secret-42";
 export function setupRestaurantHome({ profile, journey, choose }) {
   const $ = (s) => document.querySelector(s),
     solo = $("#solo-menu"),
@@ -18,7 +18,8 @@ export function setupRestaurantHome({ profile, journey, choose }) {
   ];
   const hidden = [
     ["somalia", "Somalie", 50, "La face cachée"],
-    ["platform", "Filmovore", "16 ou 24", "La Plateforme · Hunger Games"],
+    ["platform", "Le Plateau", 16, "Le buffet descend…"],
+    ["survival", "Burger Games", 24, "Le dernier service"],
     ["cannibal", "Le Festin cannibale", 16, "La face cachée"],
     ["icecream", "Le Marchand de glaces", 16, "La face cachée"],
   ];

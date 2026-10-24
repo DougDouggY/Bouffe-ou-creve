@@ -140,7 +140,7 @@ try {
   await page.locator("#enter-shadow").click();
   await page.locator("#solo-entry").press("Enter");
   await page.locator("#solo-menu").waitFor({ state: "visible" });
-  assert.equal(await page.locator("[data-solo-mode]").count(), 4);
+  assert.equal(await page.locator("[data-solo-mode]").count(), 5);
   await page.locator("[data-close-solo]").click();
   await page.locator("#gourmand-entry").press("Enter");
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
@@ -193,7 +193,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    "Four ingredient masks, real wardrobe purchase + trophy tabs, all solo modes, real multiplayer menu, four hidden modes, portrait touch targets and landscape fallback passed.",
+    "Four ingredient masks, real wardrobe purchase + trophy tabs, all solo modes, real multiplayer menu, five hidden modes, portrait touch targets and landscape fallback passed.",
   );
 } finally {
   await browser.close();

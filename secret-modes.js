@@ -5,8 +5,8 @@ export const SECRET_MAPS = new Set([
   "survival",
 ]);
 export const SECRET_GAME_MODES = {
-  survival: { name: "Hunger Games", count: 24, onlyMap: "survival" },
-  platform: { name: "La Plateforme", count: 2, onlyMap: "platform" },
+  survival: { name: "Burger Games", count: 24, onlyMap: "survival" },
+  platform: { name: "Le Plateau", count: 2, onlyMap: "platform" },
   cannibal: { name: "Le Festin Cannibale", count: 16, onlyMap: "cannibal" },
   icecream: { name: "Le Marchand de Glaces", count: 16, onlyMap: "icecream" },
 };
@@ -607,7 +607,7 @@ export function drawSecretFloor(ctx, g, time) {
   if (g.round <= 3 || r.departing) {
     ctx.save();
     ctx.globalAlpha = r.departing ? scale : 1;
-    const lift = asset("lift-food");
+    const lift = asset("restaurant-lift");
     if (lift)
       ctx.drawImage(
         lift,
@@ -629,7 +629,7 @@ export function drawSecretFloor(ctx, g, time) {
     g.phase === "bracket"
       ? "AUTRES DUELS EN COURS…"
       : g.round <= 3
-        ? `FESTIN · TOUR ${g.round}/3${g.round === 3 ? " · QUITTE LA PLATEFORME !" : ""}`
+        ? `FESTIN · TOUR ${g.round}/3${g.round === 3 ? " · QUITTE LE PLATEAU !" : ""}`
         : `DUEL · TOUR ${g.round - 3}${g.round > 16 ? " · LE VIDE S’AGRANDIT" : ""}`;
   ctx.fillText(`${stage} · ÉTAGE ${r.level}`, g.w / 2, g.h * 0.13);
   ctx.fillStyle = g.round === 3 ? "#ffac75" : "#f0d2aa";

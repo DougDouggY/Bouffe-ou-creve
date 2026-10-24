@@ -2,7 +2,7 @@ import {
   SECRET_TROPHIES,
   secretProfile,
   secretTrophyEvent,
-} from "./secret-trophies.js?v=secrets-14";
+} from "./secret-trophies.js?v=secret-42";
 export function simulateSecretTrophy(id) {
   const trophy = SECRET_TROPHIES.find((t) => t.id === id);
   if (!trophy) throw Error("Trophée inconnu");

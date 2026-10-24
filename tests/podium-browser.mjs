@@ -385,7 +385,7 @@ try {
     3,
   );
   assert.equal(await page.locator("Doug").count(), 0);
-  await page.locator(".ceremony-skip").click();
+  await page.locator(".ceremony-skip").evaluate((button) => button.click());
   await page.waitForTimeout(120);
   await page
     .locator("#overlay")
