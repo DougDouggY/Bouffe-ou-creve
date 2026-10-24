@@ -1,3 +1,4 @@
+import { chooseSolo, closeBriefing } from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -71,13 +72,12 @@ try {
       () =>
         document.querySelector(".burger-menu").dataset.masksReady === "true",
     );
-    await page.locator('[data-actual-mode="classic"]').focus();
-    await page.keyboard.press("Enter");
+    await chooseSolo(page, "classic");
     await page.locator("#solo-team-size").selectOption(String(size));
     await page.locator('[data-group="available"] .book-cover').click();
     await page.locator('[data-map="trampoline"]').click();
     await page.locator("#start-game").click();
-    await page.locator("#close-briefing").click();
+    await closeBriefing(page);
     await page.waitForFunction(
       (size) => window.__gameTest.active.teamSize === size,
       size,

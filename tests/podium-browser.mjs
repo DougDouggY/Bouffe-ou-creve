@@ -1,3 +1,4 @@
+import { openGourmand } from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -79,8 +80,7 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  await page.locator("#menu-shop").focus();
-  await page.keyboard.press("Enter");
+  await openGourmand(page);
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
   await page.waitForFunction(() =>
     [...document.images].every((i) => i.complete),

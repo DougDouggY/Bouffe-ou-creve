@@ -1,3 +1,4 @@
+import { chooseSolo, closeBriefing } from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -721,8 +722,7 @@ try {
     "hunger",
     "trampoline",
   ]) {
-    await page.locator('[data-actual-mode="classic"]').focus();
-    await page.keyboard.press("Enter");
+    await chooseSolo(page, "classic");
     await page.locator("#map-screen").waitFor({ state: "visible" });
     await page
       .locator(
@@ -731,7 +731,7 @@ try {
       .click();
     await page.locator(`[data-map="${id}"]`).click();
     await page.locator("#start-game").click();
-    await page.locator("#close-briefing").click();
+    await closeBriefing(page);
     await page.waitForTimeout(250);
     await page.screenshot({
       path: path.join(root, "test-results", `nouvelle-arene-${id}.png`),
@@ -782,12 +782,11 @@ try {
     path: path.join(root, "test-results", "guide-pouvoirs-mobile.png"),
   });
   await mobile.locator("#close-options").click();
-  await mobile.locator('[data-actual-mode="classic"]').focus();
-  await mobile.keyboard.press("Enter");
+  await chooseSolo(mobile, "classic");
   await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="nightmarket"]').click();
   await mobile.locator("#start-game").click();
-  await mobile.locator("#close-briefing").click();
+  await closeBriefing(mobile);
   await mobile.waitForTimeout(200);
   await mobile.screenshot({
     path: path.join(root, "test-results", "nouveau-nocturne-mobile.png"),

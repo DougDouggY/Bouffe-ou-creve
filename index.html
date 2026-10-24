@@ -8,18 +8,23 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Les gourmands — Le dernier repas</title>
-    <script src="./display-mode.js?v=phone-36"></script>
-    <script type="module" src="./game.js?v=menu-sign-39"></script>
+    <script src="./display-mode.js?v=chicken-menu-40"></script>
+    <script type="module" src="./game.js?v=chicken-menu-40"></script>
 
-    <link rel="stylesheet" href="./style.css?v=menu-sign-39" />
+    <link rel="stylesheet" href="./style.css?v=chicken-menu-40" />
   </head>
   <body>
     <div id="app">
       <header>
         <a class="brand" href="./"
-          ><span class="brand-icon">🍔</span> LES GOURMANDS<span class="edition"
-            >LE DERNIER REPAS</span
-          ></a
+          ><img
+            class="brand-icon brand-recipe"
+            src="./assets/douggy-chicken.webp"
+            width="38"
+            height="38"
+            alt=""
+          />
+          LES GOURMANDS<span class="edition">LE DERNIER REPAS</span></a
         ><span class="prototype"><i></i> PROTOTYPE JOUABLE · V16</span
         ><button id="sound" aria-label="Activer ou désactiver le son">
           SON ON ♫
@@ -28,32 +33,67 @@
       <main>
         <section id="main-menu" class="main-menu">
           <div id="title-screen">
-            <div class="title-copy">
-              <h1>LES GOURMANDS</h1>
-              <div class="multiplayer-sign" aria-hidden="true">
-                Multijoueur !
-              </div>
-              <p>Grossis. Vise juste. Dévore tes rivaux.</p>
-            </div>
             <svg
               class="burger-menu"
               viewBox="0 0 1536 1024"
               preserveAspectRatio="xMidYMid slice"
               role="group"
-              aria-label="Menu du burger"
+              aria-label="La carte du burger"
             >
               <g
+                id="gourmand-entry"
+                class="ingredient-button"
+                role="button"
+                tabindex="0"
+                aria-label="MON GOURMAND"
+                aria-haspopup="dialog"
+              >
+                <path d="M300 155H1240V315H300Z" />
+                <text x="768" y="235" text-anchor="middle">MON GOURMAND</text>
+              </g>
+              <g
+                id="solo-entry"
+                class="ingredient-button"
+                role="button"
+                tabindex="0"
+                aria-label="SOLO"
+                aria-haspopup="dialog"
+              >
+                <path d="M300 375H1240V535H300Z" />
+                <text x="768" y="455" text-anchor="middle">SOLO</text>
+              </g>
+              <g
+                id="multiplayer-entry"
+                class="ingredient-button"
+                role="button"
+                tabindex="0"
+                aria-label="MULTIJOUEUR"
+                aria-haspopup="dialog"
+              >
+                <path d="M300 577H1240V737H300Z" />
+                <text x="768" y="657" text-anchor="middle">MULTIJOUEUR</text>
+              </g>
+              <g
+                id="options-entry"
                 class="ingredient-button"
                 role="button"
                 tabindex="0"
                 aria-label="OPTIONS"
-                id="options-entry"
+                aria-haspopup="dialog"
               >
-                <path
-                  d="M366 749 Q387 732 435 744 Q762 785 1115 746 Q1146 737 1167 748 L1168 813 Q1165 874 1126 898 Q1065 930 768 927 Q495 930 424 902 Q379 887 369 842 Z"
-                />
-                <text x="768" y="855" text-anchor="middle">OPTIONS</text>
+                <path d="M300 770H1240V930H300Z" />
+                <text x="768" y="850" text-anchor="middle">OPTIONS</text>
               </g>
+            </svg>
+          </div>
+          <div id="legacy-menu-actions" hidden aria-hidden="true">
+            <svg
+              class="legacy-burger-actions"
+              viewBox="0 0 1536 1024"
+              preserveAspectRatio="xMidYMid slice"
+              role="group"
+              aria-label="Menu du burger"
+            >
               <g
                 class="ingredient-button"
                 role="button"
@@ -148,18 +188,6 @@
                 >
                   DU GOURMAND
                 </text>
-              </g>
-              <g
-                id="multiplayer-entry"
-                class="ingredient-button multiplayer-entry"
-                role="button"
-                tabindex="0"
-                aria-label="Multijoueur"
-                aria-haspopup="dialog"
-                aria-controls="multiplayer-dialog"
-              >
-                <path d="M0 20H420V850H0ZM1120 20H1536V850H1120Z" />
-                <title>Multijoueur</title>
               </g>
             </svg>
           </div>
@@ -362,11 +390,13 @@
                   la dernière équipe en vie gagne.
                 </p>
               </div>
-              <label for="multiplayer-size">Les couverts</label>
+              <label for="multiplayer-size">La formule multijoueur</label>
               <select id="multiplayer-size">
-                <option value="8">8 gourmands</option>
-                <option value="24" selected>24 gourmands</option>
-                <option value="50">50 gourmands</option>
+                <option value="8">Classique · 8 gourmands</option>
+                <option value="24" selected>
+                  Grand Banquet · 24 gourmands
+                </option>
+                <option value="50">États-Unis · 50 gourmands</option>
               </select>
               <p id="multiplayer-fill"></p>
               <p class="multiplayer-help">
@@ -537,7 +567,50 @@
           </header>
           <div id="rivalry-content" aria-live="polite"></div>
         </dialog>
+        <dialog
+          id="solo-menu"
+          class="home-restaurant"
+          aria-labelledby="solo-menu-title"
+        >
+          <header>
+            <p>LA CARTE DE LA MAISON</p>
+            <h2 id="solo-menu-title">À table en solo</h2>
+            <button type="button" data-close-solo aria-label="Fermer">×</button>
+          </header>
+          <div id="solo-menu-pages"></div>
+          <p class="home-page-footer">
+            Choisissez votre formule, puis votre arène.
+          </p>
+        </dialog>
+        <aside
+          id="phone-rotate"
+          hidden
+          role="region"
+          aria-label="Jouer en paysage"
+        >
+          <div class="rotate-phone" aria-hidden="true">↻</div>
+          <h2>Tourne ton téléphone</h2>
+          <p>Le festin est plus grand en paysage.</p>
+          <button id="phone-fullscreen">Passer en plein écran</button
+          ><button id="phone-portrait">Continuer en portrait</button>
+        </aside>
         <dialog id="trophies-dialog">
+          <nav class="gourmand-tabs" aria-label="Mon Gourmand">
+            <strong>MON GOURMAND</strong
+            ><button
+              type="button"
+              data-gourmand-page="look"
+              aria-current="false"
+            >
+              Mon style</button
+            ><button
+              type="button"
+              data-gourmand-page="trophies"
+              aria-current="page"
+            >
+              Mes trophées
+            </button>
+          </nav>
           <header>
             <div>
               <small>LES RECETTES DE LA GLOIRE</small>
@@ -581,6 +654,22 @@
           <div id="trophy-lab-result" aria-live="polite"></div>
         </dialog>
         <dialog id="shop-dialog">
+          <nav class="gourmand-tabs" aria-label="Mon Gourmand">
+            <strong>MON GOURMAND</strong
+            ><button
+              type="button"
+              data-gourmand-page="look"
+              aria-current="page"
+            >
+              Mon style</button
+            ><button
+              type="button"
+              data-gourmand-page="trophies"
+              aria-current="false"
+            >
+              Mes trophées
+            </button>
+          </nav>
           <div class="shop-heading">
             <div>
               <h2>LE DRESSING DU GLOUTON</h2>
@@ -988,5 +1077,6 @@
         </div>
       </main>
     </div>
+    <script type="module" src="./phone-landscape.js?v=chicken-menu-40"></script>
   </body>
 </html>

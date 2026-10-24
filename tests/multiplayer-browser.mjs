@@ -1,3 +1,4 @@
+import { chooseSolo, closeBriefing } from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -315,12 +316,11 @@ try {
   await a.waitForFunction(() => !document.body.classList.contains("playing"));
   assert(await a.locator("#main-menu").isVisible());
   // Solo must still work after an online session.
-  await a.locator('[data-actual-mode="classic"]').focus();
-  await a.keyboard.press("Enter");
+  await chooseSolo(a, "classic");
   await a.locator('[data-group="available"] .book-cover').click();
   await a.locator('[data-map="cantine"]').click();
   await a.locator("#start-game").click();
-  await a.locator("#close-briefing").click();
+  await closeBriefing(a);
   assert.equal(await a.evaluate(() => window.__game.people.length), 8);
   await shoot(a, 90, 15);
   await a.waitForFunction(

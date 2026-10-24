@@ -1,3 +1,4 @@
+import { openGourmand } from "./restaurant-navigation.mjs";
 // Public URLs/origin are preserved. Due to network restrictions, published files
 // and the Worker are served through local relays; this is not a live Internet test.
 import assert from "node:assert/strict";
@@ -234,6 +235,9 @@ try {
       }
     });
     const page = await context.newPage();
+    await page.addLocatorHandler(page.locator("#phone-rotate"), async () => {
+      await page.locator("#phone-portrait").click();
+    });
     pages.push(page);
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("requestfailed", (req) => {
@@ -267,13 +271,12 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=menu-sign-39"));
-  assert(resources.has("style.css?v=menu-sign-39"));
+  assert(resources.has("game.js?v=chicken-menu-40"));
+  assert(resources.has("style.css?v=chicken-menu-40"));
   assert(resources.has("multiplayer-client.js?v=ceremony-38"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
-    await page.locator("#menu-shop").focus();
-    await page.keyboard.press("Enter");
+    await openGourmand(page);
     await page.locator("#shop-dialog").waitFor({ state: "visible" });
     for (const id of [hat, outfit, ...Object.values(extra)]) {
       const button = page.locator(`[data-item="${id}"]`);
@@ -389,8 +392,7 @@ try {
   const trophyPage = await host.context().newPage();
   trophyPage.on("pageerror", (e) => errors.push(e.message));
   await trophyPage.goto(SITE + "?v=trophies-32");
-  await trophyPage.locator("#trophies-entry").focus();
-  await trophyPage.keyboard.press("Enter");
+  await openGourmand(trophyPage, "trophies");
   await trophyPage.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert.equal(
     await trophyPage
@@ -483,8 +485,7 @@ try {
   const revealed = await host.context().newPage();
   revealed.on("pageerror", (e) => errors.push(e.message));
   await revealed.goto(SITE + "?v=trophies-32-reveal");
-  await revealed.locator("#trophies-entry").focus();
-  await revealed.keyboard.press("Enter");
+  await openGourmand(revealed, "trophies");
   await revealed
     .locator('[data-trophy="mp-chat"].unlocked')
     .waitFor({ state: "visible" });
@@ -574,6 +575,10 @@ try {
     await page.waitForFunction(() =>
       document.body.classList.contains("online-playing"),
     );
+    if (await page.locator("#phone-rotate").isVisible())
+      await page
+        .locator("#phone-portrait")
+        .evaluate((button) => button.click());
     assert.equal(
       await page.evaluate(() => window.__game.people[0].name),
       names[i],

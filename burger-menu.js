@@ -2,13 +2,10 @@ const SVG = "http://www.w3.org/2000/svg";
 const WIDTH = 1536;
 const HEIGHT = 1024;
 const INGREDIENTS = [
-  ["trophies-entry", "#ffd15b"],
-  ["somalia", "#a5ed7b"],
-  ["classic", "#ff6859"],
-  ["gros", "#ffdb74"],
-  ["menu-shop", "#ffae63"],
+  ["gourmand-entry", "#ffd15b"],
+  ["solo-entry", "#ffe79e"],
+  ["multiplayer-entry", "#ffb563"],
   ["options-entry", "#ffdc93"],
-  ["multiplayer-entry", "#ffe29b"],
 ];
 
 function element(tag, attrs = {}) {
@@ -29,12 +26,12 @@ export async function setupBurgerMenu() {
   const svg = document.querySelector("svg.burger-menu");
   const defs = element("defs");
   const illustration = await loadImage(
-    new URL("./assets/burger-menu.webp", import.meta.url).href,
+    new URL("./assets/burger-chicken-menu.webp", import.meta.url).href,
   );
   const layers = await Promise.all(
     INGREDIENTS.map(async ([id, color]) => {
       const group = svg.querySelector(`#${id}, [data-menu-mode="${id}"]`);
-      const url = new URL(`./assets/mask-${id}.png`, import.meta.url).href;
+      const url = new URL(`./assets/mask-home-${id}.png`, import.meta.url).href;
       const image = await loadImage(url);
       const canvas = document.createElement("canvas");
       canvas.width = WIDTH;
@@ -152,15 +149,10 @@ export async function setupBurgerMenu() {
     }),
   );
   svg.prepend(defs);
-  const [secretBurger, secretBackdrop] = await Promise.all([
-    loadImage(
-      new URL("./assets/secrets/burger-bloody.webp", import.meta.url).href,
-    ),
-    loadImage(
-      new URL("./assets/secrets/burger-sober-backdrop.webp", import.meta.url)
-        .href,
-    ),
-  ]);
+  const secretBackdrop = await loadImage(
+    new URL("./assets/secrets/burger-sober-backdrop.webp", import.meta.url)
+      .href,
+  );
   // Keep the approved ingredient pixels intact while changing only their surroundings.
   const secretIllustration = document.createElement("canvas");
   secretIllustration.width = WIDTH;
@@ -171,14 +163,12 @@ export async function setupBurgerMenu() {
   ingredientMask.width = WIDTH;
   ingredientMask.height = HEIGHT;
   const maskContext = ingredientMask.getContext("2d");
-  for (const layer of layers)
-    if (layer.group.id !== "multiplayer-entry")
-      maskContext.drawImage(layer.image, 0, 0);
+  for (const layer of layers) maskContext.drawImage(layer.image, 0, 0);
   const approvedFood = document.createElement("canvas");
   approvedFood.width = WIDTH;
   approvedFood.height = HEIGHT;
   const foodContext = approvedFood.getContext("2d");
-  foodContext.drawImage(secretBurger, 0, 0, WIDTH, HEIGHT);
+  foodContext.drawImage(illustration, 0, 0, WIDTH, HEIGHT);
   foodContext.globalCompositeOperation = "destination-in";
   foodContext.drawImage(ingredientMask, 0, 0);
   scene.drawImage(approvedFood, 0, 0);
@@ -207,7 +197,7 @@ export async function setupBurgerMenu() {
   document.addEventListener("shadowchange", applyTheme);
   applyTheme();
 
-  // The chosen entrance is the original company on BOTH sides of the burger.
+  // All four entrances live on the recipe itself, including on a cropped phone menu.
   svg.dataset.multiEntry = "characters";
   let hovered = null;
   function pick(event) {
@@ -219,8 +209,7 @@ export async function setupBurgerMenu() {
     const x = Math.floor(point.x),
       y = Math.floor(point.y);
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return null;
-    // Food keeps priority where the silhouettes touch; both groups of people
-    // share the same precise alpha mask and open the same real lobby.
+    // Selection follows the four independent ingredient alpha masks.
     return (
       layers.find((layer) => layer.alpha[y * WIDTH + x] >= 128)?.group || null
     );

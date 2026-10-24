@@ -1,3 +1,4 @@
+import { chooseSolo, closeBriefing } from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -119,11 +120,11 @@ try {
       await page.locator("#multiplayer-close").click();
     }
 
-    await page.locator('[data-actual-mode="classic"]').press("Enter");
+    await chooseSolo(page, "classic");
     await page.locator('[data-group="available"] .book-cover').click();
     await page.locator('[data-map="cantine"]').click();
     await page.locator("#start-game").click();
-    await page.locator("#close-briefing").click();
+    await closeBriefing(page);
     const measured = await page.evaluate(async () => {
       const g = window.__gameTest.active,
         p = g.people[0],

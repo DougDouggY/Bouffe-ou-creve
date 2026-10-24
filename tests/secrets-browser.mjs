@@ -1,3 +1,8 @@
+import {
+  chooseSolo,
+  openGourmand,
+  closeBriefing,
+} from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -410,8 +415,7 @@ try {
     path: path.join(root, "test-results", "face-cachee-burger.png"),
     fullPage: true,
   });
-  await page.locator("#trophies-entry").focus();
-  await page.keyboard.press("Enter");
+  await openGourmand(page, "trophies");
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert.equal(await page.locator("#trophy-grid .trophy-card").count(), 39);
   assert.equal(await page.locator('[data-trophy="somalia-win"]').count(), 0);
@@ -445,8 +449,7 @@ try {
   ]) {
     const selector =
       slot === "menu-shop" ? "#menu-shop" : `[data-menu-mode="${slot}"]`;
-    await page.locator(selector).focus();
-    await page.keyboard.press("Enter");
+    await chooseSolo(page, id === "survival" ? "platform" : id);
     await page.locator('[data-group="available"] .book-cover').click();
     assert.equal(
       await page.locator(".map-card:visible").count(),
@@ -456,7 +459,7 @@ try {
     if (id === "survival")
       await page.locator(`[data-map="${id}"]:visible`).click();
     await page.locator("#start-game").click();
-    await page.locator("#close-briefing").click();
+    await closeBriefing(page);
     await page.waitForTimeout(350);
     assert.equal(await page.evaluate(() => window.__game.mode), id);
     if (id === "survival")
@@ -494,11 +497,10 @@ try {
     uiChecks.push("real secret menu starts " + id);
   }
   // Actual capture -> save -> reload -> separate trophy room.
-  await page.locator('[data-menu-mode="gros"]').focus();
-  await page.keyboard.press("Enter");
+  await chooseSolo(page, "cannibal");
   await page.locator('[data-group="available"] .book-cover').click();
   await page.locator("#start-game").click();
-  await page.locator("#close-briefing").click();
+  await closeBriefing(page);
   await page.evaluate(() => {
     const g = window.__game,
       p = g.people[0];
@@ -521,8 +523,7 @@ try {
   assert(!actualSave.trophies["shadow-cannibal-first"]);
   await page.reload();
   await enterShadow();
-  await page.locator("#trophies-entry").focus();
-  await page.keyboard.press("Enter");
+  await openGourmand(page, "trophies");
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert(
     await page
@@ -533,8 +534,7 @@ try {
   await page.locator("#options-entry").focus();
   await page.keyboard.press("Enter");
   await page.locator("#return-classic").click();
-  await page.locator("#trophies-entry").focus();
-  await page.keyboard.press("Enter");
+  await openGourmand(page, "trophies");
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert.equal(await page.locator('[data-trophy^="shadow-"]').count(), 0);
   assert.equal(await page.locator('[data-trophy="somalia-win"]').count(), 0);
@@ -562,13 +562,12 @@ try {
   ]) {
     const selector =
       slot === "menu-shop" ? "#menu-shop" : `[data-menu-mode="${slot}"]`;
-    await mobile.locator(selector).focus();
-    await mobile.keyboard.press("Enter");
+    await chooseSolo(mobile, id === "survival" ? "platform" : id);
     await mobile.locator('[data-group="available"] .book-cover').tap();
     if (id === "survival")
       await mobile.locator('[data-map="survival"]:visible').tap();
     await mobile.locator("#start-game").tap();
-    await mobile.locator("#close-briefing").tap();
+    await closeBriefing(mobile, true);
     const aim = await mobile.evaluate(() => {
       const p = window.__game.people[0].body.position,
         v = window.__view,

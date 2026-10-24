@@ -1,3 +1,4 @@
+import { setupRestaurantHome } from "./restaurant-home.js?v=chicken-menu-40";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
 import { createMotionAudio } from "./motion-audio.js?v=ceremony-38";
@@ -97,7 +98,7 @@ import {
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=menu-sign-39";
+import { setupBurgerMenu } from "./burger-menu.js?v=chicken-menu-40";
 import { createGameAudio } from "./audio.js?v=ceremony-38";
 import { setupMusicControls } from "./music.js?v=filmovore-15";
 
@@ -483,7 +484,7 @@ function wI(e, g) {
   !Number.isSafeInteger(g) || g < 0 || ((e.points += g), (e.earned += g));
 }
 const KI = "./assets/wearables.webp",
-  Pe = "./assets/burger-menu.webp",
+  Pe = "./assets/burger-chicken-menu.webp",
   NI = "./assets/hats.webp",
   WI = "./assets/outfits.webp",
   lA = new Image();
@@ -1895,6 +1896,7 @@ function Qt({ start: e, appearance: g }) {
         }),
     ));
   journey = setupSecretBurger({ profile: o, choose: S, backToMenu: v });
+  setupRestaurantHome({ profile: o, journey, choose: S });
   const f = () => {
     ((i = L("#play-area").hidden), L("#shop-dialog").close());
   };
@@ -3412,8 +3414,51 @@ function kI(e, g) {
   }
   Se(x, e, g, equippedFor(e));
 }
+const douggyChicken = new Image();
+douggyChicken.src = "./assets/douggy-chicken.webp";
 function uI(e) {
   if (drawSecretFood(x, K, e, performance.now())) return;
+  if (e.type === "burger" && e.size === "chef") {
+    x.save();
+    x.translate(e.x, e.y);
+    x.beginPath();
+    x.arc(0, 0, 28, 0, Math.PI * 2);
+    x.fillStyle = "#e3b83c35";
+    x.fill();
+    x.strokeStyle = "#c79532";
+    x.lineWidth = 1.5;
+    x.stroke();
+    if (douggyChicken.complete && douggyChicken.naturalWidth)
+      x.drawImage(douggyChicken, -27, -26, 54, 50);
+    else {
+      x.fillStyle = "#d99642";
+      x.beginPath();
+      x.ellipse(0, 17, 23, 7, 0, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = "#bf6b20";
+      x.beginPath();
+      x.ellipse(0, 5, 25, 11, 0, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = "#f5c669";
+      for (let i = 0; i < 8; i++)
+        x.fillRect(-20 + i * 5, -13 + (i % 3) * 3, 4, 17);
+      x.fillStyle = "#fff1b5";
+      x.fillRect(-21, -7, 42, 5);
+      x.fillStyle = "#d99642";
+      x.beginPath();
+      x.ellipse(0, -17, 23, 10, 0, Math.PI, Math.PI * 2);
+      x.fill();
+      x.fillStyle = "#fff0c0";
+      for (let i = 0; i < 7; i++)
+        x.fillRect(-16 + i * 5, -21 + (i % 2) * 3, 2, 1);
+    }
+    x.fillStyle = "#744516";
+    x.font = "900 7px sans-serif";
+    x.textAlign = "center";
+    x.fillText("LE BURGER DE DOUGGY", 0, 33);
+    x.restore();
+    return;
+  }
   if ((x.save(), x.translate(e.x, e.y), e.type === "mosquito")) {
     (BA(1, 5, 8, 2, "#76572244"),
       BA(-5, -4, 4, 2, "#e9ecc9cc"),
@@ -3636,7 +3681,9 @@ function Ge(e) {
     document.hidden ||
     WA?.paused ||
     podiumActive() ||
-    (!online?.active && L("#options-dialog").open)
+    (!online?.active &&
+      (L("#options-dialog").open ||
+        document.body.classList.contains("phone-awaiting-landscape")))
   ) {
     ((HA = e), requestAnimationFrame(Ge));
     return;

@@ -1,3 +1,8 @@
+import {
+  chooseSolo,
+  openGourmand,
+  closeBriefing,
+} from "./restaurant-navigation.mjs";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -68,7 +73,10 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  assert.equal(await page.locator(".ingredient-button").count(), 7);
+  assert.equal(
+    await page.locator("#title-screen .ingredient-button").count(),
+    4,
+  );
   assert.equal(
     await page.locator("html").getAttribute("data-display"),
     "desktop",
@@ -100,8 +108,7 @@ try {
   checks += 3;
 
   async function mode(slot) {
-    await page.locator(`[data-actual-mode="${slot}"]`).focus();
-    await page.keyboard.press("Enter");
+    await chooseSolo(page, slot);
     await page.waitForTimeout(260);
   }
   async function cover(group = "available") {
@@ -116,24 +123,22 @@ try {
     await page.locator("#start-game").click();
     await page.locator("#map-briefing").waitFor({ state: "visible" });
     assert((await page.locator("#briefing-text").textContent()).length > 20);
-    await page.locator("#close-briefing").click();
+    await closeBriefing(page);
   }
-  await mode("gros");
-  assert(await page.locator("#title-screen").isVisible());
-  assert(
-    (await page.locator("#mode-unlock-note").textContent()).includes(
-      "Classique",
-    ),
+  await page.locator("#solo-entry").press("Enter");
+  await page.locator("#solo-menu").waitFor({ state: "visible" });
+  assert(await page.locator('[data-solo-mode="gros"]').isDisabled());
+  assert.match(
+    await page.locator('[data-solo-mode="gros"]').textContent(),
+    /Classique/,
   );
-  checks++;
-  await mode("usa");
-  assert(await page.locator("#title-screen").isVisible());
-  assert(
-    (await page.locator("#mode-unlock-note").textContent()).includes(
-      "Grand Banquet",
-    ),
+  assert(await page.locator('[data-solo-mode="usa"]').isDisabled());
+  assert.match(
+    await page.locator('[data-solo-mode="usa"]').textContent(),
+    /Grand Banquet/,
   );
-  checks++;
+  await page.locator("[data-close-solo]").click();
+  checks += 2;
   await mode("classic");
   assert.equal(await page.locator(".book-cover:visible").count(), 2);
   assert.equal(await page.locator(".map-card:visible").count(), 0);
@@ -312,7 +317,7 @@ try {
   assert(
     (await page.locator("#briefing-text").textContent()).includes("chariots"),
   );
-  await page.locator("#close-briefing").click();
+  await closeBriefing(page);
   assert.equal(await page.evaluate(() => window.__game.count), 8);
   assert.equal(
     await page.evaluate(
@@ -392,7 +397,7 @@ try {
   await page.locator("#enter-shadow").click();
   assert(await page.locator("#multiplayer-entry").isVisible());
   await page.locator("#multiplayer-entry").press("Enter");
-  await page.locator("#multiplayer-dialog").waitFor({state:"visible"});
+  await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
   await page.locator("#multiplayer-close").click();
   checks++;
   assert.equal(
@@ -406,7 +411,7 @@ try {
   await cover();
   assert.equal(await page.locator(".map-card:visible").count(), 1);
   await page.locator("#start-game").click();
-  await page.locator("#close-briefing").click();
+  await closeBriefing(page);
   assert.equal(await page.evaluate(() => window.__game.mapId), "savanna");
   assert.equal(await page.evaluate(() => window.__game.count), 50);
   checks++;
@@ -441,8 +446,7 @@ try {
     );
   checks++;
   await page.locator("#back-title").click();
-  await page.locator("#menu-shop").focus();
-  await page.keyboard.press("Enter");
+  await openGourmand(page);
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
   assert.equal(await page.locator(".shop-card").count(), 76);
   await page.locator("#close-shop").click();
@@ -485,12 +489,11 @@ try {
     ),
   );
   checks += 2;
-  await mobile.locator('[data-actual-mode="classic"]').focus();
-  await mobile.keyboard.press("Enter");
+  await chooseSolo(mobile, "classic");
   await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="beach"]').click();
   await mobile.locator("#start-game").click();
-  await mobile.locator("#close-briefing").click();
+  await closeBriefing(mobile);
   const portraitView = await mobile.evaluate(() => window.__view);
   assert(portraitView.width >= 719 && portraitView.height > 1500);
   const mb = await mobile.locator("#game").boundingBox();
@@ -610,8 +613,7 @@ try {
       .getAttribute("data-actual-mode"),
     "usa",
   );
-  await recovery.locator("#menu-shop").focus();
-  await recovery.keyboard.press("Enter");
+  await openGourmand(recovery);
   await recovery.waitForTimeout(300);
   await recovery
     .locator("#avatar-preview")
