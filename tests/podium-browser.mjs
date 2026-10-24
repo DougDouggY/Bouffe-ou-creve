@@ -107,7 +107,7 @@ try {
   await page.waitForFunction(
     () =>
       document.querySelectorAll('.equipment-thumb[data-illustrated="true"]')
-        .length === 27,
+        .length === 30,
   );
   for (const name of [
     "L’Abonné du buffet",
@@ -224,7 +224,7 @@ try {
   });
   assert.equal(outfitsChecked, 84);
   const visibility = await page.evaluate(async () => {
-    const { drawAura } = await import("./cosmetic-effects.js?v=ceremony-38");
+    const { drawAura } = await import("./cosmetic-effects.js?v=wardrobe-41");
     const canvas = document.createElement("canvas");
     canvas.width = 100;
     canvas.height = 100;
@@ -234,7 +234,7 @@ try {
     drawAura(c, "aura_gold", 0, "simple");
     const data = c.getImageData(0, 0, 100, 100).data;
     let visible = 0;
-    for (let i = 3; i < data.length; i += 4) if (data[i] > 220) visible++;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 70) visible++;
     return visible;
   });
   assert(
@@ -242,9 +242,9 @@ try {
     "Aura should stay clearly visible at phone-sized avatar scale",
   );
   const trampoline = await page.evaluate(async () => {
-    const { drawArenaFloor } = await import("./arena-render.js?v=ceremony-38");
+    const { drawArenaFloor } = await import("./arena-render.js?v=wardrobe-41");
     const { setCosmeticMotion } =
-      await import("./cosmetic-effects.js?v=ceremony-38");
+      await import("./cosmetic-effects.js?v=wardrobe-41");
     const g = new window.__gameTest.Game(1400, 900, () => 0.5, {
       mapId: "trampoline",
       count: 8,

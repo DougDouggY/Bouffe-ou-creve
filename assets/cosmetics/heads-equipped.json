@@ -1,0 +1,218 @@
+{
+  "none": {
+    "column": 0,
+    "row": 0,
+    "top": -0.9134,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "cap": {
+    "column": 1,
+    "row": 0,
+    "top": -1.4837,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "beanie": {
+    "column": 2,
+    "row": 0,
+    "top": -1.2337,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "chef": {
+    "column": 3,
+    "row": 0,
+    "top": -1.1791,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "crown": {
+    "column": 4,
+    "row": 0,
+    "top": -1.2572,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "burger": {
+    "column": 5,
+    "row": 0,
+    "top": -1.2572,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "pirate": {
+    "column": 0,
+    "row": 1,
+    "top": -1.2728,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "halo": {
+    "column": 1,
+    "row": 1,
+    "top": -1.3978,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "tender": {
+    "column": 2,
+    "row": 1,
+    "top": -1.3353,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_croissant": {
+    "column": 3,
+    "row": 1,
+    "top": -1.3353,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_pizza": {
+    "column": 4,
+    "row": 1,
+    "top": -1.3041,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_pancakes": {
+    "column": 5,
+    "row": 1,
+    "top": -1.265,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_strawberry": {
+    "column": 0,
+    "row": 2,
+    "top": -1.3353,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_mushroom": {
+    "column": 1,
+    "row": 2,
+    "top": -1.2103,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_sushi": {
+    "column": 2,
+    "row": 2,
+    "top": -1.1634,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_egg": {
+    "column": 3,
+    "row": 2,
+    "top": -1.1009,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_icecream": {
+    "column": 4,
+    "row": 2,
+    "top": -1.515,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_popcorn": {
+    "column": 5,
+    "row": 2,
+    "top": -1.39,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_waffle": {
+    "column": 0,
+    "row": 3,
+    "top": -1.2806,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_teacup": {
+    "column": 1,
+    "row": 3,
+    "top": -1.2572,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_cream": {
+    "column": 2,
+    "row": 3,
+    "top": -1.4759,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_pastry": {
+    "column": 3,
+    "row": 3,
+    "top": -1.4212,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_lemon": {
+    "column": 4,
+    "row": 3,
+    "top": -1.2806,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  },
+  "hat_teapot": {
+    "column": 5,
+    "row": 3,
+    "top": -1.3978,
+    "faceAnchor": [
+      128,
+      333
+    ]
+  }
+}

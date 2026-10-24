@@ -26,7 +26,8 @@ export async function setupBurgerMenu() {
   const svg = document.querySelector("svg.burger-menu");
   const defs = element("defs");
   const illustration = await loadImage(
-    new URL("./assets/burger-chicken-menu.webp", import.meta.url).href,
+    new URL("./assets/burger-chicken-menu.webp?v=wardrobe-41", import.meta.url)
+      .href,
   );
   const layers = await Promise.all(
     INGREDIENTS.map(async ([id, color]) => {

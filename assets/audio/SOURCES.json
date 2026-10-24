@@ -38,5 +38,45 @@
     "license": "CC0-1.0",
     "creator": "Wyzowl",
     "duration": 0.899
+  },
+  {
+    "id": "natural-slide",
+    "source": "https://github.com/facebookincubator/Meta-open-sound/blob/251c0be57d5d1b3242b91f53e0cde62ab1cb42d9/corpora/oculus-audio-pack/ogg/CLOTHMvmt_ClothingMovement_OS_01.ogg",
+    "creator": "Oculus VR, LLC",
+    "collection": "Oculus Audio Pack 01",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256_original": "b99e17026b61c1b13a0b7cb52ea4df520b9e7f5546642f086d05665252d7a4b6",
+    "changes": "Leading silence removed; excerpt max 1.25 s; mono MP3; loudness normalized; fade-out."
+  },
+  {
+    "id": "natural-duck",
+    "source": "https://github.com/facebookincubator/Meta-open-sound/blob/251c0be57d5d1b3242b91f53e0cde62ab1cb42d9/corpora/oculus-audio-pack/ogg/BIRDFowl_Duck_OS_01.ogg",
+    "creator": "Oculus VR, LLC",
+    "collection": "Oculus Audio Pack 01",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256_original": "57554b74e24d86d0f5c982b12f15d21112db65ac47cfb0b8b7cc4b901c91972c",
+    "changes": "Leading silence removed; excerpt max 1.25 s; mono MP3; loudness normalized; fade-out."
+  },
+  {
+    "id": "natural-pig",
+    "source": "https://github.com/facebookincubator/Meta-open-sound/blob/251c0be57d5d1b3242b91f53e0cde62ab1cb42d9/corpora/oculus-audio-pack/ogg/ANMLFarm_PigSqueal_OS_01.ogg",
+    "creator": "Oculus VR, LLC",
+    "collection": "Oculus Audio Pack 01",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256_original": "38b8a3873ad4eddf4119e255e953f5961c518aed481c6c529869e6c344179185",
+    "changes": "Leading silence removed; excerpt max 1.25 s; mono MP3; loudness normalized; fade-out."
+  },
+  {
+    "id": "natural-burp",
+    "source": "https://github.com/facebookincubator/Meta-open-sound/blob/251c0be57d5d1b3242b91f53e0cde62ab1cb42d9/corpora/oculus-audio-pack/ogg/HMNBurp_Burp_OS_01.ogg",
+    "creator": "Oculus VR, LLC",
+    "collection": "Oculus Audio Pack 01",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256_original": "584d165e9798f8f75505bf23a08a2054233401a2a06417f3024eab88cdcb3dfb",
+    "changes": "Leading silence removed; excerpt max 1.25 s; mono MP3; loudness normalized; fade-out."
   }
 ]

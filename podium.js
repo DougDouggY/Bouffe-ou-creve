@@ -1,4 +1,4 @@
-import { cosmeticMotion } from "./cosmetic-effects.js?v=ceremony-38";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=wardrobe-41";
 import { teamSurface } from "./teams.js?v=rivalries-33";
 let scene = null;
 export function podiumActive() {

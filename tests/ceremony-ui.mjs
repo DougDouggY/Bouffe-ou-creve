@@ -88,7 +88,7 @@ try {
     .click();
   await page.waitForFunction(() =>
     window.__played.some(
-      (a) => a.src.includes("swish-soft") && a.currentTime > 0,
+      (a) => a.src.includes("natural-slide") && a.currentTime > 0,
     ),
   );
   const audio = await page.evaluate(async () => {
@@ -105,7 +105,7 @@ try {
     await ctx.close();
     return durations;
   });
-  assert.equal(audio.length, 5);
+  assert.equal(audio.length, 8);
   assert(audio.every((d) => d > 0.1 && d < 2));
   await page.locator("#close-shop").click();
   for (const mobile of [false, true]) {
@@ -127,7 +127,7 @@ try {
   await page.locator("#multiplayer-close").click();
   assert.deepEqual(errors, []);
   console.log(
-    "Five actual MP3 files decoded; live preview played; integrated character entrance opened multiplayer on desktop/mobile; hidden-side access passed.",
+    "Eight actual MP3 files decoded; live preview played; integrated character entrance opened multiplayer on desktop/mobile; hidden-side access passed.",
   );
 } finally {
   await browser.close();

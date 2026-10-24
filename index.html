@@ -8,10 +8,10 @@
     />
     <meta name="theme-color" content="#171d20" />
     <title>Les gourmands — Le dernier repas</title>
-    <script src="./display-mode.js?v=chicken-menu-40"></script>
-    <script type="module" src="./game.js?v=chicken-menu-40"></script>
+    <script src="./display-mode.js?v=wardrobe-41"></script>
+    <script type="module" src="./game.js?v=wardrobe-41"></script>
 
-    <link rel="stylesheet" href="./style.css?v=chicken-menu-40" />
+    <link rel="stylesheet" href="./style.css?v=wardrobe-41" />
   </head>
   <body>
     <div id="app">
@@ -19,7 +19,7 @@
         <a class="brand" href="./"
           ><img
             class="brand-icon brand-recipe"
-            src="./assets/douggy-chicken.webp"
+            src="./assets/douggy-chicken.webp?v=wardrobe-41"
             width="38"
             height="38"
             alt=""
@@ -291,11 +291,41 @@
         </dialog>
         <dialog id="multiplayer-dialog" aria-labelledby="multiplayer-title">
           <p class="menu-kicker">La table des invités</p>
-          <h2 id="multiplayer-title" tabindex="-1">ENTRE GOURMANDS</h2>
+          <h2 id="multiplayer-title" tabindex="-1">À table entre amis</h2>
           <p id="multiplayer-status" role="status">
             Salons privés sur invitation.
           </p>
           <div id="multiplayer-connect">
+            <div
+              class="multiplayer-formulas"
+              aria-label="Formule de ma nouvelle table"
+            >
+              <button
+                type="button"
+                class="home-mode-page"
+                data-multi-count="8"
+                aria-pressed="false"
+              >
+                <small>Le premier service</small><strong>Classique</strong
+                ><span>8 gourmands</span></button
+              ><button
+                type="button"
+                class="home-mode-page"
+                data-multi-count="24"
+                aria-pressed="true"
+              >
+                <small>La grande tablée</small><strong>Grand Banquet</strong
+                ><span>24 gourmands</span></button
+              ><button
+                type="button"
+                class="home-mode-page"
+                data-multi-count="50"
+                aria-pressed="false"
+              >
+                <small>Le festin démesuré</small><strong>États-Unis</strong
+                ><span>50 gourmands</span>
+              </button>
+            </div>
             <label for="multiplayer-name"
               >Ton pseudo · 24 caractères maximum</label
             >
@@ -430,7 +460,6 @@
         <dialog id="options-dialog" aria-labelledby="options-title">
           <header class="options-heading">
             <div>
-              <p class="menu-kicker">Les petits soins de la maison</p>
               <h2 id="options-title">À TA SAUCE</h2>
             </div>
             <button
@@ -459,17 +488,22 @@
                 ><input id="other-slide-sounds" type="checkbox" checked />
                 Entendre les sons de glissade des autres joueurs</label
               >
-              <button id="option-sound">Couper tous les sons</button>
+              <button id="option-sound">Couper tous les sons</button
+              ><button
+                type="button"
+                class="audio-credits-link"
+                data-audio-credits
+              >
+                Crédits audio
+              </button>
             </fieldset>
             <fieldset class="music-options">
               <legend>♫ Musique d’ambiance</legend>
-              <label class="music-toggle"
+              <label hidden class="music-toggle"
                 ><input id="music-enabled" type="checkbox" /> Activer la
                 musique</label
               >
-              <label class="music-track-label" for="music-track"
-                >Choisir une ambiance</label
-              >
+              <label class="sr-only" for="music-track">Musique</label>
               <select id="music-track" aria-describedby="music-status"></select>
               <label class="music-volume-label" for="music-volume"
                 >Volume de la musique
@@ -486,7 +520,7 @@
                 value="15"
                 aria-describedby="music-status"
               />
-              <p id="music-status" role="status">Musique désactivée.</p>
+              <p hidden id="music-status" role="status">Musique désactivée.</p>
             </fieldset>
             <fieldset class="display-options">
               <legend>Affichage</legend>
@@ -500,11 +534,9 @@
                   Téléphone</label
                 >
               </div>
-              <p id="display-status" role="status"></p>
-              <p>
-                Sur téléphone : pose le doigt sur ton gourmand, tire vers
-                l’arrière puis relâche. Portrait et paysage sont disponibles.
-              </p>
+              <p id="display-status" role="status" hidden></p>
+
+              <button id="option-fullscreen">Plein écran</button>
             </fieldset>
             <section class="options-help">
               <details id="how-to-play" class="restaurant-guide">
@@ -548,12 +580,8 @@
               <legend>La maison</legend>
               <button id="shadow-entry">La face cachée du burger</button
               ><button id="return-classic" hidden>
-                Retour au burger classique
-              </button>
-              <button id="option-fullscreen">Passer en plein écran</button
-              ><button id="chef-entry">
-                Atelier du Chef · accès provisoire
-              </button>
+                Retour au burger classique</button
+              ><button id="chef-entry">L’atelier du chef</button>
             </fieldset>
           </div>
         </dialog>
@@ -793,6 +821,9 @@
             aria-pressed="false"
           >
             Sons de glissade
+          </button>
+          <button type="button" class="audio-credits-link" data-audio-credits>
+            Crédits audio
           </button>
           <p id="sound-preview-status" role="status"></p>
           <div id="shop-items" class="shop-items"></div>
@@ -1077,6 +1108,36 @@
         </div>
       </main>
     </div>
-    <script type="module" src="./phone-landscape.js?v=chicken-menu-40"></script>
+    <script type="module" src="./phone-landscape.js?v=wardrobe-41"></script>
+    <dialog id="audio-credits">
+      <h2>Crédits audio</h2>
+      <p>
+        « Oculus Audio Pack 01 » par Oculus VR, LLC —
+        <a
+          href="https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/"
+          target="_blank"
+          rel="noreferrer"
+          >source</a
+        >, sous
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          target="_blank"
+          rel="noreferrer"
+          >CC BY 4.0</a
+        >. Extraits raccourcis, normalisés et convertis en MP3 pour les
+        glissades, le canard, le cochon et le rot.
+      </p>
+      <p>Autres effets : Wyzowl SFX Kit, CC0.</p>
+      <form method="dialog"><button>Fermer</button></form>
+    </dialog>
+    <script>
+      document
+        .querySelectorAll("[data-audio-credits]")
+        .forEach(
+          (b) =>
+            (b.onclick = () =>
+              document.querySelector("#audio-credits").showModal()),
+        );
+    </script>
   </body>
 </html>

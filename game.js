@@ -1,13 +1,25 @@
-import { setupRestaurantHome } from "./restaurant-home.js?v=chicken-menu-40";
+import {
+  drawEquippedHead,
+  drawHeadThumbnail,
+  hasHead,
+  equippedHeadTop,
+} from "./head-sprites.js?v=wardrobe-41";
+import {
+  trophyCounters,
+  trophyProgress,
+  awardCumulativeTrophies,
+  restoreModeWins,
+} from "./trophy-progress.js?v=wardrobe-41";
+import { setupRestaurantHome } from "./restaurant-home.js?v=wardrobe-41";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
-import { createMotionAudio } from "./motion-audio.js?v=ceremony-38";
+import { createMotionAudio } from "./motion-audio.js?v=wardrobe-41";
 import {
   bindEffectsControls,
   effectsGain,
 } from "./audio-settings.js?v=ceremony-38";
 import { eventPoints, MATCH_POINTS_CAP } from "./economy.js?v=ceremony-38";
-import { drawShopArt } from "./shop-art.js?v=ceremony-38";
+import { drawShopArt } from "./shop-art.js?v=wardrobe-41";
 import { gameplayViewport } from "./viewport.js?v=phone-36";
 import {
   COSMETIC_SLOTS,
@@ -16,12 +28,12 @@ import {
   cosmeticMotion,
   setCosmeticMotion,
   equippedTitle,
-} from "./cosmetic-effects.js?v=ceremony-38";
+} from "./cosmetic-effects.js?v=wardrobe-41";
 import {
   showPodium,
   clearPodium,
   podiumActive,
-} from "./podium.js?v=ceremony-38";
+} from "./podium.js?v=wardrobe-41";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
@@ -30,9 +42,9 @@ import {
 import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
-} from "./multiplayer-trophy-catalog.js?v=ceremony-38";
+} from "./multiplayer-trophy-catalog.js?v=wardrobe-41";
 import { mergeProfileProgress } from "./profile-storage.js?v=ceremony-38";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=ceremony-38";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=wardrobe-41";
 import {
   sameTeam,
   localTeamWon,
@@ -40,7 +52,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=ceremony-38";
+import { setupMultiplayer } from "./multiplayer-client.js?v=wardrobe-41";
 import {
   CA,
   Ee,
@@ -76,13 +88,13 @@ import {
   createRestaurantMenu,
   setupSecretBurger,
   modeUnlocked,
-} from "./restaurant-menu.js?v=collection-37";
+} from "./restaurant-menu.js?v=wardrobe-41";
 
 import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=ceremony-38";
+} from "./arena-render.js?v=wardrobe-41";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
@@ -98,9 +110,9 @@ import {
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=chicken-menu-40";
+import { setupBurgerMenu } from "./burger-menu.js?v=wardrobe-41";
 import { createGameAudio } from "./audio.js?v=ceremony-38";
-import { setupMusicControls } from "./music.js?v=filmovore-15";
+import { setupMusicControls } from "./music.js?v=wardrobe-41";
 
 const L = (e) => document.querySelector(e);
 
@@ -216,9 +228,8 @@ function xI(e = 1, g = 60) {
   return { x: (-E * e) / 2, y: -0.4 * e, w: E * e, h: (1.44 + 0.1 * o) * e };
 }
 function FI(e, g = 1, o = 60) {
-  const u = dI(e),
-    E = Ze(o);
-  return u ? Math.min(-g, (u.y * E.headScale + E.headY) * g) : -1.22 * g;
+  const E = Ze(o);
+  return Math.min(-g, (equippedHeadTop(e) * E.headScale + E.headY) * g);
 }
 const zI = "./assets/avatars.webp",
   DI = "./assets/volcano.webp",
@@ -251,9 +262,21 @@ const GA = [
     ["douggy1", "La recette secrète", "Manger 1 burger de DOUGGY."],
     ["douggy10", "Client fidèle", "Manger 10 burgers de DOUGGY."],
     ["douggy100", "Actionnaire chez Douggy", "Manger 100 burgers de DOUGGY."],
-    ["fondue1", "Ça fond dans la bouche", "Manger 1 fromage à raclette."],
-    ["fondue10", "Raclette Party", "Manger 10 fromages à raclette."],
-    ["fondue100", "La meule humaine", "Manger 100 fromages à raclette."],
+    [
+      "fondue1",
+      "Ça fond dans la bouche",
+      "Avaler 1 fromage à raclette (à partir de 2 000 kg).",
+    ],
+    [
+      "fondue10",
+      "Raclette Party",
+      "Avaler 10 fromages à raclette (à partir de 2 000 kg).",
+    ],
+    [
+      "fondue100",
+      "La meule humaine",
+      "Avaler 100 fromages à raclette (à partir de 2 000 kg).",
+    ],
     ["eat1", "Première victime", "Dévorer son premier gourmand."],
     ["eat10", "Prédateur", "Dévorer 10 gourmands."],
     ["eat100", "Espèce invasive", "Dévorer 100 gourmands."],
@@ -318,12 +341,17 @@ const GA = [
       "Partager le buffet de l’amitié.",
       !0,
     ],
+    [
+      "gros-win",
+      "Le Grand Banqueteur",
+      "Remporter une partie au Grand Banquet.",
+    ],
   ].map(([e, g, o, u = !1], E) => ({
     id: e,
     name: g,
     condition: o,
     secret: u,
-    art: E,
+    art: e === "gros-win" ? 1 : E,
   })),
   MI = ["burgers", "salads", "douggy", "fondue", "eaten"];
 function UI(e, g, o, u, E) {
@@ -351,6 +379,7 @@ function UI(e, g, o, u, E) {
     ]++,
     (i["somalia-win"] = e.modeWins.somalia > 0),
     (i["classic-win"] = e.modeWins.classic > 0),
+    (i["gros-win"] = e.modeWins.gros > 0),
     (i["us-win"] = e.modeWins.usa > 0),
     (i["all-modes"] = ["classic", "gros", "usa"].every(
       (mode) => e.modeWins[mode] > 0,
@@ -382,6 +411,7 @@ function UI(e, g, o, u, E) {
       i[Q.id] &&
       !e.trophies[Q.id] &&
       ((e.trophies[Q.id] = Date.now()), C.push(Q.id));
+  C.push(...awardCumulativeTrophies(e));
   return C;
 }
 const Oe = "bouffe-profile-v1";
@@ -426,14 +456,9 @@ function Xe(e) {
       Number.isSafeInteger(g.modeWins?.[u]) &&
         g.modeWins[u] >= 0 &&
         (o.modeWins[u] = g.modeWins[u]);
-    if (o.trophies["classic-win"])
-      o.modeWins.classic = Math.max(1, o.modeWins.classic);
-    if (o.trophies["us-win"]) o.modeWins.usa = Math.max(1, o.modeWins.usa);
-    if (o.modeWins.usa > 0 || o.trophies["all-modes"]) {
-      o.modeWins.classic = Math.max(1, o.modeWins.classic);
-      o.modeWins.gros = Math.max(1, o.modeWins.gros);
-    }
     o.online = onlineProfile(g.online);
+    o.modeWins = restoreModeWins(o, g);
+    awardCumulativeTrophies(o);
     o.onlineCredits = Object.fromEntries(
       Object.entries(g.onlineCredits || {}).filter(
         ([id, total]) =>
@@ -484,7 +509,7 @@ function wI(e, g) {
   !Number.isSafeInteger(g) || g < 0 || ((e.points += g), (e.earned += g));
 }
 const KI = "./assets/wearables.webp",
-  Pe = "./assets/burger-chicken-menu.webp",
+  Pe = "./assets/burger-chicken-menu.webp?v=wardrobe-41",
   NI = "./assets/hats.webp",
   WI = "./assets/outfits.webp",
   lA = new Image();
@@ -571,6 +596,10 @@ function Ie(e, g, o, u, E, A) {
   return !0;
 }
 function TI(e, g) {
+  if (hasHead(g)) {
+    drawHeadThumbnail(e, g);
+    return;
+  }
   const o = () => {
     const u = e.getContext("2d");
     if ((u.clearRect(0, 0, e.width, e.height), g === "none")) {
@@ -736,36 +765,38 @@ function Se(e, g, time = 0, u = { hat: "none", outfit: "plain" }) {
   e.translate(0, shape.headY + (pose?.headBob || 0));
   e.rotate(pose?.headTurn || 0);
   e.scale(shape.headScale, shape.headScale);
-  const hat = dI(u.hat);
-  if (hat) drawFittedHat(e, u.hat, hat, Ie, "rear");
-  if (!u.hat.startsWith("hat_")) ellipse(0, -0.39, 0.52, 0.51, "#724831");
-  ellipse(0, -0.38, 0.49, 0.49, skin);
-  ellipse(-0.42, -0.37, 0.13, 0.17, skin);
-  ellipse(0.42, -0.37, 0.13, 0.17, skin);
-  if (!hat || u.hat === "halo") {
-    e.fillStyle = "#6b4632";
+  if (!drawEquippedHead(e, u.hat)) {
+    const hat = null;
+
+    if (!u.hat.startsWith("hat_")) ellipse(0, -0.39, 0.52, 0.51, "#724831");
+    ellipse(0, -0.38, 0.49, 0.49, skin);
+    ellipse(-0.42, -0.37, 0.13, 0.17, skin);
+    ellipse(0.42, -0.37, 0.13, 0.17, skin);
+    if (!hat || u.hat === "halo") {
+      e.fillStyle = "#6b4632";
+      e.beginPath();
+      e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2);
+      e.fill();
+    }
+
+    const eyeHeight = Math.max(0.006, 0.068 * (1 - (pose?.blink || 0))),
+      look = pose?.look || 0;
+    ellipse(-0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
+    ellipse(0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
+    ellipse(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b");
+    e.strokeStyle = g.skin ? "#36251e" : "#804e3a";
+    e.lineWidth = Math.max(1 / n, 0.04);
     e.beginPath();
-    e.ellipse(0, -0.67, 0.48, 0.24, 0, Math.PI, Math.PI * 2);
-    e.fill();
-  }
-  if (hat && u.hat !== "halo") drawFittedHat(e, u.hat, hat, Ie, "front");
-  const eyeHeight = Math.max(0.006, 0.068 * (1 - (pose?.blink || 0))),
-    look = pose?.look || 0;
-  ellipse(-0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
-  ellipse(0.17 + look, -0.43, 0.055, eyeHeight, "#2c3028");
-  ellipse(0, -0.27, 0.12, 0.09, g.skin ? "#9a694b" : "#dca27b");
-  e.strokeStyle = g.skin ? "#36251e" : "#804e3a";
-  e.lineWidth = Math.max(1 / n, 0.04);
-  e.beginPath();
-  if ((pose?.mouth || 0) > 0.2)
-    ellipse(0, -0.12, 0.13, 0.04 + pose.mouth * 0.1, "#653127");
-  else if (pose?.sad) {
-    e.moveTo(-0.14, -0.06);
-    e.quadraticCurveTo(0, -0.22, 0.14, -0.06);
-    e.stroke();
-  } else {
-    e.arc(0, -0.24, 0.16, 0.1, Math.PI - 0.1);
-    e.stroke();
+    if ((pose?.mouth || 0) > 0.2)
+      ellipse(0, -0.12, 0.13, 0.04 + pose.mouth * 0.1, "#653127");
+    else if (pose?.sad) {
+      e.moveTo(-0.14, -0.06);
+      e.quadraticCurveTo(0, -0.22, 0.14, -0.06);
+      e.stroke();
+    } else {
+      e.arc(0, -0.24, 0.16, 0.1, Math.PI - 0.1);
+      e.stroke();
+    }
   }
   e.restore();
   if (pose?.coverFace) drawHands();
@@ -1335,7 +1366,7 @@ function xe(e, g = !1, o = !1) {
     u
   );
 }
-function At(e, g) {
+function At(e, g, profile = null) {
   const o = document.createElement("article");
   o.className = "trophy-card" + (g ? " unlocked" : "");
   o.title =
@@ -1345,6 +1376,16 @@ function At(e, g) {
         ? e.name
         : `${e.name} — ${e.condition}`;
   o.dataset.trophy = e.id;
+  o.tabIndex = 0;
+  const progress = profile ? trophyProgress(e.id, profile) : null;
+  if (progress && !(e.secret && !g)) {
+    const detail = document.createElement("span");
+    detail.className = "trophy-progress-detail";
+    detail.textContent = `Progression : ${progress.value.toLocaleString("fr-FR")} / ${progress.target.toLocaleString("fr-FR")}`;
+    o.title += " — " + detail.textContent;
+    o.append(detail);
+    o.setAttribute("aria-label", `${e.name}. ${detail.textContent}`);
+  }
   const u = e.secret && !g;
   o.append(xe(e, !g, u));
   const E = document.createElement("h3");
@@ -1366,6 +1407,7 @@ function At(e, g) {
   );
 }
 function et(e) {
+  awardCumulativeTrophies(e);
   const shadow = document.body.classList.contains("shadow-realm");
   const catalog = shadow
     ? SECRET_TROPHIES
@@ -1392,7 +1434,7 @@ function et(e) {
     const heading = document.createElement("h3");
     heading.className = "trophy-section-title";
     heading.textContent = name;
-    grid.append(heading, ...items.map((t) => At(t, !!unlocked[t.id])));
+    grid.append(heading, ...items.map((t) => At(t, !!unlocked[t.id], e)));
   }
   const active = catalog.filter((t) => t.enabled !== false);
   const count = active.filter((t) => unlocked[t.id]).length;
@@ -1598,6 +1640,7 @@ function Qt({ start: e, appearance: g }) {
   };
   L("#wardrobe-weight").oninput = k;
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
+  document.addEventListener("gourmand-heads-loaded", k);
   document.addEventListener("extra-cosmetics-loaded", k);
   function t() {
     journey?.refresh();
@@ -1848,8 +1891,8 @@ function Qt({ start: e, appearance: g }) {
         (L("#option-fullscreen").textContent =
           document.fullscreenElement ||
           document.body.classList.contains("app-expanded")
-            ? "Quitter le plein écran"
-            : "Passer en plein écran"));
+            ? "Quitter plein écran"
+            : "Plein écran"));
     }),
     (L("#start-game").onclick = () => {
       if (!modeUnlocked(E, o)) return;
@@ -1941,7 +1984,9 @@ function Qt({ start: e, appearance: g }) {
             (latest.onlineCredits?.[verified.profileId] || 0),
         );
         o.online = verified;
+        const cumulativeAwards = awardCumulativeTrophies(o);
         a(verified);
+        if (notify && cumulativeAwards.length) tt(cumulativeAwards);
         if (L("#shop-dialog").open) r();
         if (notify && currency > 0) {
           L("#result-reward").hidden = false;
@@ -3062,14 +3107,17 @@ function OA() {
     (w("#hint").style.display = nA === "chef" ? "none" : ""),
     (K.onEvent = (g, o, u) => {
       if (g === "slide") {
-        motionAudio.slide({ ...o, cosmetics: equippedFor(o) }, K.round);
+        motionAudio.slide(
+          { ...o, human: o.id === 0, cosmetics: equippedFor(o) },
+          K.round,
+        );
         return;
       }
       if (g === "boing") {
-        motionAudio.bounce();
+        if (o?.id === 0) motionAudio.bounce();
         return;
       }
-      if (g === "bounce") motionAudio.bounce();
+      if (g === "bounce" && o?.id === 0) motionAudio.bounce();
       if (
         (WA?.event(g, o, u, K),
         g === "discovery" &&
@@ -3415,7 +3463,7 @@ function kI(e, g) {
   Se(x, e, g, equippedFor(e));
 }
 const douggyChicken = new Image();
-douggyChicken.src = "./assets/douggy-chicken.webp";
+douggyChicken.src = "./assets/douggy-chicken.webp?v=wardrobe-41";
 function uI(e) {
   if (drawSecretFood(x, K, e, performance.now())) return;
   if (e.type === "burger" && e.size === "chef") {
@@ -3946,7 +3994,7 @@ online = setupMultiplayer({
       return;
     }
     if (["boing", "bounce"].includes(event.kind)) {
-      motionAudio.bounce();
+      if (onlinePeople[event.person]?.human) motionAudio.bounce();
       return;
     }
     if (event.kind === "elimination") {

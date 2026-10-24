@@ -6,12 +6,39 @@ const ids = [
   ),
   ...Array.from({ length: 11 }, (_, i) => "title_" + i),
 ];
-let atlas, slides;
+let atlas, slides, natural;
 export function drawShopArt(canvas, item) {
   const ctx = canvas.getContext("2d");
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (item.slot === "slide" && slides?.complete && slides.naturalWidth) {
+    if (
+      item.naturalArt !== undefined &&
+      natural?.complete &&
+      natural.naturalWidth
+    ) {
+      const w = natural.naturalWidth / 3,
+        h = natural.naturalHeight,
+        scale = Math.min(canvas.width / w, canvas.height / h);
+      ctx.drawImage(
+        natural,
+        item.naturalArt * w,
+        0,
+        w,
+        h,
+        (canvas.width - w * scale) / 2,
+        (canvas.height - h * scale) / 2,
+        w * scale,
+        h * scale,
+      );
+      canvas.dataset.illustrated = "true";
+      return;
+    }
+    if (
+      item.naturalArt === undefined &&
+      item.slot === "slide" &&
+      slides?.complete &&
+      slides.naturalWidth
+    ) {
       const index = item.art,
         w = slides.naturalWidth / 3,
         rows = [0, 488, 970].map((y) => (y * slides.naturalHeight) / 1024),
@@ -86,7 +113,18 @@ export function drawShopArt(canvas, item) {
     );
     ctx.stroke();
   };
-  if (item.slot === "slide") {
+  if (item.naturalArt !== undefined) {
+    if (!natural) {
+      natural = new Image();
+      natural.src = new URL(
+        "./assets/cosmetics/natural-sounds-art.webp",
+        import.meta.url,
+      ).href;
+    }
+    if (!natural.complete)
+      natural.addEventListener("load", draw, { once: true });
+  }
+  if (item.slot === "slide" && item.naturalArt === undefined) {
     if (!slides) {
       slides = new Image();
       slides.src = new URL(

@@ -173,11 +173,17 @@ export function onlineProfile(value = {}) {
     revision: 0,
     trophies: {},
     wins: 0,
+    normalStats: { burgers: 0, salads: 0, douggy: 0, fondue: 0, eaten: 0 },
+    modeWins: { classic: 0, gros: 0, usa: 0 },
     maxMass: 0,
     pointsEarned: 0,
     rivals: {},
     teamWins: { 2: 0, 3: 0, 4: 0 },
   };
+  for (const field of ["normalStats", "modeWins"])
+    for (const key of Object.keys(result[field]))
+      if (Number.isSafeInteger(value[field]?.[key]) && value[field][key] >= 0)
+        result[field][key] = value[field][key];
   for (const key of ["revision", "wins"])
     if (Number.isSafeInteger(value[key]) && value[key] >= 0)
       result[key] = value[key];

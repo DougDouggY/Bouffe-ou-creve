@@ -1,4 +1,4 @@
-import { SLIDE_SOUNDS, slideSound } from "./sound-catalog.js?v=ceremony-38";
+import { SLIDE_SOUNDS, slideSound } from "./sound-catalog.js?v=wardrobe-41";
 import {
   effectsGain,
   effectsSettings,
@@ -13,7 +13,6 @@ export function createMotionAudio({
     queue = [],
     heard = new Set();
   let muted = false,
-    aiTurn = null,
     boingAt = -Infinity,
     flushPending = false;
   const url = (file) => new URL("./assets/audio/" + file, import.meta.url).href;
@@ -120,20 +119,10 @@ export function createMotionAudio({
       pool("move-spring.mp3");
     },
     slide(person, turn) {
+      if (person.human !== true) return;
       const key = turn + ":" + (person.networkSeat ?? person.id);
       if (heard.has(key)) return;
       heard.add(key);
-      if (!person.human && person.id !== 0) {
-        if (aiTurn === turn) return;
-        aiTurn = turn;
-        enqueue({
-          file: SLIDE_SOUNDS[0].file,
-          remote: true,
-          human: false,
-          weight: 0.2,
-        });
-        return;
-      }
       enqueue({
         file: slideSound(person.cosmetics?.slide).file,
         remote: person.id !== 0,
@@ -159,7 +148,6 @@ export function createMotionAudio({
     },
     reset() {
       heard.clear();
-      aiTurn = null;
       queue.length = 0;
       for (const v of [...active]) {
         v.audio.pause();

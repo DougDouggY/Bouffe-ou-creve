@@ -1,4 +1,4 @@
-import { modeUnlocked } from "./restaurant-menu.js?v=collection-37";
+import { modeUnlocked } from "./restaurant-menu.js?v=wardrobe-41";
 export function setupRestaurantHome({ profile, journey, choose }) {
   const $ = (s) => document.querySelector(s),
     solo = $("#solo-menu"),

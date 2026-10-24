@@ -83,7 +83,7 @@ test("real-file sound bus deduplicates launches, caps voices, mutes peers and re
     played += next.length;
     assert(next.length <= 3);
   }
-  assert.equal(played, 9); // eight humans plus one representative AI
+  assert.equal(played, 8); // Only the eight humans: all AI are silent.
   assert.equal(bus.preview("slide_prout"), false);
   bus.slide({ id: 1, human: true, cosmetics: {} }, 2);
   await tick();
@@ -100,6 +100,9 @@ test("real-file sound bus deduplicates launches, caps voices, mutes peers and re
   assert.equal(Voice.all.filter((v) => v.playing).length, 0);
   bus.reset();
   changeEffects({ volume: 0.5, others: true });
+  bus.slide({ id: 0, human: false, cosmetics: {} }, 99);
+  await tick();
+  assert.equal(Voice.all.filter((v) => v.playing).length, 0);
 });
 
 import { Room, randomCode } from "../cloudflare/src/room.js";

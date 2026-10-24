@@ -168,6 +168,7 @@ export async function verifyDeployment(
       assert.equal(health.ceremony, true);
       assert.equal(health.audioCosmetics, true);
       assert.equal(health.economy, true);
+      assert.equal(health.progressCounters, true);
       break;
     } catch {
       if (attempt === 5)
@@ -206,7 +207,7 @@ export async function verifyDeployment(
         outfit: "cook",
         aura: "aura_gold",
         podium: "podium_jump",
-        slide: "slide_spring",
+        slide: "slide_duck",
         title: "title_3",
       },
     });
@@ -299,7 +300,7 @@ export async function verifyDeployment(
           outfit: "cook",
           aura: "aura_gold",
           podium: "podium_jump",
-          slide: "slide_spring",
+          slide: "slide_duck",
           title: "title_3",
         },
       ],

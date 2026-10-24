@@ -2,11 +2,19 @@ import { eventPoints, matchPoints, MATCH_POINTS_CAP } from "../../economy.js";
 import {
   ONLINE_TROPHY_IDS,
   onlineProfile,
-} from "../../multiplayer-trophy-catalog.js?v=ceremony-38";
+} from "../../multiplayer-trophy-catalog.js?v=wardrobe-41";
 // Invoked only by the authoritative Room; never accepts client achievement claims.
 export function applyProfileGrant(previous, grant, now = Date.now()) {
   const p = onlineProfile(previous);
   p.revision++;
+  for (const key of Object.keys(p.normalStats)) {
+    const amount = grant.normalStats?.[key];
+    if (Number.isSafeInteger(amount) && amount > 0 && amount <= 100000)
+      p.normalStats[key] += amount;
+  }
+  if (grant.win && ["classic", "gros", "usa"].includes(grant.mode))
+    p.modeWins[grant.mode]++;
+
   if (
     Number.isSafeInteger(grant.currency) &&
     grant.currency > 0 &&
@@ -59,6 +67,7 @@ function queue(room, profileId, awards = [], extra = {}) {
     (!awards.length &&
       !extra.win &&
       !extra.currency &&
+      !extra.normalStats &&
       !extra.rivals?.length &&
       !Number.isFinite(extra.maxMass))
   )
@@ -71,6 +80,7 @@ function queue(room, profileId, awards = [], extra = {}) {
     !awards.length &&
     !extra.win &&
     !extra.currency &&
+    !extra.normalStats &&
     !extra.rivals?.length &&
     !Number.isFinite(extra.maxMass)
   )
@@ -128,6 +138,33 @@ export function trophyChat(room, member) {
     "mp-chat",
     ...(eliminated ? ["mp-ghost-chat"] : []),
   ]);
+}
+function queueNormalProgress(room) {
+  const m = room.data.trophyMatch,
+    g = room.game;
+  if (!m || !g) return;
+  m.normalSent ||= {};
+  const byProfile = new Map();
+  for (const [seat, human] of Object.entries(m.humans)) {
+    if (!human.profileId) continue;
+    const stats = g.stats?.people?.[seat];
+    if (!stats) continue;
+    const record = byProfile.get(human.profileId) || {};
+    for (const key of ["burgers", "salads", "douggy", "fondue", "eaten"])
+      record[key] = Math.max(record[key] || 0, stats[key] || 0);
+    byProfile.set(human.profileId, record);
+  }
+  for (const [profileId, stats] of byProfile) {
+    const sent = m.normalSent[profileId] || {},
+      delta = {};
+    for (const key of Object.keys(stats))
+      if (stats[key] > (sent[key] || 0))
+        delta[key] = stats[key] - (sent[key] || 0);
+    if (Object.keys(delta).length) {
+      queue(room, profileId, [], { normalStats: delta });
+      m.normalSent[profileId] = stats;
+    }
+  }
 }
 export function trophyTurn(room, replay) {
   const d = room.data,
@@ -236,6 +273,7 @@ export function trophyTurn(room, replay) {
       if (seats.every((s) => m.salads[s]))
         awardSeats(room, seats, ["team-salads"]);
     }
+  queueNormalProgress(room);
   if (g.phase === "ended") finishTrophyMatch(room);
 }
 export function finishTrophyMatch(room) {
@@ -243,6 +281,7 @@ export function finishTrophyMatch(room) {
     g = room.game,
     m = d.trophyMatch;
   if (!m || m.done) return;
+  queueNormalProgress(room);
   const byId = new Map(g.people.map((p) => [p.id, p]));
   m.done = true;
   const survivors = g.people.filter((p) => p.alive);
@@ -310,6 +349,7 @@ export function finishTrophyMatch(room) {
   for (const [profileId, result] of results)
     queue(room, profileId, result.awards, {
       win: result.win,
+      mode: g.count >= 50 ? "usa" : g.count > 8 ? "gros" : "classic",
       teamSize: g.teamSize,
       currency: result.currency,
       rivals: [

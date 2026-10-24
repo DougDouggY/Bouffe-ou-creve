@@ -149,6 +149,11 @@ export function setupMusicControls() {
     storage = localStorage;
   } catch {}
   const music = createAmbientMusic({ storage });
+  try {
+    if (JSON.parse(storage?.getItem(STORAGE_KEY) || "{}").enabled === false)
+      music.setVolume(0);
+  } catch {}
+  music.setEnabled(true);
   const toggle = document.querySelector("#music-enabled");
   const choice = document.querySelector("#music-track");
   for (const track of MUSIC_TRACKS) {
@@ -168,6 +173,7 @@ export function setupMusicControls() {
     volume.value = String(percent);
     volume.setAttribute("aria-valuetext", `${percent} %`);
     output.value = `${percent} %`;
+    status.hidden = !(state.failed || state.blocked);
     status.textContent = !state.enabled
       ? "Musique désactivée."
       : state.muted
@@ -178,14 +184,19 @@ export function setupMusicControls() {
             ? "La musique n’a pas pu être chargée. Réessaie de l’activer."
             : state.blocked
               ? "Touche l’écran ou appuie sur une touche pour lancer la musique."
-              : "Une ambiance légère, dans le menu et en partie.";
+              : "";
   }
   music.subscribe(render);
-  toggle.addEventListener("change", () => music.setEnabled(toggle.checked));
-  choice.addEventListener("change", () => music.setTrack(choice.value));
-  volume.addEventListener("input", () =>
-    music.setVolume(Number(volume.value) / 100),
-  );
+
+  choice.addEventListener("change", () => {
+    music.setTrack(choice.value);
+    music.setEnabled(true);
+  });
+  volume.addEventListener("input", () => {
+    const next = Number(volume.value) / 100;
+    music.setVolume(next);
+    music.setEnabled(true);
+  });
   render();
   return music;
 }

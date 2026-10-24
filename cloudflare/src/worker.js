@@ -63,6 +63,7 @@ export default {
           ceremony: true,
           audioCosmetics: true,
           economy: true,
+          progressCounters:true,
           sizes: [8, 24, 50],
         },
         200,

@@ -1,4 +1,4 @@
-import { SLIDE_SOUNDS } from "./sound-catalog.js?v=ceremony-38";
+import { SLIDE_SOUNDS } from "./sound-catalog.js?v=wardrobe-41";
 export const COSMETIC_SLOTS = [
   "hat",
   "outfit",
@@ -19,11 +19,11 @@ export const EFFECT_COSMETICS = [
   ...SLIDE_SOUNDS,
   { id: "aura_none", slot: "aura", name: "Sans aura", price: 0, icon: "◌" },
   ...[
-    ["ketchup", "Cercle de ketchup", "#c74b39"],
-    ["mayo", "Cercle de mayonnaise", "#fff0b0"],
-    ["gold", "Cercle doré", "#f3bf45"],
+    ["ketchup", "Flaque de ketchup", "#c74b39"],
+    ["mayo", "Flaque de mayonnaise", "#fff0b0"],
+    ["gold", "Flaque dorée", "#f3bf45"],
     ["flame", "Flammes du grill", "#ec7e36"],
-    ["toxic", "Cercle toxique", "#8fda68"],
+    ["toxic", "Flaque toxique", "#8fda68"],
   ].map(([id, name, color], i) => ({
     id: "aura_" + id,
     slot: "aura",
@@ -100,42 +100,47 @@ export function drawAura(ctx, id, time = 0, mode = cosmeticMotion()) {
   ctx.save();
   const transform = ctx.getTransform();
   const pixels = Math.max(1, Math.hypot(transform.a, transform.b));
-  const width = Math.max(0.15, 1.8 / pixels),
-    rx = 1.42,
-    ry = 0.43,
-    cy = 0.87;
-  ctx.beginPath();
-  ctx.ellipse(0, cy, rx, ry, 0, 0, Math.PI * 2);
+  const pulse = mode === "full" ? 1 + Math.sin(time * 0.0028) * 0.045 : 1;
+  // Low, filled pool on the ground beneath the soles. Never a body outline.
+  const rx = 1.18 * pulse,
+    ry = 0.23 * pulse,
+    cy = 1.01;
+  ctx.globalAlpha = 0.42;
   ctx.fillStyle = item.color;
-  ctx.globalAlpha = 0.16;
-  ctx.fill();
-  ctx.strokeStyle = "#172219";
-  ctx.globalAlpha = 0.8;
-  ctx.lineWidth = width + 0.12;
-  ctx.stroke();
-  ctx.strokeStyle = item.color;
-  ctx.globalAlpha = 0.98;
-  ctx.lineWidth = width;
-  ctx.stroke();
-  if (id === "aura_flame") {
-    ctx.fillStyle = item.color;
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 1.3, cy + Math.sin(a) * 0.4);
-      ctx.lineTo(Math.cos(a + 0.08) * 1.7, cy + Math.sin(a + 0.08) * 0.57);
-      ctx.lineTo(Math.cos(a + 0.2) * 1.3, cy + Math.sin(a + 0.2) * 0.4);
-      ctx.fill();
-    }
+  ctx.beginPath();
+  for (let i = 0; i <= 24; i++) {
+    const angle = (i / 24) * Math.PI * 2;
+    const wobble =
+      1 + 0.035 * Math.sin(angle * 3 + (mode === "full" ? time * 0.0015 : 0));
+    const x = Math.cos(angle) * rx * wobble,
+      y = cy + Math.sin(angle) * ry * wobble;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
   }
+  ctx.closePath();
+  ctx.fill();
+  ctx.lineWidth = Math.max(0.035, 1.1 / pixels);
+  ctx.strokeStyle = item.color;
+  ctx.globalAlpha = 0.75;
+  ctx.stroke();
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = "#fff4bd";
+  ctx.beginPath();
+  ctx.ellipse(-0.24, cy - 0.035, 0.48, 0.055, 0, 0, Math.PI * 2);
+  ctx.fill();
   if (mode === "full") {
-    ctx.strokeStyle = "#fff7cc";
-    ctx.globalAlpha = 0.85;
-    ctx.lineWidth = width * 0.55;
-    ctx.lineCap = "round";
-    const a = time * 0.001;
+    const ripple = (time % 1800) / 1800;
+    ctx.globalAlpha = (1 - ripple) * 0.35;
+    ctx.strokeStyle = item.color;
     ctx.beginPath();
-    ctx.ellipse(0, cy, rx, ry, 0, a, a + 1.2);
+    ctx.ellipse(
+      0,
+      cy,
+      rx * (0.55 + ripple * 0.45),
+      ry * (0.55 + ripple * 0.45),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
   ctx.restore();

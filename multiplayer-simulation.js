@@ -1,7 +1,7 @@
 import { validTeamSetup } from "./teams.js?v=rivalries-33";
 import { validMultiplayerMap } from "./multiplayer-maps.js?v=collection-37";
 import { arenaSize } from "./arena-bounds.js?v=collection-37";
-import { normalizeCosmetics } from "./cosmetic-catalog.js?v=ceremony-38";
+import { normalizeCosmetics } from "./cosmetic-catalog.js?v=wardrobe-41";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
   zt as Game,
@@ -242,6 +242,7 @@ export function resolveTurn(game, shots) {
     if (
       [
         "food",
+        "fondue",
         "eat",
         "burn",
         "power",

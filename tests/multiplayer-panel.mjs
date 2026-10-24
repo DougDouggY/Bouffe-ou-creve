@@ -111,6 +111,7 @@ try {
           Object.defineProperty(window,'__bouffeReplayMetrics',{get(){return replayMetric},set(value){replayMetric=value;if(!window.__replayStarts.some(x=>x.turn===value.turn))window.__replayStarts.push({...value})}});
           window.__cosmeticTest = {
             shoot(v) { return online.shoot(v); },
+            debug(){return online.testState;},
             ready(ids) { return lA.complete && lA.naturalWidth > 0 && DA.complete && DA.naturalWidth > 0 && ids.every(id => { const im = extraCosmeticImage(id); return !im || im.complete && im.naturalWidth > 0; }); },
             avatar(memberId) {
               const p = window.__game.people.find(p => p.memberId === memberId);
@@ -122,6 +123,16 @@ try {
 `),
           ]);
 
+        // Test-only introspection for end-screen regressions, never shipped in runtime JS.
+        if (relative === "multiplayer-client.js")
+          body = Buffer.from(
+            body
+              .toString()
+              .replace(
+                "    canShoot,\n    tick,",
+                "    get testState(){return {phase:lastState?.phase,hasResults:!!lastState?.results,ended,replay:!!replay}},\n    canShoot,\n    tick,",
+              ),
+          );
         resources.add(relative + url.search);
         await route.fulfill({
           status: 200,
@@ -271,9 +282,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=chicken-menu-40"));
-  assert(resources.has("style.css?v=chicken-menu-40"));
-  assert(resources.has("multiplayer-client.js?v=ceremony-38"));
+  assert(resources.has("game.js?v=wardrobe-41"));
+  assert(resources.has("style.css?v=wardrobe-41"));
+  assert(resources.has("multiplayer-client.js?v=wardrobe-41"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await openGourmand(page);
@@ -326,10 +337,12 @@ try {
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-name").fill(names[i]);
     if (i === 0) {
+      await page.locator('[data-multi-count="8"]').click();
       await page.locator("#multiplayer-create").click();
       await page.waitForFunction(
         () =>
-          document.querySelector("#multiplayer-code").textContent.length === 14,
+          document.querySelector("#multiplayer-code").textContent.length ===
+            14 && document.querySelector("#multiplayer-size").value === "8",
       );
     } else {
       await page
@@ -954,7 +967,29 @@ try {
     assert(await page.locator("#overlay").isVisible());
   }
   for (const page of pages) {
-    await page.locator("#match-podium").waitFor({ state: "visible" });
+    try {
+      await page.locator("#match-podium").waitFor({ state: "visible" });
+    } catch (error) {
+      console.log(
+        "END DIAGNOSTIC",
+        JSON.stringify({
+          errors,
+          clients: await Promise.all(
+            pages.map((p) => p.evaluate(() => window.__cosmeticTest.debug())),
+          ),
+          states: wires.map((w) =>
+            w
+              .filter((p) => p.type === "state")
+              .slice(-1)
+              .map((p) => ({
+                phase: p.state.phase,
+                hasResults: !!p.state.results,
+              })),
+          ),
+        }),
+      );
+      throw error;
+    }
     assert.equal(await page.locator(".podium-course").count(), 3);
     assert.match(
       await page.locator(".podium-course--first h3").textContent(),

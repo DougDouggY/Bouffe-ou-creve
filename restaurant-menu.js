@@ -4,8 +4,8 @@ export function modeUnlocked(mode, profile) {
   return (
     !["gros", "usa"].includes(mode) ||
     (mode === "gros"
-      ? profile.modeWins?.classic > 0
-      : profile.modeWins?.gros > 0)
+      ? profile.modeWins?.classic > 0 || profile.online?.modeWins?.classic > 0
+      : profile.modeWins?.gros > 0 || profile.online?.modeWins?.gros > 0)
   );
 }
 export function createRestaurantMenu(catalog, onSelect) {

@@ -7,6 +7,7 @@
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.mjs",
     "test:home": "node tests/chicken-menu.mjs",
+    "test:wardrobe": "node tests/wardrobe-ground.mjs",
     "test:arenas": "node tests/arenas-browser.mjs",
     "test:secrets": "node tests/secrets-browser.mjs",
     "test:filmovore": "node tests/filmovore-browser.mjs",

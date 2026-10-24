@@ -1,4 +1,4 @@
-import { equippedTitle } from "./cosmetic-effects.js?v=ceremony-38";
+import { equippedTitle } from "./cosmetic-effects.js?v=wardrobe-41";
 import { ReplayClock } from "./replay-clock.js?v=podium-35";
 import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=rivalries-33";
 import {
@@ -10,7 +10,7 @@ import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=collection-37";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
-} from "./cosmetic-catalog.js?v=ceremony-38";
+} from "./cosmetic-catalog.js?v=wardrobe-41";
 import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
 const VERSION = "multi-21";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)
@@ -48,6 +48,8 @@ export function setupMultiplayer({
     healthy = false,
     lastChatKey = "",
     lastRosterKey = "";
+  let selectedFormula = 24,
+    pendingFormula = null;
   let requestedMap = null,
     lastRequests = "";
   const dialog = $("#multiplayer-dialog");
@@ -363,6 +365,15 @@ export function setupMultiplayer({
   function acceptRoom(data) {
     if (room && data.revision < room.revision) return;
     room = data;
+    if (
+      pendingFormula !== null &&
+      data.phase === "lobby" &&
+      data.host === ticket?.memberId
+    ) {
+      const count = pendingFormula;
+      pendingFormula = null;
+      if (data.count !== count) send({ type: "size", count });
+    }
     if (active && data.phase === "lobby") {
       active = false;
       replay = null;
@@ -519,6 +530,7 @@ export function setupMultiplayer({
   }
   async function join(creating) {
     if (!healthy || ticket) return;
+    pendingFormula = creating ? selectedFormula : null;
     const name = $("#multiplayer-name").value.trim() || "Gourmand";
     const code = $("#multiplayer-join-code").value;
     $("#multiplayer-create").disabled = true;
@@ -671,6 +683,12 @@ export function setupMultiplayer({
     });
   $("#multiplayer-shop").onclick = () => openShop();
   $("#shop-dialog").addEventListener("close", syncAppearance);
+  for (const button of document.querySelectorAll("[data-multi-count]"))
+    button.onclick = () => {
+      selectedFormula = Number(button.dataset.multiCount);
+      for (const other of document.querySelectorAll("[data-multi-count]"))
+        other.setAttribute("aria-pressed", String(other === button));
+    };
   $("#multiplayer-create").onclick = () => join(true);
   $("#multiplayer-join").onclick = () => join(false);
   $("#multiplayer-join-code").addEventListener("keydown", (e) => {
