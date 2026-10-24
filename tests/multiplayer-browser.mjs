@@ -132,7 +132,7 @@ try {
   await a.locator("#multiplayer-name").fill("Doug");
   await a.locator("#multiplayer-create").click();
   await a.waitForFunction(
-    () => document.querySelector("#multiplayer-code").textContent.length === 14,
+    () => document.querySelector("#multiplayer-code").textContent.length === 4,
   );
   const code = await a.locator("#multiplayer-code").textContent();
   await b.locator("#multiplayer-name").fill("Tony");

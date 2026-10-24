@@ -91,26 +91,14 @@ try {
       "Le Marchand de glaces",
     ],
   );
-  await page.locator("[data-solo-mode=platform]").click();
-  assert.match(
-    await page.locator("#map-mode-title").textContent(),
-    /LE PLATEAU/,
-  );
-  assert.equal(
-    await page
-      .locator("#map-screen h3")
-      .allTextContents()
-      .then((a) => a.filter((s) => s === "Burger Games").length),
-    0,
-  );
-  await page.locator("#back-title").click();
-  await page.locator("#solo-entry").press("Enter");
-  await page.locator("[data-solo-mode=survival]").click();
-  assert.match(
-    await page.locator("#map-mode-title").textContent(),
-    /BURGER GAMES/,
-  );
-  await page.locator("#back-title").click();
+  for(const mode of ['platform','survival','somalia','cannibal','icecream']) {
+    if(mode!=='platform'){await page.locator('#solo-entry').press('Enter');await page.locator('#solo-menu').waitFor({state:'visible'});}
+    await page.locator(`[data-solo-mode=${mode}]`).click();
+    await page.locator('#map-briefing').waitFor({state:'visible'});
+    assert(await page.locator('#map-screen').isHidden());
+    await page.locator('#close-briefing').click();
+    await page.locator('#back-menu').click();
+  }
   const show = async (team = false) =>
     page.evaluate((team) => {
       const t = window.__gameTest,

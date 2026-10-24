@@ -5199,3 +5199,5 @@ body.playing #options-dialog .options-help {grid-row:2;grid-column:2;}
 #match-podium.ceremony-is-3d .ceremony-skip {
   z-index: 10;
 }
+.home-mode-page .home-mode-description {font:400 13px/1.45 Georgia,serif;text-transform:none;letter-spacing:0;max-width:28em;margin:8px auto 0;color:#68503a;}
+body.playing #event-notice[data-kind="zone"] {display:block!important;position:fixed;z-index:100;top:76px;left:50%;transform:translateX(-50%);width:min(90vw,640px);height:auto;min-height:0;max-height:none;padding:12px 18px;border:1px solid #ffa16e;border-radius:12px;background:#481b20e8;color:#fff1cf;font-weight:800;text-align:center;pointer-events:none;box-shadow:0 5px 20px #0006;}

@@ -1,4 +1,8 @@
-import { survivalLayout } from "./survival.js?v=hunger-18";
+import {
+  survivalLayout,
+  survivalScenery,
+  survivalRivers,
+} from "./survival.js?v=burger-43";
 import { shaft, secretSprite } from "./secret-modes.js?v=secret-42";
 export const ILLUSTRATED_MAPS = [
   "survival",
@@ -27,14 +31,16 @@ export const ILLUSTRATED_MAPS = [
 ];
 const images = new Map();
 const platformFloors = new WeakMap();
-const survivalPatterns = new WeakMap();
+const survivalDecor = new WeakMap();
+let survivalDetails = null;
+let detailPattern = null;
 export function mapArtURL(id) {
   if (!ILLUSTRATED_MAPS.includes(id)) return null;
   if (id === "platform")
     return new URL("./assets/secrets/plateau-restaurant.webp", import.meta.url)
       .href;
   if (id === "survival")
-    return new URL("./assets/secrets/survival-ground.webp", import.meta.url)
+    return new URL("./assets/secrets/burger-games-forest.webp", import.meta.url)
       .href;
   if (id === "icecream")
     return new URL("./assets/secrets/icecream-street.webp", import.meta.url)
@@ -59,16 +65,82 @@ export function drawMapArt(context, game) {
   const image = images.get(game.mapId);
   if (!image.complete || !image.naturalWidth) return false;
   if (game.mapId === "survival") {
-    let pattern = survivalPatterns.get(game);
-    if (!pattern) {
-      pattern = context.createPattern(image, "repeat");
-      pattern.setTransform(new DOMMatrix().scale(0.5));
-      survivalPatterns.set(game, pattern);
+    context.drawImage(image, 0, 0, game.w, game.h);
+    if (!survivalDetails) {
+      survivalDetails = new Image();
+      survivalDetails.src = new URL(
+        "./assets/secrets/survival-ground.webp",
+        import.meta.url,
+      ).href;
     }
-    context.fillStyle = pattern;
-    context.fillRect(0, 0, game.w, game.h);
-    context.fillStyle = "rgba(43,58,34,.20)";
-    context.fillRect(0, 0, game.w, game.h);
+    if (survivalDetails.complete && survivalDetails.naturalWidth) {
+      detailPattern ||= context.createPattern(survivalDetails, "repeat");
+      detailPattern.setTransform(new DOMMatrix().scale(0.5));
+      context.save();
+      context.globalCompositeOperation = "soft-light";
+      context.globalAlpha = 0.7;
+      context.fillStyle = detailPattern;
+      context.fillRect(0, 0, game.w, game.h);
+      context.restore();
+    }
+    // Smooth ribbons use the same sampled centreline as the permanent slowdown zones.
+    context.save();
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    let decor = survivalDecor.get(game);
+    if (!decor || decor.w !== game.w || decor.h !== game.h) {
+      decor = {
+        w: game.w,
+        h: game.h,
+        scenery: survivalScenery(game.w, game.h),
+        rivers: survivalRivers(game.w, game.h).map((river) => {
+          const shape = new Path2D(),
+            shine = new Path2D(),
+            bubbles = [];
+          const banks = [[], []];
+          river.forEach((p, i) => {
+            const before = river[Math.max(0, i - 1)],
+              after = river[Math.min(river.length - 1, i + 1)];
+            const dx = after.x - before.x,
+              dy = after.y - before.y,
+              len = Math.hypot(dx, dy) || 1,
+              nx = -dy / len,
+              ny = dx / len;
+            banks[0].push({ x: p.x + nx * p.r, y: p.y + ny * p.r });
+            banks[1].push({ x: p.x - nx * p.r, y: p.y - ny * p.r });
+            const x = p.x + nx * p.r * 0.34 * Math.sin(i * 0.7),
+              y = p.y + ny * p.r * 0.34 * Math.sin(i * 0.7);
+            if (i === 0) shine.moveTo(x, y);
+            else shine.lineTo(x, y);
+            if (i % 2 === 0)
+              bubbles.push({ x, y, r: p.r * (0.025 + (i % 5) * 0.008) });
+          });
+          const polygon = [...banks[0], ...banks[1].reverse()];
+          shape.moveTo(polygon[0].x, polygon[0].y);
+          for (const p of polygon.slice(1)) shape.lineTo(p.x, p.y);
+          shape.closePath();
+          return { shape, shine, bubbles };
+        }),
+      };
+      survivalDecor.set(game, decor);
+    }
+    for (const { shape, shine, bubbles } of decor.rivers) {
+      context.strokeStyle = "#80552c";
+      context.lineWidth = 48;
+      context.stroke(shape);
+      context.fillStyle = "#f5ca64";
+      context.fill(shape);
+      context.strokeStyle = "#ffedaf88";
+      context.lineWidth = 42;
+      context.stroke(shine);
+      context.fillStyle = "#fff2b9";
+      for (const p of bubbles) {
+        context.beginPath();
+        context.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+    context.restore();
     const layout = survivalLayout(game.w, game.h),
       outer = layout.foodRadii[2] + 65 * layout.unit;
     const clearing = context.createRadialGradient(
@@ -86,7 +158,7 @@ export function drawMapArt(context, game) {
     clearing.addColorStop(1, "rgba(154,123,67,0)");
     context.fillStyle = clearing;
     context.fillRect(layout.x - outer, layout.y - outer, outer * 2, outer * 2);
-    for (const o of game.obstacles) {
+    for (const o of [...game.obstacles, ...decor.scenery]) {
       if (o.scenery === "cornucopia-circle")
         secretSprite(context, "cornucopia-circle", o.x, o.y, o.artW, o.artH);
       else if (o.scenery === "forest-grove")

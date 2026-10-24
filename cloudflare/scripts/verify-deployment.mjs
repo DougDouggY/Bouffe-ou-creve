@@ -211,7 +211,7 @@ export async function verifyDeployment(
         title: "title_3",
       },
     });
-    assert.match(first.code, /^[A-HJ-NP-Z2-9]{12}$/);
+    assert.match(first.code, /^[A-HJ-NP-Z2-9]{4}$/);
     assert.match(first.token, /^[a-f0-9]{64}$/);
     const socketURL = new URL("/api/socket/" + first.code, base);
     socketURL.protocol = base.protocol === "https:" ? "wss:" : "ws:";

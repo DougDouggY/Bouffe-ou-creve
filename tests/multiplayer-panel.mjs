@@ -282,9 +282,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=wardrobe-41"));
-  assert(resources.has("style.css?v=wardrobe-41"));
-  assert(resources.has("multiplayer-client.js?v=wardrobe-41"));
+  assert(resources.has("game.js?v=burger-43"));
+  assert(resources.has("style.css?v=burger-43"));
+  assert(resources.has("multiplayer-client.js?v=burger-43"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await openGourmand(page);
@@ -342,7 +342,7 @@ try {
       await page.waitForFunction(
         () =>
           document.querySelector("#multiplayer-code").textContent.length ===
-            14 && document.querySelector("#multiplayer-size").value === "8",
+            4 && document.querySelector("#multiplayer-size").value === "8",
       );
     } else {
       await page

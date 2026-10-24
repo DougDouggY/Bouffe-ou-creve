@@ -101,6 +101,12 @@ export class ArenaMechanics {
         x: radius + 25 + g.random() * (g.w - 2 * radius - 50),
         y: radius + 25 + g.random() * (g.h - 2 * radius - 50),
       };
+      if (g.mode === "survival") {
+        const angle = g.random() * Math.PI * 2,
+          r = 500 + g.random() * 420;
+        p.x = g.w / 2 + Math.cos(angle) * r;
+        p.y = g.h / 2 + Math.sin(angle) * r;
+      }
       if (g.mapId === "royal" && p.y < g.h * 0.23) continue;
       if (
         g.mapId === "hunger" &&
@@ -151,7 +157,7 @@ export class ArenaMechanics {
       if (p.securityUntil < g.round) p.securityUntil = 0;
     }
     g.secretRules?.beginRound();
-    if (["platform", "survival"].includes(g.mode)) return;
+    if (g.mode === "platform") return;
     // Exactly one 3% roll per complete match. Douggy's food roll is independent.
     if (!this.globalRareRolled && !this.lastGlobalRollRound) {
       this.globalRareRolled = true;

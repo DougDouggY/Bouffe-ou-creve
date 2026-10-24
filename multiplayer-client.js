@@ -463,8 +463,13 @@ export function setupMultiplayer({
       } else if (packet.type === "rivalry") showRivalry(packet);
       else if (packet.type === "profile") pendingProfile = packet.state;
       else if (packet.type === "room") acceptRoom(packet.room);
-      else if (packet.type === "state") enter(packet.state);
-      else if (packet.type === "resolution") {
+      else if (packet.type === "state") {
+        // A newer terminal snapshot supersedes an older non-terminal replay.
+        // Keep the real final-turn recording when its own final state is ended.
+        if (packet.state.phase === "ended" && replay?.final?.phase !== "ended")
+          replay = null;
+        enter(packet.state);
+      } else if (packet.type === "resolution") {
         replay = {
           ...packet,
           frames: [],
@@ -761,7 +766,7 @@ export function setupMultiplayer({
     const saved = JSON.parse(sessionStorage.getItem(TICKET_KEY));
     if (
       saved?.version === VERSION &&
-      /^[A-HJ-NP-Z2-9]{12}$/.test(saved.code) &&
+      /^(?:[A-HJ-NP-Z2-9]{4}|[A-HJ-NP-Z2-9]{12})$/.test(saved.code) &&
       /^[a-f0-9]{64}$/.test(saved.token)
     ) {
       ticket = saved;

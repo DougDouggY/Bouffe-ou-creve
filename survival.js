@@ -1,5 +1,5 @@
 import { survivalWaypoint } from "./survival-navigation.js?v=hunger-18";
-// Secret FILMOVORE survival mode. Its finite food supply never calls Game.addFood.
+// Burger Games. Its finite food supply never calls Game.addFood.
 export function survivalLayout(w, h) {
   const unit = Math.min(1, Math.min(w, h) / 9000);
   return {
@@ -8,7 +8,7 @@ export function survivalLayout(w, h) {
     y: h / 2,
     coreRadius: 420 * unit,
     foodRadii: [620, 740, 860].map((r) => r * unit),
-    spawnRadius: 2500 * unit,
+    spawnRadius: 1180 * unit,
   };
 }
 export function survivalStart(w, h, index, count) {
@@ -40,11 +40,24 @@ export function survivalObstacles(w, h) {
       artH: layout.coreRadius * 2,
     },
   ];
+  return objects;
+}
+export function survivalScenery(w, h) {
+  const { unit: u, x: cx, y: cy } = survivalLayout(w, h);
+  const objects = [];
+  const block = (dx, dy, bw, bh, angle, extra) => ({
+    x: cx + dx * u,
+    y: cy + dy * u,
+    w: bw * u,
+    h: bh * u,
+    angle,
+    ...extra,
+  });
   for (let ring = 0; ring < 2; ring++)
     for (let i = 0; i < (ring ? 16 : 12); i++) {
       const a = (i * Math.PI * 2) / (ring ? 16 : 12) + ring * 0.14,
         r =
-          (ring ? (Math.min(w, h) * 0.43) / u : 3150) + Math.sin(i * 2.3) * 110;
+          (ring ? (Math.min(w, h) * 0.43) / u : 1850) + Math.sin(i * 2.3) * 110;
       objects.push(
         block(
           Math.cos(a) * r,
@@ -57,6 +70,26 @@ export function survivalObstacles(w, h) {
       );
     }
   return objects;
+}
+// Shared samples drive both the visible raclette ribbons and their slowdown zones.
+export function survivalRivers(w, h) {
+  return [-1, 1].map((side) =>
+    Array.from({ length: 57 }, (_, i) => {
+      const t = i / 56;
+      return {
+        x:
+          w *
+          (0.5 +
+            side *
+              (side < 0
+                ? 0.15 + 0.035 * Math.sin(t * 8 + 0.4)
+                : 0.14 + 0.045 * Math.sin(t * 6 + 1))),
+        y: h * (0.06 + t * 0.88),
+        r:
+          Math.min(w, h) * (0.01 + (0.003 * (1 + Math.sin(t * 13 + side))) / 2),
+      };
+    }),
+  );
 }
 export function survivalZone(g, round = g.round) {
   const step = Math.max(0, round - 5);
@@ -98,23 +131,42 @@ export class SurvivalRules {
       "small",
     ];
     const layout = survivalLayout(g.w, g.h);
-    // Three complete accessible food rings, outside the central sculpture.
-    for (let ring = 0; ring < 3; ring++)
-      for (let i = 0; i < 32; i++) {
-        const angle = -Math.PI / 2 + (i * Math.PI) / 16,
-          r = layout.foodRadii[ring];
+    // A seeded scattered feast, outside the monument and inside the starting circle.
+    for (let i = 0; i < 96; i++)
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const angle = g.random() * Math.PI * 2;
+        const inner = layout.coreRadius + 65 * layout.unit,
+          outer = 980 * layout.unit;
+        const radius = Math.sqrt(
+          inner * inner + g.random() * (outer * outer - inner * inner),
+        );
         const point = {
-          x: g.w / 2 + Math.cos(angle) * r,
-          y: g.h / 2 + Math.sin(angle) * r,
+          x: layout.x + Math.cos(angle) * radius,
+          y: layout.y + Math.sin(angle) * radius,
         };
-        if (!g.obstacles.some((o) => api.intersects(point, 26, o)))
-          g.food.push({
-            ...point,
-            type: "burger",
-            initialFeast: true,
-            size: types[(i + ring * 4) % types.length],
-          });
+        if (
+          g.obstacles.some((o) => api.intersects(point, 26, o)) ||
+          g.food.some((f) => dist(point, f) < 42 * layout.unit)
+        )
+          continue;
+        g.food.push({
+          ...point,
+          type: "burger",
+          initialFeast: true,
+          size: types[i % types.length],
+        });
+        break;
       }
+    g.zones = survivalRivers(g.w, g.h).flatMap((river, arm) =>
+      river.map((point, segment) => ({
+        ...point,
+        kind: "cheese",
+        flow: true,
+        river: true,
+        arm,
+        segment,
+      })),
+    );
     for (const p of g.people) p.survivalStyle = p.id % 3;
   }
   onEnd() {
@@ -127,6 +179,9 @@ export class SurvivalRules {
   launch() {}
   beginRound() {
     const g = this.g;
+    const closing =
+      g.round >= 6 && survivalZone(g).r < survivalZone(g, g.round - 1).r;
+
     // At most one drop every fourth round, with a genuine empty interval and a warning.
     if (g.round >= 5 && g.round % 4 === 1 && g.random() < 0.78) {
       const z = survivalZone(g, g.round + 1);
@@ -150,6 +205,18 @@ export class SurvivalRules {
         break;
       }
     }
+    if (closing)
+      g.announcement = {
+        kind: "zone",
+        text: "LA ZONE SE REFERME À LA FIN DE CE TOUR ! Rejoins le cercle rouge.",
+        round: g.round,
+      };
+    else if (g.round === 5)
+      g.announcement = {
+        kind: "zone",
+        text: "ATTENTION : LA ZONE COMMENCE À SE REFERMER AU PROCHAIN TOUR.",
+        round: g.round,
+      };
   }
   tick(ms) {
     this.clock += ms;
@@ -283,19 +350,34 @@ export class SurvivalRules {
 }
 export function drawSurvivalFloor(ctx, g, time) {
   if (g.mode !== "survival" || !g.secretRules) return;
-  const zone = survivalZone(g),
-    rules = g.secretRules;
+  const rules = g.secretRules,
+    zone = survivalZone(
+      g,
+      g.round >= 6 && rules.resolved < g.round ? g.round - 1 : g.round,
+    );
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, g.w, g.h);
-  ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2, true);
-  ctx.fillStyle = "#411321a8";
-  ctx.fill("evenodd");
-  ctx.beginPath();
-  ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2);
-  ctx.strokeStyle = g.round >= 6 ? "#ff694c" : "#edd295";
-  ctx.lineWidth = 7;
-  ctx.stroke();
+  if (g.round >= 6) {
+    ctx.beginPath();
+    ctx.rect(0, 0, g.w, g.h);
+    ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2, true);
+    ctx.fillStyle = "#411321a8";
+    ctx.fill("evenodd");
+    ctx.beginPath();
+    ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2);
+    ctx.strokeStyle = "#ff694c";
+    ctx.lineWidth = 7;
+    ctx.stroke();
+  }
+  if (g.round === 5 || (g.round >= 6 && rules.resolved < g.round)) {
+    const target = survivalZone(g, g.round === 5 ? 6 : g.round);
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
+    ctx.setLineDash([35, 22]);
+    ctx.strokeStyle = "#ff644f";
+    ctx.lineWidth = 10;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.font = "bold 20px Georgia";
   ctx.textAlign = "center";
   ctx.fillStyle = "#fff1c9";

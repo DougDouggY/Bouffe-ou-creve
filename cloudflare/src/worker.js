@@ -57,13 +57,14 @@ export default {
           service: "bouffe-private-rooms",
           version: SIMULATION_VERSION,
           roomLimit: 8,
+          invitationLength: 4,
           teamSizes: [1, 2, 3, 4],
           trophies: true,
           rivalries: true,
           ceremony: true,
           audioCosmetics: true,
           economy: true,
-          progressCounters:true,
+          progressCounters: true,
           sizes: [8, 24, 50],
         },
         200,
@@ -152,11 +153,11 @@ export default {
             "Recharge le jeu pour mettre le multijoueur à jour.",
           );
         const creating = url.pathname === "/api/rooms";
-        const code = creating ? randomCode() : normalizeCode(body.code);
+        let code = creating ? randomCode() : normalizeCode(body.code);
         if (!validCode(code))
           throw new RoomError(
             "CODE",
-            "Le code doit contenir les 12 caractères de l’invitation.",
+            "Le code contient 4 lettres ou chiffres. Les anciennes invitations restent acceptées.",
           );
         const digest = await crypto.subtle.digest(
           "SHA-256",
@@ -200,14 +201,25 @@ export default {
             maxMass: verifiedState.maxMass || 0,
           };
         }
-        const room = env.ROOMS.get(env.ROOMS.idFromName("room:" + code));
-        response = await room.fetch(
-          "https://internal/" + (creating ? "create" : "join"),
-          {
-            method: "POST",
-            body: JSON.stringify({ ...body, code, profileId, statistics }),
-          },
-        );
+        // A short code is allocated atomically by its Durable Object. A collision
+        // never joins or overwrites another room; try a fresh random code instead.
+        for (let attempt = 0; attempt < 16; attempt++) {
+          const room = env.ROOMS.get(env.ROOMS.idFromName("room:" + code));
+          response = await room.fetch(
+            "https://internal/" + (creating ? "create" : "join"),
+            {
+              method: "POST",
+              body: JSON.stringify({ ...body, code, profileId, statistics }),
+            },
+          );
+          if (
+            !creating ||
+            response.status !== 409 ||
+            (await response.clone().json()).error !== "EXISTS"
+          )
+            break;
+          code = randomCode();
+        }
       } else if (
         request.method === "GET" &&
         url.pathname.startsWith("/api/socket/")

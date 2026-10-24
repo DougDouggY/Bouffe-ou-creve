@@ -10,7 +10,7 @@ import {
   awardCumulativeTrophies,
   restoreModeWins,
 } from "./trophy-progress.js?v=wardrobe-41";
-import { setupRestaurantHome } from "./restaurant-home.js?v=secret-42";
+import { setupRestaurantHome } from "./restaurant-home.js?v=burger-43";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
 import { createMotionAudio } from "./motion-audio.js?v=wardrobe-41";
@@ -52,7 +52,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=wardrobe-41";
+import { setupMultiplayer } from "./multiplayer-client.js?v=burger-43";
 import {
   CA,
   Ee,
@@ -65,8 +65,8 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=secret-42";
-import { drawSurvivalFloor } from "./survival.js?v=hunger-18";
+} from "./simulation-core.js?v=burger-43";
+import { drawSurvivalFloor } from "./survival.js?v=burger-43";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
   SECRET_GAME_MODES,
@@ -83,7 +83,7 @@ import {
   secretTrophyEvent,
 } from "./secret-trophies.js?v=secret-42";
 
-import { arenaSize, drawArenaBorders } from "./arena-bounds.js?v=collection-37";
+import { arenaSize, drawArenaBorders } from "./arena-bounds.js?v=burger-43";
 import {
   createRestaurantMenu,
   setupSecretBurger,
@@ -100,7 +100,7 @@ import {
   drawExtraCosmetic,
   extraCosmeticImage,
 } from "./cosmetics.js?v=podium-35";
-import { drawMapArt, mapArtURL } from "./map-art.js?v=secret-42";
+import { drawMapArt, mapArtURL } from "./map-art.js?v=burger-43";
 import {
   WORK_IN_PROGRESS_MAPS,
   mapGroups,
@@ -1825,6 +1825,11 @@ function Qt({ start: e, appearance: g }) {
   }
   function S(l) {
     if (!modeUnlocked(l, o)) return;
+    if (["somalia","platform","survival","cannibal","icecream"].includes(l)) {
+      E=l;u=me[l].onlyMap || "savanna";
+      L("#start-game").click();
+      return;
+    }
     ((E = l),
       (u =
         me[E].onlyMap ||
@@ -2635,6 +2640,7 @@ function dt(e, g, o, u = 0) {
         e.restore());
       continue;
     }
+    if (g.mode === "survival" && i.river) { e.restore(); continue; }
     if (i.kind === "cheese" && i.flow) {
       const I = Math.sin(u * 0.004 + i.segment);
       (fA(e, -i.r * 0.2, i.r * 0.15, 2 + I * 0.4, 1.6, "#fff2b9bb"),

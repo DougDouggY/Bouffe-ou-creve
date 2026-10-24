@@ -21,7 +21,7 @@ export const TURN_MS = 45000;
 export const RECONNECT_MS = 90000;
 export const IDLE_MS = 30 * 60000;
 const MAX_AGE = 4 * 60 * 60000;
-const codePattern = /^[A-HJ-NP-Z2-9]{12}$/;
+const codePattern = /^(?:[A-HJ-NP-Z2-9]{4}|[A-HJ-NP-Z2-9]{12})$/;
 export const validCode = (code) =>
   typeof code === "string" && codePattern.test(code);
 export function normalizeCode(code) {
@@ -32,7 +32,7 @@ export function normalizeCode(code) {
 export function randomCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from(
-    crypto.getRandomValues(new Uint8Array(12)),
+    crypto.getRandomValues(new Uint8Array(4)),
     (b) => alphabet[b & 31],
   ).join("");
 }

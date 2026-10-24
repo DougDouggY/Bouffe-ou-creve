@@ -11,7 +11,7 @@ import {
   SurvivalRules,
   survivalStart,
   survivalObstacles,
-} from "./survival.js?v=hunger-18";
+} from "./survival.js?v=burger-43";
 import {
   SecretRules,
   SECRET_GAME_MODES,
@@ -23,8 +23,8 @@ import {
   hungerZone,
   insideHungerZone,
 } from "./hunger-games.js?v=filmovore-15";
-import { arenaBorderBodies } from "./arena-bounds.js?v=collection-37";
-import { ArenaMechanics } from "./arena-mechanics.js?v=collection-37";
+import { arenaBorderBodies } from "./arena-bounds.js?v=burger-43";
+import { ArenaMechanics } from "./arena-mechanics.js?v=burger-43";
 import { isVisible as xA } from "./visibility.js?v=filmovore-15";
 import { consumeShelves, SHELF_MASS_GAIN } from "./shelves.js";
 const SECRET_MAP_MODE = (mode) => Object.hasOwn(SECRET_GAME_MODES, mode);
@@ -276,7 +276,7 @@ for (const [id, mode] of Object.entries(SECRET_GAME_MODES))
         : id === "cannibal"
           ? "Les victimes sont des adultes fictifs de 40 kg. Elles préparent de courtes fuites avant les propulsions simultanées, paniquent et trébuchent parfois. Les gourmands peuvent toujours se dévorer. Dernier survivant : même règle que le Classique."
           : id === "survival"
-            ? "24 gourmands à 60 kg sur un cercle de départ. Le monument circulaire central est infranchissable ; les burgers sont accessibles en anneau autour. Suis la flèche du festin pour le rejoindre, puis explore la grande forêt. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
+            ? "24 gourmands à 60 kg sur un cercle de départ. Le monument circulaire central est infranchissable ; les burgers sont dispersés et accessibles autour. Suis la flèche du festin pour le rejoindre, puis explore la forêt et ses rivières de raclette non comestibles. Aucun réapprovisionnement ordinaire : guette les rares parachutages. Dès le sixième tour, rejoins le cercle annoncé avant la fin du mouvement. Dernier survivant : victoire !"
             : "Une grande rue, des camions de glaces vus du dessus et une course-poursuite de comédie horrifique. Capture les enfants pour grossir, évite les camions plus imposants et reste le dernier gourmand en piste.",
   };
 CA.royal = {
@@ -6671,7 +6671,7 @@ function Zt(e, g, o = Math.random) {
     };
   for (const s of e.zones || []) s.kind === "portal" && I(s, "reposition");
   if (u.mass >= VA)
-    for (const s of e.zones || []) s.kind === "cheese" && I(s, "fondue");
+    for (const s of e.zones || []) s.kind === "cheese" && !s.flow && I(s, "fondue");
   const C = e.food
     .filter(Fe)
     .sort((s, r) => mA(u, s) / Math.sqrt(ZA(s)) - mA(u, r) / Math.sqrt(ZA(r)))
@@ -6770,7 +6770,7 @@ function xt(e, g, o, u, E, evaluation) {
     s = !1,
     r = g.sticky || null;
   const d = new Set(),
-    M = (u.zones || []).filter((m) => !(m.kind === "cheese" && g.mass >= VA));
+    M = (u.zones || []).filter((m) => !(m.kind === "cheese" && !m.flow && g.mass >= VA));
   let S = 0;
   const v = M.filter((m) => m.kind === "portal"),
     f = new Set(),
@@ -6820,6 +6820,7 @@ function xt(e, g, o, u, E, evaluation) {
     if (g.mass >= VA)
       for (const p of u.zones || [])
         p.kind === "cheese" &&
+          !p.flow &&
           !d.has(p.flow ? "arm" + p.arm : p) &&
           Math.hypot(i - p.x, I - p.y) <= g.r + p.r &&
           (d.add(p.flow ? "arm" + p.arm : p), (B += Qe * G));
@@ -7330,7 +7331,7 @@ class zt {
   consumeFondue() {
     for (let g = this.zones.length - 1; g >= 0; g--) {
       const o = this.zones[g];
-      if (!o || o.inactive || o.kind !== "cheese") continue;
+      if (!o || o.inactive || o.kind !== "cheese" || o.flow) continue;
       const E = this.people
         .filter(
           (A) =>

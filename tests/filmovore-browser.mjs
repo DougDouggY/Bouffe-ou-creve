@@ -196,7 +196,7 @@ try {
       );
       check(
         "large arena, spaced ring and final original size",
-        separation > 650 &&
+        separation > 300 &&
           survivalZone(g, 1).r === 5940 &&
           survivalZone(g, 60).r === 990,
         {
