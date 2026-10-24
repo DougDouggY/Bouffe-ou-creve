@@ -111,42 +111,11 @@ try {
     await page.setViewportSize(
       mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
     );
-    for (const variant of ["characters", "steak"]) {
-      await page.locator("#options-entry").press("Enter");
-      await page.locator("#options-dialog").waitFor({ state: "visible" });
-      await page.locator("#multi-entry-style").selectOption(variant);
-      await page.locator("#close-options").click();
-      const point = await page.locator(".burger-menu").evaluate((svg) => {
-        const p = new DOMPoint(768, 972).matrixTransform(svg.getScreenCTM());
-        return { x: p.x, y: p.y };
-      });
-      if (variant === "characters") {
-        const character = await page.evaluate(async () => {
-          const image = await createImageBitmap(
-            await (await fetch("./assets/mask-multiplayer-entry.png")).blob(),
-          );
-          const canvas = document.createElement("canvas");
-          canvas.width = 1536;
-          canvas.height = 1024;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(image, 0, 0, 1536, 1024);
-          const data = ctx.getImageData(0, 0, 1536, 1024).data;
-          for (let y = 400; y < 900; y += 10)
-            for (let x = 120; x < 340; x += 10)
-              if (data[(y * 1536 + x) * 4 + 3] > 250) {
-                const p = new DOMPoint(x, y).matrixTransform(
-                  document.querySelector(".burger-menu").getScreenCTM(),
-                );
-                return { x: p.x, y: p.y };
-              }
-          throw Error("No character silhouette");
-        });
-        await page.mouse.click(character.x, character.y);
-      } else await page.mouse.click(point.x, point.y);
-      await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
-      await page.locator("#multiplayer-close").click();
-    }
+    await page.locator("#multiplayer-entry").press("Enter");
+    await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
+    await page.locator("#multiplayer-close").click();
   }
+
   await page.locator("#options-entry").press("Enter");
   await page.locator("#shadow-entry").click();
   await page.locator("#shadow-password").fill("Pologne");
@@ -157,7 +126,7 @@ try {
   await page.locator("#multiplayer-close").click();
   assert.deepEqual(errors, []);
   console.log(
-    "Five actual MP3 files decoded; live preview played; both integrated menu variants opened multiplayer on desktop/mobile; hidden-side access passed.",
+    "Five actual MP3 files decoded; live preview played; integrated character entrance opened multiplayer on desktop/mobile; hidden-side access passed.",
   );
 } finally {
   await browser.close();

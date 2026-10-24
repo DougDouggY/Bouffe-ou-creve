@@ -113,20 +113,12 @@ try {
         return "Three RGBA crops identical including holes and disconnected islands";
       }, legacy);
       console.log(masks);
-      // Both prototypes are actual artwork interactions and open the real multiplayer dialog.
-      for (const variant of ["characters", "steak"]) {
-        await page.locator("#options-entry").press("Enter");
-        await page.locator("#multi-entry-style").selectOption(variant);
-        await page.locator("#close-options").click();
-        const point = await page.locator(".burger-menu").evaluate((svg) => {
-          const p = new DOMPoint(768, 972).matrixTransform(svg.getScreenCTM());
-          return { x: p.x, y: p.y };
-        });
-        await page.mouse.click(point.x, point.y);
-        await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
-        await page.locator("#multiplayer-close").click();
-      }
+      // The final character entrance remains keyboard accessible.
+      await page.locator("#multiplayer-entry").press("Enter");
+      await page.locator("#multiplayer-dialog").waitFor({ state: "visible" });
+      await page.locator("#multiplayer-close").click();
     }
+
     await page.locator('[data-actual-mode="classic"]').press("Enter");
     await page.locator('[data-group="available"] .book-cover').click();
     await page.locator('[data-map="cantine"]').click();

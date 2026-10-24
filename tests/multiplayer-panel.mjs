@@ -267,8 +267,8 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=ceremony-38"));
-  assert(resources.has("style.css?v=ceremony-38"));
+  assert(resources.has("game.js?v=menu-sign-39"));
+  assert(resources.has("style.css?v=menu-sign-39"));
   assert(resources.has("multiplayer-client.js?v=ceremony-38"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {

@@ -4934,9 +4934,11 @@ body.ceremony-open #match-podium {
   flex-shrink: 0;
   padding: 5px 10px;
 }
-/* Both entrances are drawn into the original menu scene, with no floating panel. */
+/* The original guests, on both sides, invite players into the private lobby. */
 #multiplayer-entry,
-body.shadow-realm #multiplayer-entry {
+body.shadow-realm #multiplayer-entry,
+#multiplayer-entry:hover,
+#multiplayer-entry:focus-visible {
   position: static;
   inset: auto;
   width: auto;
@@ -4949,74 +4951,59 @@ body.shadow-realm #multiplayer-entry {
   transform: none;
   filter: none;
 }
-#multiplayer-entry:hover,
-#multiplayer-entry:focus-visible {
-  background: none;
-  transform: none;
-  filter: none;
-  box-shadow: none;
-}
-#multiplayer-entry .multi-menu-label {
-  font-size: 29px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  fill: #ffedbe;
-  stroke: #4b2b15;
-  stroke-width: 5px;
-  paint-order: stroke;
-  opacity: 1;
-}
-.extra-menu-steak {
-  display: none;
-  pointer-events: none;
-}
-.burger-menu[data-multi-entry="steak"] #multiplayer-entry .extra-menu-steak {
-  display: block;
-}
-.burger-menu[data-multi-entry="steak"] #multiplayer-entry .ingredient-surface,
-.burger-menu[data-multi-entry="steak"] #multiplayer-entry .ingredient-light {
-  display: none;
-}
-.burger-menu[data-multi-entry="characters"]
-  #multiplayer-entry.is-hovered
-  .ingredient-texture,
-.burger-menu[data-multi-entry="characters"]
-  #multiplayer-entry:focus-visible
-  .ingredient-texture {
+#multiplayer-entry:is(.is-hovered, :focus-visible) .ingredient-texture {
   animation: tablee-sway 1.2s ease-in-out infinite alternate;
 }
-#multiplayer-entry.is-hovered .multi-menu-label,
-#multiplayer-entry:focus-visible .multi-menu-label {
-  fill: #fff8df;
-  stroke: #6e3517;
-}
-.burger-menu[data-multi-entry="steak"]
-  #multiplayer-entry.is-hovered
-  .extra-menu-steak {
-  animation: steak-sway 1s ease-in-out infinite alternate;
-  transform-origin: 768px 979px;
-}
 @keyframes tablee-sway {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-3px);
-  }
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
 }
-@keyframes steak-sway {
-  from {
-    transform: translateY(0) rotate(-0.5deg);
-  }
-  to {
-    transform: translateY(-4px) rotate(0.5deg);
-  }
+.multiplayer-sign {
+  position: absolute;
+  top: calc(clamp(22px, 3.6vw, 48px) + 27px);
+  left: 50%;
+  width: clamp(175px, 24vw, 280px);
+  box-sizing: border-box;
+  padding: 12px 15px;
+  border: 2px solid #e4b55b;
+  border-radius: 5px 5px 11px 11px;
+  background: repeating-linear-gradient(2deg, #fff2 0 1px, transparent 1px 8px), linear-gradient(100deg, #542e19, #85502a 50%, #502a17);
+  color: #fff0c2;
+  box-shadow: 0 6px 12px #1d100a88, inset 0 0 0 3px #372012;
+  font: 900 clamp(20px, 2.5vw, 30px)/1.1 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 1px;
+  text-shadow: 0 2px #28150d;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -85px) rotate(-3deg);
+  transition: transform 380ms cubic-bezier(.2, 1.35, .35, 1), opacity 160ms, visibility 380ms;
+  pointer-events: none;
+}
+.multiplayer-sign::before, .multiplayer-sign::after {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  height: 22px;
+  width: 4px;
+  border-inline: 1px solid #442411;
+  background: repeating-linear-gradient(35deg, #ba9457 0 3px, #73502c 3px 6px);
+  box-shadow: 1px 1px 2px #0006;
+}
+.multiplayer-sign::before { left: 17%; }
+.multiplayer-sign::after { right: 17%; }
+#title-screen:has(#multiplayer-entry:is(.is-hovered, .is-selecting, :focus-visible)) .multiplayer-sign {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) rotate(0deg);
+}
+.title-copy p { transition: opacity 160ms; }
+#title-screen:has(#multiplayer-entry:is(.is-hovered, .is-selecting, :focus-visible)) .title-copy p { opacity: 0; }
+@media (max-width: 650px) {
+  .multiplayer-sign { top: 57px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  #multiplayer-entry .ingredient-texture,
-  #multiplayer-entry .extra-menu-steak {
-    animation: none !important;
-  }
+  #multiplayer-entry .ingredient-texture { animation: none !important; }
+  .multiplayer-sign, .title-copy p { transition: none; }
 }
 .ceremony-stage figure{flex-basis:195px;}.ceremony-stage .podium-course--champion figure{flex-basis:150px;}.ceremony-stage .podium-course--champion[data-members="1"] figure{flex-basis:220px;}
 @media(max-width:650px){.ceremony-stage figure{flex-basis:190px;}.ceremony-stage .podium-course--champion figure{flex-basis:130px;}.ceremony-stage .podium-course--champion[data-members="1"] figure{flex-basis:215px;}}

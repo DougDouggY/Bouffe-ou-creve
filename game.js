@@ -97,7 +97,7 @@ import {
   drawMarketFog as nt,
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
-import { setupBurgerMenu } from "./burger-menu.js?v=ceremony-38";
+import { setupBurgerMenu } from "./burger-menu.js?v=menu-sign-39";
 import { createGameAudio } from "./audio.js?v=ceremony-38";
 import { setupMusicControls } from "./music.js?v=filmovore-15";
 

@@ -18,8 +18,10 @@ Le mode de mouvements simplifiés reste respecté.
 
 Options agrandies, fermeture par croix, effets et musique réglables en partie.
 Les guides longs des objets/arènes ont été retirés des options, pas du jeu.
-Deux entrées multijoueurs sont comparables dans les options : personnages de
-l'illustration (défaut), ou steak supplémentaire. L'image originale est conservée.
+L’accès multijoueur utilise les personnages des deux côtés de l’illustration.
+Une pancarte « Multijoueur ! » descend sous le titre au survol ou au focus clavier.
+Le clic sur les personnages ouvre le salon ; aucun libellé fixe en bas ni steak
+supplémentaire. L’image originale est conservée.
 Les invités peuvent demander une carte ; seul l'hôte applique le choix.
 
 ## Sons et économie

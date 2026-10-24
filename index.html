@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Les gourmands — Le dernier repas</title>
     <script src="./display-mode.js?v=phone-36"></script>
-    <script type="module" src="./game.js?v=ceremony-38"></script>
+    <script type="module" src="./game.js?v=menu-sign-39"></script>
 
-    <link rel="stylesheet" href="./style.css?v=ceremony-38" />
+    <link rel="stylesheet" href="./style.css?v=menu-sign-39" />
   </head>
   <body>
     <div id="app">
@@ -30,6 +30,9 @@
           <div id="title-screen">
             <div class="title-copy">
               <h1>LES GOURMANDS</h1>
+              <div class="multiplayer-sign" aria-hidden="true">
+                Multijoueur !
+              </div>
               <p>Grossis. Vise juste. Dévore tes rivaux.</p>
             </div>
             <svg
@@ -155,32 +158,15 @@
                 aria-haspopup="dialog"
                 aria-controls="multiplayer-dialog"
               >
-                <path d="M610 930H926V1008H610Z" />
-                <image
-                  class="extra-menu-steak"
-                  href="./assets/menu-extra-steak.webp"
-                  x="610"
-                  y="926"
-                  width="316"
-                  height="106"
-                  aria-hidden="true"
-                />
-                <text
-                  class="multi-menu-label"
-                  x="768"
-                  y="976"
-                  text-anchor="middle"
-                >
-                  MULTIJOUEUR
-                </text>
+                <path d="M0 20H420V850H0ZM1120 20H1536V850H1120Z" />
                 <title>Multijoueur</title>
               </g>
             </svg>
           </div>
           <div class="title-wallet">
-              <span>🧈 <strong data-wallet>0</strong> points de graisse</span
-              ><span id="menu-record"></span>
-            </div>
+            <span>🧈 <strong data-wallet>0</strong> points de graisse</span
+            ><span id="menu-record"></span>
+          </div>
 
           <section id="map-screen" hidden>
             <button id="back-title">← Retour au burger</button>
@@ -530,11 +516,6 @@
             </section>
             <fieldset class="menu-options">
               <legend>La maison</legend>
-              <label for="multi-entry-style">Accès au multijoueur</label
-              ><select id="multi-entry-style">
-                <option value="characters">La tablée</option>
-                <option value="steak">Supplément steak</option>
-              </select>
               <button id="shadow-entry">La face cachée du burger</button
               ><button id="return-classic" hidden>
                 Retour au burger classique

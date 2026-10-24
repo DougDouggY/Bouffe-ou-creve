@@ -207,35 +207,8 @@ export async function setupBurgerMenu() {
   document.addEventListener("shadowchange", applyTheme);
   applyTheme();
 
-  let variant = "characters";
-  const variantControl = document.querySelector("#multi-entry-style");
-  try {
-    variant =
-      localStorage.getItem("gourmands-multi-entry") === "steak"
-        ? "steak"
-        : "characters";
-  } catch {}
-  const applyVariant = () => {
-    svg.dataset.multiEntry = variant;
-    variantControl.value = variant;
-  };
-  variantControl.onchange = () => {
-    variant = variantControl.value;
-    try {
-      localStorage.setItem("gourmands-multi-entry", variant);
-    } catch {}
-    applyVariant();
-  };
-  applyVariant();
-  const extraSteak = await loadImage(
-    new URL("./assets/menu-extra-steak.webp", import.meta.url).href,
-  );
-  const steakCanvas = document.createElement("canvas");
-  steakCanvas.width = 316;
-  steakCanvas.height = 106;
-  const steakCtx = steakCanvas.getContext("2d", { willReadFrequently: true });
-  steakCtx.drawImage(extraSteak, 0, 0, 316, 106);
-  const steakAlpha = steakCtx.getImageData(0, 0, 316, 106).data;
+  // The chosen entrance is the original company on BOTH sides of the burger.
+  svg.dataset.multiEntry = "characters";
   let hovered = null;
   function pick(event) {
     const matrix = svg.getScreenCTM();
@@ -246,28 +219,13 @@ export async function setupBurgerMenu() {
     const x = Math.floor(point.x),
       y = Math.floor(point.y);
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return null;
-    const multi = layers.find(
-      (layer) => layer.group.id === "multiplayer-entry",
-    );
-    if (x >= 620 && x <= 916 && y >= 946 && y <= 995) return multi.group;
-    if (
-      variant === "steak" &&
-      x >= 610 &&
-      x < 926 &&
-      y >= 926 &&
-      y < 1032 &&
-      steakAlpha[((y - 926) * 316 + x - 610) * 4 + 3] >= 128
-    )
-      return multi.group;
+    // Food keeps priority where the silhouettes touch; both groups of people
+    // share the same precise alpha mask and open the same real lobby.
     return (
-      layers.find(
-        (layer) =>
-          (layer.group.id !== "multiplayer-entry" ||
-            variant === "characters") &&
-          layer.alpha[y * WIDTH + x] >= 128,
-      )?.group || null
+      layers.find((layer) => layer.alpha[y * WIDTH + x] >= 128)?.group || null
     );
   }
+
   function hover(group) {
     if (group === hovered) return;
     hovered?.classList.remove("is-hovered");
