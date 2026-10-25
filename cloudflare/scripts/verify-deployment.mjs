@@ -207,7 +207,7 @@ export async function verifyDeployment(
         outfit: "cook",
         aura: "aura_gold",
         podium: "podium_jump",
-        slide: "slide_duck",
+        slide: "slide_prout",
         title: "title_3",
       },
     });
@@ -300,7 +300,7 @@ export async function verifyDeployment(
           outfit: "cook",
           aura: "aura_gold",
           podium: "podium_jump",
-          slide: "slide_duck",
+          slide: "slide_prout",
           title: "title_3",
         },
       ],

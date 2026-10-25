@@ -92,7 +92,7 @@ try {
     ),
   );
   const audio = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=ceremony-38");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=sounds-44");
     const ctx = new AudioContext(),
       durations = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {
@@ -105,8 +105,8 @@ try {
     await ctx.close();
     return durations;
   });
-  assert.equal(audio.length, 8);
-  assert(audio.every((d) => d > 0.1 && d < 2));
+  assert.equal(audio.length, 16);
+  assert(audio.every((d) => d > 0.1 && d < 4));
   await page.locator("#close-shop").click();
   for (const mobile of [false, true]) {
     await page.setViewportSize(

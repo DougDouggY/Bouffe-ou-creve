@@ -1,4 +1,4 @@
-import { cosmeticMotion } from "./cosmetic-effects.js?v=wardrobe-41";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=sounds-44";
 import { isVisible } from "./visibility.js?v=filmovore-15";
 import { hungerZone } from "./hunger-games.js?v=filmovore-15";
 const images = new Map();

@@ -1,4 +1,8 @@
-import { SLIDE_SOUNDS, slideSound } from "./sound-catalog.js?v=wardrobe-41";
+import {
+  SLIDE_SOUNDS,
+  COLLISION_SOUNDS,
+  slideSound,
+} from "./sound-catalog.js?v=sounds-44";
 import {
   effectsGain,
   effectsSettings,
@@ -11,9 +15,11 @@ export function createMotionAudio({
   const pools = new Map(),
     active = new Set(),
     queue = [],
-    heard = new Set();
+    heard = new Set(),
+    impacts = new Map();
   let muted = false,
     boingAt = -Infinity,
+    impactAt = -Infinity,
     flushPending = false;
   const url = (file) => new URL("./assets/audio/" + file, import.meta.url).href;
   function pool(file) {
@@ -117,6 +123,7 @@ export function createMotionAudio({
     prime(cosmetics = []) {
       for (const c of cosmetics) pool(slideSound(c?.slide).file);
       pool("move-spring.mp3");
+      for (const sound of COLLISION_SOUNDS) pool(sound.file);
     },
     slide(person, turn) {
       if (person.human !== true) return;
@@ -128,6 +135,44 @@ export function createMotionAudio({
         remote: person.id !== 0,
         human: !!person.human,
         weight: person.id === 0 ? 1 : 0.65,
+      });
+    },
+    collision(person, other, turn = 0, stamp = 0) {
+      const human =
+        [person, other].find((p) => p?.human === true && p.id === 0) ||
+        [person, other].find((p) => p?.human === true);
+      if (
+        !human ||
+        muted ||
+        effectsGain() === 0 ||
+        (human.id !== 0 && !effectsSettings().others)
+      )
+        return false;
+      const time = now(),
+        a = person?.networkSeat ?? person?.id ?? -1,
+        b = other?.networkSeat ?? other?.id ?? -1;
+      const pair = turn + ":" + Math.min(a, b) + ":" + Math.max(a, b);
+      if (
+        time - impactAt < 400 ||
+        time - (impacts.get(pair) ?? -Infinity) < 900 ||
+        active.size >= 3 ||
+        queue.length > 1
+      )
+        return false;
+      impacts.set(pair, time);
+      impactAt = time;
+      const index =
+        Math.abs(
+          turn * 17 +
+            Math.min(a, b) * 7 +
+            Math.max(a, b) * 13 +
+            Math.floor(stamp / 1000),
+        ) % COLLISION_SOUNDS.length;
+      return enqueue({
+        file: COLLISION_SOUNDS[index].file,
+        remote: human.id !== 0,
+        human: true,
+        weight: 0.45,
       });
     },
     bounce() {
@@ -148,6 +193,9 @@ export function createMotionAudio({
     },
     reset() {
       heard.clear();
+      impacts.clear();
+      impactAt = -Infinity;
+      boingAt = -Infinity;
       queue.length = 0;
       for (const v of [...active]) {
         v.audio.pause();

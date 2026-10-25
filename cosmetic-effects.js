@@ -1,4 +1,4 @@
-import { SLIDE_SOUNDS } from "./sound-catalog.js?v=wardrobe-41";
+import { SLIDE_SOUNDS } from "./sound-catalog.js?v=sounds-44";
 export const COSMETIC_SLOTS = [
   "hat",
   "outfit",

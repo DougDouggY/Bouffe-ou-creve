@@ -448,7 +448,7 @@ try {
   await page.locator("#back-title").click();
   await openGourmand(page);
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
-  assert.equal(await page.locator(".shop-card").count(), 79);
+  assert.equal(await page.locator(".shop-card").count(), 86);
   await page.locator("#close-shop").click();
   checks++;
   await page.locator("#options-entry").focus();

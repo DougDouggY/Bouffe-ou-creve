@@ -1,0 +1,152 @@
+[
+  {
+    "file": "slide-youhou-44.mp3",
+    "category": "slide",
+    "source_file": "Youhouu.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "f73507d39081b701d40ce4d81688c784e91be4c8cdfc30f8744356fad3f8e894",
+    "duration": 1.17551,
+    "original_duration": 2.048,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-neons-44.mp3",
+    "category": "slide",
+    "source_file": "Sous les néons.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "5d9804d8b3661e582974f77bc2dd61a687ec672203d6d2676ae8159bf6b412e8",
+    "duration": 2.377143,
+    "original_duration": 3.562667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "collision-wouf-44.mp3",
+    "category": "collision",
+    "source_file": "Wouf (1).m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "efe83c3d6fd941a26da7aec9fcca77ca01dc397754fdeb8579c9ce33204c4b33",
+    "duration": 0.600816,
+    "original_duration": 1.450667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-prout-44.mp3",
+    "category": "slide",
+    "source_file": "Pet.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "824fe168426075f063f1975bacbebb50243c6c5b97a85422a0eef1e4c51df971",
+    "duration": 0.888163,
+    "original_duration": 2.261333,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "collision-arreteuh-44.mp3",
+    "category": "collision",
+    "source_file": "Arreteuh.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "2f8a67634be757d721db6bc6d8e637abdb62c80125db319d9fc1b1eb476bac57",
+    "duration": 0.966531,
+    "original_duration": 2.261333,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "collision-bidou-44.mp3",
+    "category": "collision",
+    "source_file": "Gros bidou.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "8d25d31bc9e0215fed3e456a0142e9d8ec318c37f9a90c88b7158e668bb7a28b",
+    "duration": 0.731429,
+    "original_duration": 1.664,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-doofy-44.mp3",
+    "category": "slide",
+    "source_file": "Agent spécial Doofy.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "b5c2da3ba53d0dae6b939f177dca210d0c3cb49bfb28df6ec5f23ff68ff317a9",
+    "duration": 1.671837,
+    "original_duration": 1.706667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-dalle-44.mp3",
+    "category": "slide",
+    "source_file": "J’ai la dalle.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "1130cafc87cfc7b08b2c147df0ab559e9daf7be82ecc8145e7d2ff20a17f6204",
+    "duration": 0.992653,
+    "original_duration": 1.002667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "menu-jingle-44.mp3",
+    "category": "jingle",
+    "source_file": "Les gourmands jingle (4).m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "73c36ef9757cf94455e40ee898a4cc92d8dcd6e412ff93d4bfbace32aafc36bb",
+    "duration": 4.440816,
+    "original_duration": 4.864,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-kisscount-44.mp3",
+    "category": "slide",
+    "source_file": "Kisscount.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "1fce300b2a48f40dcba28edb61b65242ef2001c127d71ea8ff17c487453028e0",
+    "duration": 1.227755,
+    "original_duration": 1.216,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "collision-smack-44.mp3",
+    "category": "collision",
+    "source_file": "Smack.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "68044803c2a40b2dabdfe48f9ccc0bfd2a92c6fb5671d8bd8fc514dd78c14b73",
+    "duration": 0.496327,
+    "original_duration": 1.962667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "collision-hello-44.mp3",
+    "category": "collision",
+    "source_file": "Hello.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "441d57945bdc93b2d191e96d12e6e461859f6c072d3adaca07d27c73cdd276cc",
+    "duration": 0.653061,
+    "original_duration": 1.856,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-bonnie-44.mp3",
+    "category": "slide",
+    "source_file": "Bonnie and clyde.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "022cae15079b83ad4d39ccdb6e9530d6927329b83ae2c0bbaf9de1fa5bfd7055",
+    "duration": 1.619592,
+    "original_duration": 1.621333,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "slide-contresens-44.mp3",
+    "category": "slide",
+    "source_file": "En contresens.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "c2c2ee0838444fb0bdee782f2cdf64f82b9295d844d2eb3eb8dbc6a5375d8e56",
+    "duration": 1.593469,
+    "original_duration": 1.6,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  },
+  {
+    "file": "secret-jingle-44.mp3",
+    "category": "jingle",
+    "source_file": "Les gourmands jingle face caché.m4a",
+    "source": "Fichier fourni par l’utilisateur pour intégration au jeu",
+    "sha256_original": "4c5ffad708fad92a0c4be961cf59b0c64f31a42da4e0915deeaaf9930432e955",
+    "duration": 4.597551,
+    "original_duration": 6.250667,
+    "processing": "Silences extérieurs retirés, normalisation modérée, conversion MP3 mono ; contenu conservé, sans boucle."
+  }
+]

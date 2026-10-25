@@ -1,4 +1,4 @@
-import { CA } from "./simulation-core.js?v=burger-43";
+import { CA } from "./simulation-core.js?v=sounds-44";
 import { mapGroups } from "./map-catalog.js?v=collection-37";
 export const MULTIPLAYER_MAPS = mapGroups(CA)[0]
   .maps.filter(([id]) => id !== "savanna")

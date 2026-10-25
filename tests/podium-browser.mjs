@@ -107,7 +107,7 @@ try {
   await page.waitForFunction(
     () =>
       document.querySelectorAll('.equipment-thumb[data-illustrated="true"]')
-        .length === 30,
+        .length === 37,
   );
   for (const name of [
     "L’Abonné du buffet",

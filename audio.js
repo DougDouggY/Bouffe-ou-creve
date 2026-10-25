@@ -17,7 +17,7 @@ export function createGameAudio({
   target = document,
 }) {
   const jingle = new AudioClass(
-    new URL("./assets/jingle.m4a", import.meta.url).href,
+    new URL("./assets/audio/menu-jingle-44.mp3", import.meta.url).href,
   );
   const mealURL = new URL("./assets/bruitage-gourmand.m4a", import.meta.url)
     .href;
@@ -72,7 +72,7 @@ export function createGameAudio({
     )
       return;
     shadowJingle ||= new AudioClass(
-      new URL("./assets/secrets/jingle.m4a", import.meta.url).href,
+      new URL("./assets/audio/secret-jingle-44.mp3", import.meta.url).href,
     );
     shadowJingle.loop = false;
     shadowJingle.volume = 0.22 * effectsGain();

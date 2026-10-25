@@ -84,7 +84,8 @@ test("real-file sound bus deduplicates launches, caps voices, mutes peers and re
     assert(next.length <= 3);
   }
   assert.equal(played, 8); // Only the eight humans: all AI are silent.
-  assert.equal(bus.preview("slide_prout"), false);
+  assert.equal(bus.preview("slide_prout"), true);
+  bus.reset();
   bus.slide({ id: 1, human: true, cosmetics: {} }, 2);
   await tick();
   assert(Voice.all.some((v) => v.playing));

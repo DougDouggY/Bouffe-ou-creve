@@ -39,7 +39,7 @@ test("jingle retries blocked autoplay once unlocked, never loops; mute stops all
     }
     play() {
       this.calls++;
-      if (this.src.endsWith("jingle.m4a") && blocked) {
+      if (this.src.endsWith("menu-jingle-44.mp3") && blocked) {
         return Promise.reject(
           new DOMException("Gesture required", "NotAllowedError"),
         );
@@ -101,7 +101,7 @@ test("Face Cachée jingle plays once per entry, retries autoplay, stops on exit 
     }
     async play() {
       this.calls++;
-      if (this.src.includes("/secrets/") && blocked)
+      if (this.src.includes("secret-jingle-44.mp3") && blocked)
         throw new DOMException("gesture", "NotAllowedError");
       this.paused = false;
     }
@@ -122,7 +122,7 @@ test("Face Cachée jingle plays once per entry, retries autoplay, stops on exit 
   target.dispatchEvent(new Event("shadowchange"));
   await settle();
   const sound = voices[1];
-  assert(sound.src.endsWith("/secrets/jingle.m4a"));
+  assert(sound.src.endsWith("/audio/secret-jingle-44.mp3"));
   assert.equal(sound.loop, false);
   assert(voices[0].paused);
   blocked = false;

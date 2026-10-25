@@ -282,9 +282,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=burger-43"));
-  assert(resources.has("style.css?v=burger-43"));
-  assert(resources.has("multiplayer-client.js?v=burger-43"));
+  assert(resources.has("game.js?v=sounds-44"));
+  assert(resources.has("style.css?v=sounds-44"));
+  assert(resources.has("multiplayer-client.js?v=sounds-44"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await openGourmand(page);
@@ -313,21 +313,28 @@ try {
     { hat: "hat_pizza", outfit: "outfit_royal" },
     { hat: "hat_teapot", outfit: "outfit_chocolate" },
   ];
+  outfits.forEach(
+    (look, i) =>
+      (look.slide = [
+        "slide_prout",
+        "slide_doofy",
+        "slide_dalle",
+        "slide_kisscount",
+      ][i]),
+  );
   // Equip through the real Dressing UI rather than inventing display-only skins.
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-close").click();
-    await dress(
-      page,
-      outfits[i].hat,
-      outfits[i].outfit,
-      i === 1
+    await dress(page, outfits[i].hat, outfits[i].outfit, {
+      slide: outfits[i].slide,
+      ...(i === 1
         ? {
             aura: outfits[i].aura,
             podium: outfits[i].podium,
             title: outfits[i].title,
           }
-        : {},
-    );
+        : {}),
+    });
     await page.locator("#multiplayer-entry").press("Enter");
     await page.waitForFunction(
       () => !document.querySelector("#multiplayer-create").disabled,
@@ -545,7 +552,7 @@ try {
   await host.locator("#shop-dialog").waitFor({ state: "visible" });
   await host.locator('[data-item="crown"]').click();
   await host.locator("#close-shop").click();
-  outfits[0] = { hat: "crown", outfit: "sport" };
+  outfits[0] = { ...outfits[0], hat: "crown", outfit: "sport" };
   for (const page of pages)
     await page.locator('#multiplayer-players li[data-hat="crown"]').waitFor();
   assert.equal(
@@ -857,7 +864,7 @@ try {
       window.__cosmeticTest &&
       document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  await dress(nextLook, "burger", "cosmic");
+  await dress(nextLook, "burger", "cosmic", {slide:outfits[0].slide});
   await nextLook.close();
   for (const page of pages) {
     await page.reload();

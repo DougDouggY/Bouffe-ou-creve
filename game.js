@@ -13,7 +13,7 @@ import {
 import { setupRestaurantHome } from "./restaurant-home.js?v=burger-43";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
-import { createMotionAudio } from "./motion-audio.js?v=wardrobe-41";
+import { createMotionAudio } from "./motion-audio.js?v=sounds-44";
 import {
   bindEffectsControls,
   effectsGain,
@@ -28,12 +28,12 @@ import {
   cosmeticMotion,
   setCosmeticMotion,
   equippedTitle,
-} from "./cosmetic-effects.js?v=wardrobe-41";
+} from "./cosmetic-effects.js?v=sounds-44";
 import {
   showPodium,
   clearPodium,
   podiumActive,
-} from "./podium.js?v=secret-42";
+} from "./podium.js?v=sounds-44";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
@@ -44,7 +44,7 @@ import {
   onlineProfile,
 } from "./multiplayer-trophy-catalog.js?v=wardrobe-41";
 import { mergeProfileProgress } from "./profile-storage.js?v=ceremony-38";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=wardrobe-41";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=sounds-44";
 import {
   sameTeam,
   localTeamWon,
@@ -52,7 +52,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=burger-43";
+import { setupMultiplayer } from "./multiplayer-client.js?v=sounds-44";
 import {
   CA,
   Ee,
@@ -65,7 +65,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=burger-43";
+} from "./simulation-core.js?v=sounds-44";
 import { drawSurvivalFloor } from "./survival.js?v=burger-43";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -94,7 +94,7 @@ import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=wardrobe-41";
+} from "./arena-render.js?v=sounds-44";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
@@ -111,7 +111,7 @@ import {
   lightOpacity,
 } from "./visibility.js?v=filmovore-15";
 import { setupBurgerMenu } from "./burger-menu.js?v=secret-42";
-import { createGameAudio } from "./audio.js?v=ceremony-38";
+import { createGameAudio } from "./audio.js?v=sounds-44";
 import { setupMusicControls } from "./music.js?v=wardrobe-41";
 
 const L = (e) => document.querySelector(e);
@@ -3123,7 +3123,9 @@ function OA() {
         if (o?.id === 0) motionAudio.bounce();
         return;
       }
-      if (g === "bounce" && o?.id === 0) motionAudio.bounce();
+      if (g === "bounce" || g === "impact") motionAudio.collision(
+        o && {...o,human:o.id===0}, u && {...u,human:u.id===0},K.round,K.elapsed,
+      );
       if (
         (WA?.event(g, o, u, K),
         g === "discovery" &&
@@ -3999,7 +4001,10 @@ online = setupMultiplayer({
       if (person) motionAudio.slide(person, K.round);
       return;
     }
-    if (["boing", "bounce"].includes(event.kind)) {
+    if(event.kind==='bounce'||event.kind==='impact') {
+      motionAudio.collision(onlinePeople[event.person],onlinePeople[event.food?.id],K.round,event.t);return;
+    }
+    if (event.kind === "boing") {
       if (onlinePeople[event.person]?.human) motionAudio.bounce();
       return;
     }

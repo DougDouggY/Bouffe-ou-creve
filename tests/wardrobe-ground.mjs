@@ -64,6 +64,7 @@ try {
     }),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(()=>{const NativeAudio=window.Audio;window.__audios44=[];window.Audio=function(src){const a=new NativeAudio(src);window.__audios44.push(a);return a;};window.Audio.prototype=NativeAudio.prototype;});
   await page.addInitScript(
     () =>
       !localStorage.getItem("bouffe-profile-v1") &&
@@ -184,6 +185,20 @@ try {
   await page.locator("#gourmand-entry").press("Enter");
   await page.locator("#shop-dialog").waitFor({ state: "visible" });
   await page.locator('[data-item="hat_pancakes"]').click();
+  const prout = page.locator('[data-item="slide_prout"]');
+  await prout.click();
+  if (await prout.isEnabled()) await prout.click();
+  await prout
+    .locator("xpath=ancestor::article")
+    .locator(".sound-listen")
+    .click();
+  assert.match(
+    await page.locator("#sound-preview-status").textContent(),
+    /Le Prout/,
+  );
+
+  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('slide-prout-44')&&a.currentTime>0));
+  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('slide-prout-44')).every(a=>a.loop===false)));
   await page.locator('#shop-dialog [data-gourmand-page="trophies"]').click();
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert(
@@ -231,7 +246,7 @@ try {
   });
   await page.locator("#multiplayer-close").click();
   const durations = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=wardrobe-41");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=sounds-44");
     const ctx = new AudioContext(),
       result = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {
@@ -243,8 +258,26 @@ try {
     await ctx.close();
     return result;
   });
-  assert.equal(durations.length, 8);
-  assert(durations.every((d) => d.duration > 0 && d.duration < 2));
+  assert.equal(durations.length, 16);
+  assert(durations.every((d) => d.duration > 0 && d.duration < 4));
+  const supplied = await page.evaluate(async () => {
+    const manifest = await (
+      await fetch("./assets/audio/USER-SOUNDS-44.json")
+    ).json();
+    const ctx = new AudioContext();
+    const result = [];
+    for (const item of manifest) {
+      const response = await fetch("./assets/audio/" + item.file);
+      if (!response.ok) throw Error(item.file);
+      const decoded = await ctx.decodeAudioData(await response.arrayBuffer());
+      result.push({ file: item.file, duration: decoded.duration });
+    }
+    await ctx.close();
+    return result;
+  });
+  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('menu-jingle-44')&&a.currentTime>0));
+  assert.equal(supplied.length, 15);
+  assert(supplied.every((s) => s.duration > 0));
   await page.reload();
   await page.waitForFunction(
     () => document.querySelector(".burger-menu").dataset.masksReady === "true",
@@ -255,6 +288,16 @@ try {
     ),
     "hat_pancakes",
   );
+  assert.equal(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("bouffe-profile-v1")).equipped.slide,
+    ),
+    "slide_prout",
+  );
+  await page.locator('#options-entry').press('Enter');await page.locator('#shadow-entry').click();await page.locator('#shadow-password').fill('Pologne');await page.locator('#shadow-form button[type=submit]').click();await page.locator('#enter-shadow').click();
+  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('secret-jingle-44')&&a.currentTime>0));
+  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('secret-jingle-44')).every(a=>a.loop===false)));
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
