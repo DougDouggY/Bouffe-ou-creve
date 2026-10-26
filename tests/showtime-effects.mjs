@@ -122,7 +122,7 @@ try {
     .click();
   await page.waitForFunction(() =>
     window.__voices45.some(
-      (a) => a.src.includes("collision-smack-44") && a.currentTime > 0,
+      (a) => a.src.includes("collision-smack-46") && a.currentTime > 0,
     ),
   );
   await page.screenshot({
