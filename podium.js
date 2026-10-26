@@ -1,4 +1,4 @@
-import { cosmeticMotion } from "./cosmetic-effects.js?v=showtime-45";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=quiet-46";
 import { teamSurface } from "./teams.js?v=rivalries-33";
 let scene = null;
 export function podiumActive() {
@@ -335,7 +335,7 @@ export function showPodium(results, people, renderAvatar) {
   scene.redraw();
   scene.raf = requestAnimationFrame(draw);
   const owner = scene;
-  import("./podium-3d.js?v=showtime-45")
+  import("./podium-3d.js?v=quiet-46")
     .then(({ createCeremony3D }) => {
       if (scene !== owner) return null;
       return createCeremony3D(

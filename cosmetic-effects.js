@@ -1,8 +1,8 @@
-import { drawGroundAura } from "./presentation-art.js?v=showtime-45";
+import { drawGroundAura } from "./presentation-art.js?v=quiet-46";
 import {
   SLIDE_SOUNDS,
   COLLISION_SOUNDS,
-} from "./sound-catalog.js?v=showtime-45";
+} from "./sound-catalog.js?v=quiet-46";
 export const COSMETIC_SLOTS = [
   "hat",
   "outfit",

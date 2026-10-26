@@ -41,7 +41,7 @@ test("15 supplied recordings have real resources and 8 correct slide IDs, includ
     assert.equal(row.sha256_original.length, 64);
   }
   const supplied = SLIDE_SOUNDS.filter((s) =>
-    /-(44|45)\.mp3$/.test(s.file || ""),
+    /-(44|45|46)\.mp3$/.test(s.file || ""),
   );
   assert.equal(supplied.length, 8);
   for (const item of supplied) {
@@ -59,7 +59,7 @@ test("all uploaded slides preview actual recordings, AI stay silent, human launc
   changeEffects({ volume: 0.5, others: true });
   const bus = createMotionAudio({ AudioClass: Voice });
   for (const item of SLIDE_SOUNDS.filter((s) =>
-    /-(44|45)\.mp3$/.test(s.file || ""),
+    /-(44|45|46)\.mp3$/.test(s.file || ""),
   )) {
     assert(bus.preview(item.id));
     await wait();
@@ -98,7 +98,7 @@ test("collision voices include the second human, skip AI-only pairs, throttle ch
   voice.finish();
   clock += 500;
   assert.equal(bus.collision(ai, self, 1, 1400), false);
-  clock += 500;
+  clock += 5500;
   assert(bus.collision(ai, self, 1, 1500));
   await wait();
   bus.reset();

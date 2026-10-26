@@ -148,7 +148,7 @@ export const COLLISION_SOUNDS = [
     slot: "collision",
     name: "Hello",
     price: 160,
-    file: "collision-hello-44.mp3",
+    file: "collision-hello-46.mp3",
     art: 0,
   },
   {
@@ -156,7 +156,7 @@ export const COLLISION_SOUNDS = [
     slot: "collision",
     name: "Arrêteuh",
     price: 180,
-    file: "collision-arreteuh-44.mp3",
+    file: "collision-arreteuh-46.mp3",
     art: 1,
   },
   {
@@ -164,7 +164,7 @@ export const COLLISION_SOUNDS = [
     slot: "collision",
     name: "Smack",
     price: 180,
-    file: "collision-smack-44.mp3",
+    file: "collision-smack-46.mp3",
     art: 2,
   },
   {
@@ -172,7 +172,7 @@ export const COLLISION_SOUNDS = [
     slot: "collision",
     name: "Gros bidou",
     price: 200,
-    file: "collision-bidou-44.mp3",
+    file: "collision-bidou-46.mp3",
     art: 3,
   },
   {
@@ -180,7 +180,7 @@ export const COLLISION_SOUNDS = [
     slot: "collision",
     name: "Wouf",
     price: 200,
-    file: "collision-wouf-44.mp3",
+    file: "collision-wouf-46.mp3",
     art: 4,
   },
 ];

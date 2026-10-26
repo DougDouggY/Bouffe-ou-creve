@@ -86,14 +86,14 @@ try {
   );
   await page.waitForFunction(async () => {
     const { drawEquippedHead } =
-      await import("./head-sprites.js?v=showtime-45");
+      await import("./head-sprites.js?v=quiet-46");
     return drawEquippedHead(
       document.createElement("canvas").getContext("2d"),
       "none",
     );
   });
   await page.evaluate(async () => {
-    const art = await import("./presentation-art.js?v=showtime-45");
+    const art = await import("./presentation-art.js?v=quiet-46");
     await art.preparePresentationArt();
   });
   const render = await page.evaluate(() => {
@@ -250,7 +250,7 @@ try {
   });
   await page.locator("#multiplayer-close").click();
   const durations = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=showtime-45");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=quiet-46");
     const ctx = new AudioContext(),
       result = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {
