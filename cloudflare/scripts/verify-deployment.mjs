@@ -208,6 +208,7 @@ export async function verifyDeployment(
         aura: "aura_gold",
         podium: "podium_jump",
         slide: "slide_prout",
+        collision: "collision_smack",
         title: "title_3",
       },
     });
@@ -301,6 +302,7 @@ export async function verifyDeployment(
           aura: "aura_gold",
           podium: "podium_jump",
           slide: "slide_prout",
+          collision: "collision_smack",
           title: "title_3",
         },
       ],

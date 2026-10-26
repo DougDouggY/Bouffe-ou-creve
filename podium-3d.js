@@ -1,6 +1,14 @@
+import {
+  preparePresentationArt,
+  getCeremonyHead,
+  auraAtlas,
+  AURA_IDS,
+  vfxAtlas,
+  ceremonyBackdrop,
+} from "./presentation-art.js?v=showtime-45";
 // Loaded only for the ceremony. Local Three.js (MIT), no CDN or game physics.
 import * as T from "./assets/vendor/three.module.min.js";
-import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=sounds-44";
+import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=showtime-45";
 import { extraCosmeticImage } from "./cosmetics.js?v=podium-35";
 const HEAD_IDS = [
   "none",
@@ -56,12 +64,12 @@ export async function createCeremony3D(
   scene.background = new T.Color("#1b1021");
   scene.fog = new T.Fog("#1b1021", 17, 31);
   const camera = new T.PerspectiveCamera(37, 1, 0.1, 70);
-  camera.position.set(0, 6.3, 14.8);
-  camera.lookAt(0, 2.7, 0);
+  camera.position.set(0, 5.8, 11.8);
+  camera.lookAt(0, 2.6, 0);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.3;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   const resources = new Set(),
@@ -99,8 +107,8 @@ export async function createCeremony3D(
   function box(parent, x, y, z, w, h, d, color) {
     return mesh(new T.BoxGeometry(w, h, d), material(color), parent, x, y, z);
   }
-  scene.add(new T.HemisphereLight("#ffe9c5", "#241329", 2.2));
-  const key = new T.DirectionalLight("#ffdb9b", 3.5);
+  scene.add(new T.HemisphereLight("#ffe9c5", "#241329", 1.8));
+  const key = new T.DirectionalLight("#ffdb9b", 2.8);
   key.position.set(-4, 10, 6);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -131,17 +139,6 @@ export async function createCeremony3D(
     0,
   ).rotation.x = Math.PI / 2;
   box(scene, 0, 4.2, -4.7, 22, 9, 0.35, "#321a2b");
-  for (let i = -10; i <= 10; i++)
-    ball(
-      scene,
-      i * 0.96,
-      4,
-      -4.35,
-      0.29,
-      4.5,
-      0.25,
-      i % 2 ? "#571e38" : "#742941",
-    );
   for (let x of [-7.5, 7.5]) {
     box(scene, x, 3, -2.4, 0.16, 6, 0.16, "#c99958");
     ball(scene, x, 6.1, -2.4, 0.23, 0.23, 0.23, "#ffd59c");
@@ -235,8 +232,55 @@ export async function createCeremony3D(
       heights[kind] + 0.23,
       0,
     );
+    for (let step = 0; step < 3; step++) {
+      const h = ((heights[kind] + 0.3) * (step + 1)) / 3;
+      box(g, 0, h / 2, 2.65 - step * 0.45, 2.1, h, 0.55, "#634632");
+      box(g, 0, h + 0.018, 2.65 - step * 0.45, 2.14, 0.045, 0.57, "#d8ba7f");
+    }
+    const rimMat = new T.MeshStandardMaterial({
+      color: "#ffcc70",
+      emissive: "#b86f24",
+      emissiveIntensity: 0.8,
+      metalness: 0.6,
+    });
+    resources.add(rimMat);
+    const rim = mesh(
+      new T.TorusGeometry(1.78, 0.035, 8, 64),
+      rimMat,
+      g,
+      0,
+      heights[kind] + 0.32,
+      0,
+    );
+    rim.rotation.x = Math.PI / 2;
     podiums.set(kind, g);
   }
+  try {
+    await preparePresentationArt();
+  } catch {
+    renderer.dispose();
+    for (const r of resources) r.dispose();
+    return null;
+  }
+  if (!isCurrent()) {
+    renderer.dispose();
+    for (const r of resources) r.dispose();
+    return null;
+  }
+  const backdropTexture = new T.Texture(ceremonyBackdrop());
+  backdropTexture.colorSpace = T.SRGBColorSpace;
+  backdropTexture.needsUpdate = true;
+  resources.add(backdropTexture);
+  const backdropMaterial = new T.MeshBasicMaterial({ map: backdropTexture });
+  resources.add(backdropMaterial);
+  mesh(
+    new T.PlaneGeometry(24, 12),
+    backdropMaterial,
+    scene,
+    0,
+    4.5,
+    -4.25,
+  ).castShadow = false;
   let atlas;
   try {
     atlas = new Image();
@@ -274,6 +318,11 @@ export async function createCeremony3D(
       256,
       384,
     );
+    const neutral = getCeremonyHead(at, 0);
+    if (neutral) {
+      c.clearRect(0, 0, 256, 384);
+      c.drawImage(neutral, 0, 0);
+    }
     const pixels = c.getImageData(0, 0, 256, 384).data,
       positions = [],
       uv = [],
@@ -299,7 +348,17 @@ export async function createCeremony3D(
             [step, step],
             [0, step],
           ]) {
-            positions.push((px + dx - 128) / 128, (333 - py - dy) / 128, z);
+            positions.push(
+              (px + dx - 128) / 128,
+              (333 - py - dy) / 128,
+              z === depth
+                ? 0.12 +
+                    0.28 *
+                      Math.sqrt(
+                        Math.max(0, 1 - Math.pow((px + dx - 128) / 128, 2)),
+                      )
+                : z,
+            );
             uv.push((px + dx) / 256, 1 - (py + dy) / 384);
           }
         indices.push(
@@ -444,22 +503,44 @@ export async function createCeremony3D(
     ball(head, 0, 0.32, -0.05, 0.38, 0.43, 0.3, skin);
     face.position.z = 0.08;
     head.add(face);
-    const auraColor = COSMETIC_CATALOG.find(
-      (c) => c.id === p.cosmetics?.aura,
-    )?.color;
-    let aura = null;
-    if (auraColor) {
+    const auraIndex = AURA_IDS.indexOf(p.cosmetics?.aura);
+    let aura = null,
+      auraTexture = null;
+    if (auraIndex >= 0) {
+      auraTexture = new T.Texture(auraAtlas());
+      auraTexture.colorSpace = T.SRGBColorSpace;
+      auraTexture.repeat.set(1 / 5, 1 / 4);
+      auraTexture.offset.set(auraIndex / 5, 3 / 4);
+      auraTexture.needsUpdate = true;
+      resources.add(auraTexture);
       const mat = new T.MeshBasicMaterial({
-        color: auraColor,
+        map: auraTexture,
         transparent: true,
-        opacity: 0.42,
         depthWrite: false,
+        side: T.DoubleSide,
       });
       resources.add(mat);
-      aura = mesh(new T.CircleGeometry(1.3, 40), mat, group, 0, 0.014, 0);
-      aura.rotation.x = -Math.PI / 2;
+      aura = mesh(new T.PlaneGeometry(3.4, 1.35), mat, group, 0, 0.08, 0.1);
+      aura.rotation.x = -Math.PI * 0.36;
       aura.castShadow = false;
     }
+    const smokeTexture = new T.Texture(vfxAtlas());
+    smokeTexture.colorSpace = T.SRGBColorSpace;
+    smokeTexture.repeat.set(1 / 6, 1 / 2);
+    smokeTexture.needsUpdate = true;
+    resources.add(smokeTexture);
+    const smokeMaterial = new T.SpriteMaterial({
+      map: smokeTexture,
+      transparent: true,
+      depthWrite: false,
+      opacity: 0,
+    });
+    resources.add(smokeMaterial);
+    const smoke = new T.Sprite(smokeMaterial);
+    smoke.center.set(0, 0.5);
+    smoke.position.set(0.05, 0.18, 0.7);
+    head.add(smoke);
+    smoke.visible = false;
     const arms = [],
       legs = [];
     for (const side of [-1, 1]) {
@@ -483,13 +564,22 @@ export async function createCeremony3D(
       bottom = ball(buns, 0, -0.2, 0.05, 1.08, 0.18, 0.72, "#d99639");
     group.traverse((o) => {
       if (o.isMesh) {
-        o.castShadow = true;
+        o.castShadow = !o.material.transparent || !!o.material.alphaTest;
         o.userData.actor = actor;
       }
     });
     models.push({
       actor,
       aura,
+      auraIndex,
+      auraTexture,
+      smoke,
+      smokeTexture,
+      face,
+      expression: 0,
+      burpCycle: null,
+      decal,
+      targetX: group.position.x,
       group,
       head,
       arms,
@@ -512,11 +602,11 @@ export async function createCeremony3D(
   root.dataset.renderer = "webgl";
   const resize = () => {
     const width = Math.max(1, root.clientWidth),
-      height = matchMedia("(max-width:600px)").matches ? 360 : 440;
+      height = matchMedia("(max-width:600px)").matches ? 380 : 490;
     renderer.setSize(width, height, false);
     canvas.style.height = height + "px";
     camera.aspect = width / height;
-    camera.position.z = width / height < 1.5 ? 24 : 14.8;
+    camera.position.z = width / height < 1.5 ? 24 : 11.8;
     camera.updateProjectionMatrix();
   };
   const observer = new ResizeObserver(resize);
@@ -563,31 +653,93 @@ export async function createCeremony3D(
         full && !skipped ? Math.max(0.01, ease((age - delay) / 0.7)) : 1;
     }
     for (const m of models) {
-      const p = poseAt(m.actor, time),
-        visible = skipped || !full || time >= m.actor.celebrateAt - 250;
-      m.group.visible = visible;
-      if (!visible) continue;
-      m.group.position.y = m.baseY + p.jump * 0.018;
-      m.group.rotation.y = full
-        ? Math.sin(time * 0.0005 + m.actor.person.id) * 0.12
-        : 0;
-      if (m.aura) {
-        const pulse = 1 + (full ? Math.sin(time * 0.003) * 0.05 : 0);
-        m.aura.scale.setScalar(pulse);
-      }
-      m.torso.scale.y = 0.96 * (1 + (p.breath || 0) * 0.018);
-      m.head.rotation.z = -(p.headTurn || 0);
-      m.head.rotation.y = (p.look || 0) * 2;
+      const p = poseAt(full ? m.actor : { ...m.actor, enabled: false }, time);
+      const stagger =
+        m.actor.kind === "champion"
+          ? 0
+          : m.actor.kind === "predator"
+            ? 0.18
+            : 0.36;
+      const walk =
+        skipped || !full
+          ? 1
+          : Math.max(0, Math.min(1, (age - 0.35 - stagger) / 2.1));
+      m.group.visible = skipped || !full || age > 0.35 + stagger;
+      if (!m.group.visible) continue;
+      const gait = walk < 1 ? Math.sin(walk * Math.PI * 14) : 0,
+        stepLift = walk < 1 ? Math.abs(gait) * 0.065 : 0;
+      m.group.position.set(
+        m.targetX + (m.actor.kind === "first" ? 1 : -1) * (1 - walk) * 1.3,
+        0.12 +
+          (m.baseY - 0.12) * Math.max(0, Math.min(1, (walk - 0.35) / 0.45)) +
+          stepLift +
+          p.jump * 0.018,
+        (1 - walk) * 4.6,
+      );
+      m.group.rotation.y =
+        walk < 1
+          ? m.actor.kind === "first"
+            ? -0.25
+            : 0.25
+          : full
+            ? Math.sin(time * 0.0005 + m.actor.person.id) * 0.1
+            : 0;
+      m.torso.scale.set(
+        0.82 * (1 + p.belly),
+        0.96 * (1 + (p.breath || 0) * 0.018),
+        0.58 * (1 + p.belly * 0.55),
+      );
+      m.decal.scale.set(
+        0.835 * (1 + p.belly),
+        0.97 * (1 + (p.breath || 0) * 0.018),
+        0.59 * (1 + p.belly * 0.55),
+      );
+      m.torso.rotation.z = p.twist;
+      m.decal.rotation.z = p.twist;
+      m.head.rotation.set(p.headPitch, -(p.look || 0) * 2, -(p.headTurn || 0));
       m.head.position.y = 1.85 - (p.headBob || 0);
-      m.arms[0].rotation.z = -(p.armL || 0);
-      m.arms[1].rotation.z = -(p.armR || 0);
-      m.arms[0].rotation.x = Math.sin(time * 0.002) * 0.06;
-      m.arms[1].rotation.x = -Math.sin(time * 0.002) * 0.06;
-      m.legs[0].rotation.x = p.legL || 0;
-      m.legs[1].rotation.x = p.legR || 0;
+      m.arms[0].rotation.z = walk < 1 ? gait * 0.35 : -(p.armL || 0);
+      m.arms[1].rotation.z = walk < 1 ? -gait * 0.35 : -(p.armR || 0);
+      m.arms[0].rotation.x =
+        walk < 1 ? gait * 0.5 : Math.sin(time * 0.002) * 0.06;
+      m.arms[1].rotation.x = -m.arms[0].rotation.x;
+      m.legs[0].rotation.x = walk < 1 ? gait * 0.65 : p.legL || 0;
+      m.legs[1].rotation.x = walk < 1 ? -gait * 0.65 : p.legR || 0;
+      const expression = walk < 1 ? 0 : p.expression || 0;
+      if (m.expression !== expression) {
+        const head = getCeremonyHead(
+          Math.max(
+            0,
+            HEAD_IDS.indexOf(m.actor.person.cosmetics?.hat || "none"),
+          ),
+          expression,
+        );
+        if (head) {
+          m.face.material.map.image = head;
+          m.face.material.map.needsUpdate = true;
+          m.expression = expression;
+        }
+      }
+      if (m.aura) {
+        m.aura.visible = root.dataset.motion !== "off";
+        m.aura.position.y = 0.08 - (p.jump * 0.018) / m.scale;
+        m.auraTexture.offset.y =
+          (3 - (full ? Math.floor(time / 180) % 4 : 0)) / 4;
+      }
+      m.smoke.visible = full && p.burp > 0;
+      if (m.smoke.visible) {
+        m.smokeTexture.offset.set(Math.min(5, Math.floor(p.burp * 6)) / 6, 0);
+        m.smoke.scale.set(1.8 + p.burp * 2.5, 1.2 + p.burp, 1);
+        m.smoke.material.opacity = Math.sin(Math.PI * p.burp) * 0.8;
+      }
+      if (full && p.burp > 0.015 && m.actor.burpCycle !== m.actor.celebrateAt) {
+        m.actor.burpCycle = m.actor.celebrateAt;
+        document.dispatchEvent(new Event("podium-burp"));
+      }
+      m.arrival = walk;
       const elapsed = (time - m.actor.celebrateAt) / 1000;
       m.buns.visible =
-        m.actor.kind === "first" &&
+        p.animation === "podium_despair" &&
         m.actor.enabled &&
         elapsed > 0.3 &&
         elapsed < 2.4;
@@ -625,6 +777,12 @@ export async function createCeremony3D(
       confetti.instanceMatrix.needsUpdate = true;
     }
     renderer.render(scene, camera);
+    root.dataset.bodyWidths = models
+      .map((m) => m.torso.scale.x.toFixed(3))
+      .join(",");
+    root.dataset.expressions = models.map((m) => m.expression).join(",");
+    root.dataset.walkers = models.filter((m) => m.arrival < 1).length;
+    root.dataset.smoke = models.filter((m) => m.smoke.visible).length;
     root.dataset.triangles = renderer.info.render.triangles;
     root.dataset.drawCalls = renderer.info.render.calls;
   }
@@ -640,6 +798,7 @@ export async function createCeremony3D(
     canvas.onclick = null;
     canvas.removeEventListener("webglcontextlost", contextLost);
     renderer.dispose();
+    renderer.forceContextLoss?.();
     for (const resource of resources) resource.dispose();
     canvas.remove();
     root.classList.remove("ceremony-is-3d");

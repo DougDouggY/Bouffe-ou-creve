@@ -1,0 +1,86 @@
+{
+  "kisscount": {
+    "source": "Kisscount.m4a fourni par l’utilisateur",
+    "original_duration": 1.216,
+    "complete_source_preserved": true,
+    "tail_seconds": 0.15,
+    "file": "slide-kisscount-45.mp3"
+  },
+  "new_slide_gain": 0.5,
+  "fade_in_seconds": 0.06,
+  "fade_out_seconds": 0.12,
+  "playback_rate_range": [
+    0.86,
+    1
+  ],
+  "rate_source": "Vitesse réelle de propulsion transmise dans les événements, physique inchangée.",
+  "gain_baked_into_files": true,
+  "fade_baked_in_seconds": 0.045,
+  "fade_baked_out_seconds": 0.12,
+  "slides": [
+    {
+      "file": "slide-youhou-45.mp3",
+      "source": "Youhouu.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.472,
+      "decoded_duration": 1.2916
+    },
+    {
+      "file": "slide-neons-45.mp3",
+      "source": "Sous les néons.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.475,
+      "decoded_duration": 2.5006
+    },
+    {
+      "file": "slide-prout-45.mp3",
+      "source": "Pet.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.456,
+      "decoded_duration": 1.009
+    },
+    {
+      "file": "slide-doofy-45.mp3",
+      "source": "Agent spécial Doofy.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.475,
+      "decoded_duration": 1.7936
+    },
+    {
+      "file": "slide-dalle-45.mp3",
+      "source": "J’ai la dalle.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.475,
+      "decoded_duration": 1.1089
+    },
+    {
+      "file": "slide-kisscount-45.mp3",
+      "source": "Kisscount.m4a",
+      "recording_gain": 0.5,
+      "complete_source": true,
+      "measured_rms_ratio_vs_previous": 0.492,
+      "decoded_duration": 1.328
+    },
+    {
+      "file": "slide-bonnie-45.mp3",
+      "source": "Bonnie and clyde.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.471,
+      "decoded_duration": 1.7387
+    },
+    {
+      "file": "slide-contresens-45.mp3",
+      "source": "En contresens.m4a",
+      "recording_gain": 0.5,
+      "complete_source": "Version précédente conservée intégralement avec marge finale",
+      "measured_rms_ratio_vs_previous": 0.474,
+      "decoded_duration": 1.7164
+    }
+  ]
+}

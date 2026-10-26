@@ -7179,8 +7179,7 @@ class zt {
                 text: "Le distributeur a lâché un burger !",
               }));
           }
-          if (B && t >= 0 && B.body.speed > 1.2 && !this.obstacles[t].bumper) this.emit('impact',B);
-          if(this.mode==='platform' && C?.alive && Q?.alive) this.emit('impact',C,Q);
+          if(this.mode==='platform' && C?.alive && Q?.alive) this.emit('bounce',C,Q);
           if (this.mode === "platform" || !C || !Q || !C.alive || !Q.alive)
             continue;
           let a, s;

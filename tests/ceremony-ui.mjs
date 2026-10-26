@@ -92,7 +92,7 @@ try {
     ),
   );
   const audio = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=sounds-44");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=showtime-45");
     const ctx = new AudioContext(),
       durations = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {

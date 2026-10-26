@@ -68,7 +68,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Prout",
     price: 200,
-    file: "slide-prout-44.mp3",
+    file: "slide-prout-45.mp3",
     art: 5,
   },
   {
@@ -76,7 +76,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "En contresens",
     price: 220,
-    file: "slide-contresens-44.mp3",
+    file: "slide-contresens-45.mp3",
     art: 0,
   },
   {
@@ -84,7 +84,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Agent spécial Doofy",
     price: 240,
-    file: "slide-doofy-44.mp3",
+    file: "slide-doofy-45.mp3",
     art: 4,
   },
   {
@@ -92,7 +92,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "J’ai la dalle",
     price: 220,
-    file: "slide-dalle-44.mp3",
+    file: "slide-dalle-45.mp3",
     art: 0,
   },
   {
@@ -100,7 +100,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Sous les néons",
     price: 260,
-    file: "slide-neons-44.mp3",
+    file: "slide-neons-45.mp3",
     art: 3,
   },
   {
@@ -108,7 +108,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Youhouu",
     price: 220,
-    file: "slide-youhou-44.mp3",
+    file: "slide-youhou-45.mp3",
     art: 1,
   },
   {
@@ -116,7 +116,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Bonnie and Clyde",
     price: 240,
-    file: "slide-bonnie-44.mp3",
+    file: "slide-bonnie-45.mp3",
     art: 2,
   },
   {
@@ -124,17 +124,65 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Kisscount",
     price: 240,
-    file: "slide-kisscount-44.mp3",
+    file: "slide-kisscount-45.mp3",
     art: 3,
   },
-];
+].map((item) => ({
+  ...item,
+  gain: 1,
+  recordingGain: item.file?.startsWith("slide-") ? 0.5 : 1,
+}));
 export const slideSound = (id) =>
   SLIDE_SOUNDS.find((s) => s.id === id && !s.disabled) || SLIDE_SOUNDS[0];
 
 export const COLLISION_SOUNDS = [
-  { id: "hello", name: "Hello", file: "collision-hello-44.mp3" },
-  { id: "arreteuh", name: "Arrêteuh", file: "collision-arreteuh-44.mp3" },
-  { id: "smack", name: "Smack", file: "collision-smack-44.mp3" },
-  { id: "bidou", name: "Gros bidou", file: "collision-bidou-44.mp3" },
-  { id: "wouf", name: "Wouf", file: "collision-wouf-44.mp3" },
+  {
+    id: "collision_none",
+    slot: "collision",
+    name: "Sans son de collision",
+    price: 0,
+    file: null,
+  },
+  {
+    id: "collision_hello",
+    slot: "collision",
+    name: "Hello",
+    price: 160,
+    file: "collision-hello-44.mp3",
+    art: 0,
+  },
+  {
+    id: "collision_arreteuh",
+    slot: "collision",
+    name: "Arrêteuh",
+    price: 180,
+    file: "collision-arreteuh-44.mp3",
+    art: 1,
+  },
+  {
+    id: "collision_smack",
+    slot: "collision",
+    name: "Smack",
+    price: 180,
+    file: "collision-smack-44.mp3",
+    art: 2,
+  },
+  {
+    id: "collision_bidou",
+    slot: "collision",
+    name: "Gros bidou",
+    price: 200,
+    file: "collision-bidou-44.mp3",
+    art: 3,
+  },
+  {
+    id: "collision_wouf",
+    slot: "collision",
+    name: "Wouf",
+    price: 200,
+    file: "collision-wouf-44.mp3",
+    art: 4,
+  },
 ];
+export const collisionSound = (id) =>
+  COLLISION_SOUNDS.find((s) => s.id === id) || COLLISION_SOUNDS[0];

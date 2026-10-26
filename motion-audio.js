@@ -2,7 +2,8 @@ import {
   SLIDE_SOUNDS,
   COLLISION_SOUNDS,
   slideSound,
-} from "./sound-catalog.js?v=sounds-44";
+  collisionSound,
+} from "./sound-catalog.js?v=showtime-45";
 import {
   effectsGain,
   effectsSettings,
@@ -21,6 +22,7 @@ export function createMotionAudio({
     boingAt = -Infinity,
     impactAt = -Infinity,
     flushPending = false;
+  let envelopeTimer = null;
   const url = (file) => new URL("./assets/audio/" + file, import.meta.url).href;
   function pool(file) {
     if (!pools.has(file)) {
@@ -33,8 +35,25 @@ export function createMotionAudio({
   }
   function balance() {
     const total = [...active].reduce((sum, v) => sum + v.weight, 0) || 1;
-    for (const v of active)
-      v.audio.volume = Math.min(1, (0.65 * effectsGain() * v.weight) / total);
+    for (const v of active) {
+      const elapsed = Math.max(0, (now() - v.startedAt) / 1000),
+        remaining = Number.isFinite(v.audio.duration)
+          ? Math.max(
+              0,
+              (v.audio.duration - v.audio.currentTime) /
+                (v.audio.playbackRate || 1),
+            )
+          : Infinity;
+      const fade = v.fade ? Math.min(1, elapsed / 0.06, remaining / 0.12) : 1;
+      v.audio.volume = Math.min(
+        1,
+        (0.65 * effectsGain() * v.weight * v.gain * Math.max(0, fade)) / total,
+      );
+    }
+    if (!active.size && envelopeTimer !== null) {
+      clearInterval(envelopeTimer);
+      envelopeTimer = null;
+    }
   }
   function flush() {
     flushPending = false;
@@ -59,8 +78,18 @@ export function createMotionAudio({
         weight: job.weight || 1,
         remote: job.remote,
         human: job.human,
+        gain:
+          job.gain ?? SLIDE_SOUNDS.find((s) => s.file === job.file)?.gain ?? 1,
+        fade: !!job.fade,
+        startedAt: now(),
       };
+      audio.playbackRate = job.rate || 1;
+      audio.preservesPitch = true;
       active.add(voice);
+      if (envelopeTimer === null) {
+        envelopeTimer = setInterval(balance, 30);
+        envelopeTimer.unref?.();
+      }
       balance();
       const release = () => {
         audio.removeEventListener("ended", release);
@@ -123,31 +152,35 @@ export function createMotionAudio({
     prime(cosmetics = []) {
       for (const c of cosmetics) pool(slideSound(c?.slide).file);
       pool("move-spring.mp3");
-      for (const sound of COLLISION_SOUNDS) pool(sound.file);
+      for (const c of cosmetics) {
+        const sound = collisionSound(c?.collision);
+        if (sound.file) pool(sound.file);
+      }
+      pool("podium-burp-45.mp3");
     },
-    slide(person, turn) {
+    slide(person, turn, speed = person.body?.speed || 0) {
       if (person.human !== true) return;
       const key = turn + ":" + (person.networkSeat ?? person.id);
       if (heard.has(key)) return;
       heard.add(key);
       enqueue({
         file: slideSound(person.cosmetics?.slide).file,
+        fade: true,
+        rate: 1 - 0.14 * Math.max(0, Math.min(1, (Number(speed) || 0) / 17)),
         remote: person.id !== 0,
         human: !!person.human,
         weight: person.id === 0 ? 1 : 0.65,
       });
     },
     collision(person, other, turn = 0, stamp = 0) {
-      const human =
-        [person, other].find((p) => p?.human === true && p.id === 0) ||
-        [person, other].find((p) => p?.human === true);
-      if (
-        !human ||
-        muted ||
-        effectsGain() === 0 ||
-        (human.id !== 0 && !effectsSettings().others)
-      )
-        return false;
+      if (!person || !other) return false;
+      const humans = [person, other].filter(
+        (p) =>
+          p?.human === true &&
+          collisionSound(p.cosmetics?.collision).file &&
+          (p.id === 0 || effectsSettings().others),
+      );
+      if (!humans.length || muted || effectsGain() === 0) return false;
       const time = now(),
         a = person?.networkSeat ?? person?.id ?? -1,
         b = other?.networkSeat ?? other?.id ?? -1;
@@ -161,18 +194,24 @@ export function createMotionAudio({
         return false;
       impacts.set(pair, time);
       impactAt = time;
-      const index =
-        Math.abs(
-          turn * 17 +
-            Math.min(a, b) * 7 +
-            Math.max(a, b) * 13 +
-            Math.floor(stamp / 1000),
-        ) % COLLISION_SOUNDS.length;
+      const unique = new Map(humans.map((p) => [p.networkSeat ?? p.id, p]));
+      for (const human of unique.values())
+        enqueue({
+          file: collisionSound(human.cosmetics.collision).file,
+          remote: human.id !== 0,
+          human: true,
+          weight: 0.55,
+          gain: 0.65,
+          fade: true,
+        });
+      return true;
+    },
+    burp() {
       return enqueue({
-        file: COLLISION_SOUNDS[index].file,
-        remote: human.id !== 0,
-        human: true,
-        weight: 0.45,
+        file: "podium-burp-45.mp3",
+        weight: 0.5,
+        gain: 0.6,
+        fade: true,
       });
     },
     bounce() {
@@ -182,14 +221,22 @@ export function createMotionAudio({
       enqueue({ file: "move-spring.mp3", weight: 0.65, remote: false });
     },
     preview(id) {
-      const item = SLIDE_SOUNDS.find((s) => s.id === id && !s.disabled);
+      const item = [...SLIDE_SOUNDS, ...COLLISION_SOUNDS].find(
+        (s) => s.id === id && !s.disabled && s.file,
+      );
       if (!item || muted || !effectsGain()) return false;
       queue.length = 0;
       for (const v of active) {
         v.audio.pause();
         v.audio.dispatchEvent(new Event("ended"));
       }
-      return enqueue({ file: item.file, weight: 1, remote: false });
+      return enqueue({
+        file: item.file,
+        weight: 1,
+        gain: item.gain ?? 0.65,
+        fade: true,
+        remote: false,
+      });
     },
     reset() {
       heard.clear();

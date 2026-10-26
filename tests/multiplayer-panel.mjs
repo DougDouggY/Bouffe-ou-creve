@@ -116,13 +116,23 @@ try {
             avatar(memberId) {
               const p = window.__game.people.find(p => p.memberId === memberId);
               const canvas = document.createElement('canvas'); canvas.width = 144; canvas.height = 180;
-              Se(canvas.getContext('2d', {willReadFrequently:true}), {...p, id:-1, body:{position:{x:72,y:118}, circleRadius:32, speed:3}},1234,equippedFor(p));
+              const previousMotion=cosmeticMotion();setCosmeticMotion('full');
+              Se(canvas.getContext('2d', {willReadFrequently:true}), {...p, id:-1, body:{position:{x:72,y:118}, circleRadius:32, speed:3}},1234,equippedFor(p));setCosmeticMotion(previousMotion);
               return { png:canvas.toDataURL(), pixels:Array.from(canvas.getContext("2d").getImageData(0,0,144,180).data) };
             }
           };
 `),
           ]);
 
+        if (relative === "game.js")
+          body = Buffer.from(
+            body
+              .toString()
+              .replace(
+                "  onEnd(state) {",
+                "  onEnd(state) { window.__endHistory=(window.__endHistory||[]).concat({phase:state.phase,hasResults:!!state.results});",
+              ),
+          );
         // Test-only introspection for end-screen regressions, never shipped in runtime JS.
         if (relative === "multiplayer-client.js")
           body = Buffer.from(
@@ -228,7 +238,8 @@ try {
         });
       },
     );
-    await context.addInitScript(() => {
+    await context.addInitScript((index) => {
+      if(index>0)localStorage.setItem("bouffe-cosmetic-motion","simple");
       Object.defineProperty(document, "hidden", {
         configurable: true,
         get: () => window.__forceHidden === true,
@@ -244,7 +255,7 @@ try {
         );
         localStorage.setItem("cosmetic-test-seeded", "1");
       }
-    });
+    }, i);
     const page = await context.newPage();
     await page.addLocatorHandler(page.locator("#phone-rotate"), async () => {
       await page.locator("#phone-portrait").click();
@@ -282,9 +293,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=sounds-44"));
-  assert(resources.has("style.css?v=sounds-44"));
-  assert(resources.has("multiplayer-client.js?v=sounds-44"));
+  assert(resources.has("game.js?v=showtime-45"));
+  assert(resources.has("style.css?v=showtime-45"));
+  assert(resources.has("multiplayer-client.js?v=showtime-45"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await openGourmand(page);
@@ -322,11 +333,21 @@ try {
         "slide_kisscount",
       ][i]),
   );
+  outfits.forEach(
+    (look, i) =>
+      (look.collision = [
+        "collision_hello",
+        "collision_wouf",
+        "collision_smack",
+        "collision_bidou",
+      ][i]),
+  );
   // Equip through the real Dressing UI rather than inventing display-only skins.
   for (const [i, page] of pages.entries()) {
     await page.locator("#multiplayer-close").click();
     await dress(page, outfits[i].hat, outfits[i].outfit, {
       slide: outfits[i].slide,
+      collision: outfits[i].collision,
       ...(i === 1
         ? {
             aura: outfits[i].aura,
@@ -864,7 +885,10 @@ try {
       window.__cosmeticTest &&
       document.querySelector(".burger-menu").dataset.masksReady === "true",
   );
-  await dress(nextLook, "burger", "cosmic", {slide:outfits[0].slide});
+  await dress(nextLook, "burger", "cosmic", {
+    slide: outfits[0].slide,
+    collision: outfits[0].collision,
+  });
   await nextLook.close();
   for (const page of pages) {
     await page.reload();
@@ -982,7 +1006,23 @@ try {
         JSON.stringify({
           errors,
           clients: await Promise.all(
-            pages.map((p) => p.evaluate(() => window.__cosmeticTest.debug())),
+            pages.map((p) =>
+              p.evaluate(() => {
+                const e = document.querySelector("#match-podium");
+                return {
+                  ...window.__cosmeticTest.debug(),
+                  history: window.__endHistory,
+                  hidden: e?.hidden,
+                  rect: e && {
+                    w: e.getBoundingClientRect().width,
+                    h: e.getBoundingClientRect().height,
+                  },
+                  renderer: e?.dataset.renderer,
+                  children: e?.children.length,
+                  display: e && getComputedStyle(e).display,
+                };
+              }),
+            ),
           ),
           states: wires.map((w) =>
             w

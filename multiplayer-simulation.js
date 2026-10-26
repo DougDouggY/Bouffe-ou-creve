@@ -1,7 +1,7 @@
 import { validTeamSetup } from "./teams.js?v=rivalries-33";
 import { validMultiplayerMap } from "./multiplayer-maps.js?v=collection-37";
 import { arenaSize } from "./arena-bounds.js?v=burger-43";
-import { normalizeCosmetics } from "./cosmetic-catalog.js?v=sounds-44";
+import { normalizeCosmetics } from "./cosmetic-catalog.js?v=showtime-45";
 // Headless adapter. Only the server calls resolveTurn; clients render its snapshots.
 import {
   zt as Game,
@@ -9,7 +9,7 @@ import {
   XA as World,
   he as Engine,
   yA as Bodies,
-} from "./simulation-core.js?v=sounds-44";
+} from "./simulation-core.js?v=showtime-45";
 
 export const SIMULATION_VERSION = "multi-21";
 export function seededRandom(seed) {
@@ -257,6 +257,7 @@ export function resolveTurn(game, shots) {
       events.push({
         t: time,
         kind,
+        speed:kind === "slide" ? person?.body?.speed : undefined,
         person: person?.id,
         food: food && { type: food.type, size: food.size, id: food.id },
       });

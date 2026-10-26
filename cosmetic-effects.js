@@ -1,4 +1,8 @@
-import { SLIDE_SOUNDS } from "./sound-catalog.js?v=sounds-44";
+import { drawGroundAura } from "./presentation-art.js?v=showtime-45";
+import {
+  SLIDE_SOUNDS,
+  COLLISION_SOUNDS,
+} from "./sound-catalog.js?v=showtime-45";
 export const COSMETIC_SLOTS = [
   "hat",
   "outfit",
@@ -6,6 +10,7 @@ export const COSMETIC_SLOTS = [
   "podium",
   "title",
   "slide",
+  "collision",
 ];
 export const SLOT_LABELS = {
   hat: "CHAPEAU",
@@ -14,9 +19,11 @@ export const SLOT_LABELS = {
   podium: "ANIMATION DE PODIUM",
   title: "SURNOM",
   slide: "SON DE GLISSADE",
+  collision: "SON DE COLLISION",
 };
 export const EFFECT_COSMETICS = [
   ...SLIDE_SOUNDS,
+  ...COLLISION_SOUNDS,
   { id: "aura_none", slot: "aura", name: "Sans aura", price: 0, icon: "◌" },
   ...[
     ["ketchup", "Flaque de ketchup", "#c74b39"],
@@ -97,53 +104,7 @@ export function drawAura(ctx, id, time = 0, mode = cosmeticMotion()) {
   if (mode === "off" || !id || id === "aura_none") return;
   const item = EFFECT_COSMETICS.find((c) => c.id === id && c.slot === "aura");
   if (!item) return;
-  ctx.save();
-  const transform = ctx.getTransform();
-  const pixels = Math.max(1, Math.hypot(transform.a, transform.b));
-  const pulse = mode === "full" ? 1 + Math.sin(time * 0.0028) * 0.045 : 1;
-  // Low, filled pool on the ground beneath the soles. Never a body outline.
-  const rx = 1.18 * pulse,
-    ry = 0.23 * pulse,
-    cy = 1.01;
-  ctx.globalAlpha = 0.42;
-  ctx.fillStyle = item.color;
-  ctx.beginPath();
-  for (let i = 0; i <= 24; i++) {
-    const angle = (i / 24) * Math.PI * 2;
-    const wobble =
-      1 + 0.035 * Math.sin(angle * 3 + (mode === "full" ? time * 0.0015 : 0));
-    const x = Math.cos(angle) * rx * wobble,
-      y = cy + Math.sin(angle) * ry * wobble;
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.lineWidth = Math.max(0.035, 1.1 / pixels);
-  ctx.strokeStyle = item.color;
-  ctx.globalAlpha = 0.75;
-  ctx.stroke();
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = "#fff4bd";
-  ctx.beginPath();
-  ctx.ellipse(-0.24, cy - 0.035, 0.48, 0.055, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (mode === "full") {
-    const ripple = (time % 1800) / 1800;
-    ctx.globalAlpha = (1 - ripple) * 0.35;
-    ctx.strokeStyle = item.color;
-    ctx.beginPath();
-    ctx.ellipse(
-      0,
-      cy,
-      rx * (0.55 + ripple * 0.45),
-      ry * (0.55 + ripple * 0.45),
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-  }
-  ctx.restore();
+  drawGroundAura(ctx, id, time, mode === "full");
 }
 
 export function equippedTitle(cosmetics) {

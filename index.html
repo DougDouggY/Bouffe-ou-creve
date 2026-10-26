@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#171d20" />
     <title>Les gourmands — Le dernier repas</title>
     <script src="./display-mode.js?v=wardrobe-41"></script>
-    <script type="module" src="./game.js?v=sounds-44"></script>
+    <script type="module" src="./game.js?v=showtime-45"></script>
 
-    <link rel="stylesheet" href="./style.css?v=sounds-44" />
+    <link rel="stylesheet" href="./style.css?v=showtime-45" />
   </head>
   <body>
     <div id="app">
@@ -486,7 +486,7 @@
               />
               <label
                 ><input id="other-slide-sounds" type="checkbox" checked />
-                Entendre les sons de glissade des autres joueurs</label
+                Entendre les glissades et collisions des autres</label
               >
               <button id="option-sound">Couper tous les sons</button
               ><button
@@ -822,6 +822,7 @@
           >
             Sons de glissade
           </button>
+          <button type="button" data-cosmetics-filter="collision" aria-pressed="false">Sons de collision</button>
           <button type="button" class="audio-credits-link" data-audio-credits>
             Crédits audio
           </button>

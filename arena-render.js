@@ -1,4 +1,5 @@
-import { cosmeticMotion } from "./cosmetic-effects.js?v=sounds-44";
+import {drawVFX} from "./presentation-art.js?v=showtime-45";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=showtime-45";
 import { isVisible } from "./visibility.js?v=filmovore-15";
 import { hungerZone } from "./hunger-games.js?v=filmovore-15";
 const images = new Map();
@@ -465,17 +466,8 @@ export function drawArenaPowers(ctx, g, time) {
     ctx.strokeStyle = "#ffdc62";
     ctx.lineWidth = 4;
     ctx.stroke();
-    if (Math.floor(trail.endDistance / 8) % 3 === 0) {
-      const x = trail.b.x,
-        y = trail.b.y,
-        flame = 6 + Math.sin(time * 0.019 + x) * 3;
-      ctx.fillStyle = "#ffd96b";
-      ctx.beginPath();
-      ctx.moveTo(x - 4, y);
-      ctx.quadraticCurveTo(x - 6, y - flame * 0.6, x + 1, y - flame - 5);
-      ctx.quadraticCurveTo(x, y - flame * 0.3, x + 4, y);
-      ctx.fill();
-    }
+    if(Math.floor(trail.endDistance/8)%3===0){const frame=Math.floor(time/80+trail.endDistance)%6;drawVFX(ctx,'fire',frame,trail.b.x,trail.b.y+4,26,38,.9);}
+
   }
   for (const p of g.people.filter((p) => p.alive)) {
     if (!visible(g, p.body.position)) continue;
@@ -490,6 +482,7 @@ export function drawArenaPowers(ctx, g, time) {
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    if(p.fireActive)drawVFX(ctx,'fire',Math.floor(time/90+p.id)%6,pos.x,pos.y+r*.5,r*2.2,r*3,.85);
     if (p.infernoReady) sprite(ctx, "inferno", pos.x + r, pos.y - r, 18, 22);
     if (p.lightBoost > 1) sprite(ctx, "lamp", pos.x - r, pos.y - r, 18, 22);
   }

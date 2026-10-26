@@ -97,3 +97,5 @@ const TOPS = {
   hat_teapot: -1.3978,
 };
 export const equippedHeadTop = (id) => TOPS[id] ?? TOPS.none;
+
+export const CEREMONY_HEAD_IDS = IDS;

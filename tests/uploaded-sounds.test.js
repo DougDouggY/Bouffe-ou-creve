@@ -40,20 +40,27 @@ test("15 supplied recordings have real resources and 8 correct slide IDs, includ
     assert(row.duration <= row.original_duration + 0.1);
     assert.equal(row.sha256_original.length, 64);
   }
-  const supplied = SLIDE_SOUNDS.filter((s) => s.file?.endsWith("-44.mp3"));
+  const supplied = SLIDE_SOUNDS.filter((s) =>
+    /-(44|45)\.mp3$/.test(s.file || ""),
+  );
   assert.equal(supplied.length, 8);
   for (const item of supplied) {
     assert.equal(normalizeCosmetics({ slide: item.id }).slide, item.id);
     assert(!item.disabled);
   }
-  assert.equal(COLLISION_SOUNDS.length, 5);
-  assert.equal(new Set(COLLISION_SOUNDS.map((s) => s.file)).size, 5);
+  assert.equal(COLLISION_SOUNDS.filter((s) => s.file).length, 5);
+  assert.equal(
+    new Set(COLLISION_SOUNDS.filter((s) => s.file).map((s) => s.file)).size,
+    5,
+  );
 });
 test("all uploaded slides preview actual recordings, AI stay silent, human launches remain deduplicated", async () => {
   Voice.all = [];
   changeEffects({ volume: 0.5, others: true });
   const bus = createMotionAudio({ AudioClass: Voice });
-  for (const item of SLIDE_SOUNDS.filter((s) => s.file?.endsWith("-44.mp3"))) {
+  for (const item of SLIDE_SOUNDS.filter((s) =>
+    /-(44|45)\.mp3$/.test(s.file || ""),
+  )) {
     assert(bus.preview(item.id));
     await wait();
     assert(Voice.all.some((v) => v.playing && v.src.endsWith(item.file)));
@@ -74,8 +81,13 @@ test("collision voices include the second human, skip AI-only pairs, throttle ch
   let clock = 1000;
   const bus = createMotionAudio({ AudioClass: Voice, now: () => clock });
   const ai = { id: 8, human: false },
-    self = { id: 0, networkSeat: 3, human: true },
-    peer = { id: 2, human: true };
+    self = {
+      id: 0,
+      networkSeat: 3,
+      human: true,
+      cosmetics: { collision: "collision_hello" },
+    },
+    peer = { id: 2, human: true, cosmetics: { collision: "collision_wouf" } };
   assert.equal(bus.collision(ai, { id: 9, human: false }, 1), false);
   assert(bus.collision(ai, self, 1, 1200));
   await wait();
@@ -103,7 +115,7 @@ test("collision voices include the second human, skip AI-only pairs, throttle ch
 });
 
 import { zt as Game, eA as Body } from "../simulation-core.js";
-test("real engine collisions carry both gourmands and emit wall impact without changing their physics", () => {
+test("real engine collisions carry both gourmands and ignore walls for equipped collision sounds", () => {
   const g = new Game(2400, 1800, () => 0.5, {
     mode: "classic",
     mapId: "cantine",
@@ -137,7 +149,7 @@ test("real engine collisions carry both gourmands and emit wall impact without c
     });
     Body.setVelocity(a.body, { x: 0, y: -4 });
     g.step(1000 / 60);
-    assert(events.some((e) => e.kind === "impact" && e.person === 0));
+    assert(!events.some((e) => e.kind === "impact"));
   } finally {
     g.destroy();
   }

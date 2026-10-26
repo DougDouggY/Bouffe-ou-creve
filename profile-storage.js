@@ -66,7 +66,7 @@ export function mergeProfileProgress(current, baseline, latest) {
     );
   }
   result.equipped = { ...latest.equipped };
-  for (const slot of ["hat", "outfit", "aura", "podium", "title", "slide"])
+  for (const slot of ["hat", "outfit", "aura", "podium", "title", "slide", "collision"])
     if (!baseline || current.equipped?.[slot] !== baseline.equipped?.[slot])
       result.equipped[slot] = current.equipped?.[slot];
   return result;

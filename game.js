@@ -1,9 +1,11 @@
+import {getCeremonyHead,drawVFX,preloadGameEffects} from "./presentation-art.js?v=showtime-45";
 import {
   drawEquippedHead,
   drawHeadThumbnail,
   hasHead,
   equippedHeadTop,
-} from "./head-sprites.js?v=wardrobe-41";
+  CEREMONY_HEAD_IDS,
+} from "./head-sprites.js?v=showtime-45";
 import {
   trophyCounters,
   trophyProgress,
@@ -13,13 +15,13 @@ import {
 import { setupRestaurantHome } from "./restaurant-home.js?v=burger-43";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
-import { createMotionAudio } from "./motion-audio.js?v=sounds-44";
+import { createMotionAudio } from "./motion-audio.js?v=showtime-45";
 import {
   bindEffectsControls,
   effectsGain,
 } from "./audio-settings.js?v=ceremony-38";
 import { eventPoints, MATCH_POINTS_CAP } from "./economy.js?v=ceremony-38";
-import { drawShopArt } from "./shop-art.js?v=wardrobe-41";
+import { drawShopArt } from "./shop-art.js?v=showtime-45";
 import { gameplayViewport } from "./viewport.js?v=phone-36";
 import {
   COSMETIC_SLOTS,
@@ -28,12 +30,13 @@ import {
   cosmeticMotion,
   setCosmeticMotion,
   equippedTitle,
-} from "./cosmetic-effects.js?v=sounds-44";
+} from "./cosmetic-effects.js?v=showtime-45";
 import {
   showPodium,
   clearPodium,
   podiumActive,
-} from "./podium.js?v=sounds-44";
+  poseAt,
+} from "./podium.js?v=showtime-45";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
@@ -43,8 +46,8 @@ import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
 } from "./multiplayer-trophy-catalog.js?v=wardrobe-41";
-import { mergeProfileProgress } from "./profile-storage.js?v=ceremony-38";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=sounds-44";
+import { mergeProfileProgress } from "./profile-storage.js?v=showtime-45";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=showtime-45";
 import {
   sameTeam,
   localTeamWon,
@@ -52,7 +55,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=sounds-44";
+import { setupMultiplayer } from "./multiplayer-client.js?v=showtime-45";
 import {
   CA,
   Ee,
@@ -65,7 +68,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=sounds-44";
+} from "./simulation-core.js?v=showtime-45";
 import { drawSurvivalFloor } from "./survival.js?v=burger-43";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -94,7 +97,7 @@ import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=sounds-44";
+} from "./arena-render.js?v=showtime-45";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,
@@ -433,6 +436,7 @@ function Te() {
       "podium_none",
       "title_none",
       "slide_standard",
+      "collision_none",
     ],
     equipped: { hat: "none", outfit: "plain" },
   };
@@ -648,6 +652,7 @@ function renderPodiumAvatar(canvas, person, pose = null) {
     0,
     person.cosmetics || { hat: "none", outfit: "plain" },
   );
+  if(pose?.burp>0)drawVFX(ctx,'burp',Math.min(5,Math.floor(pose.burp*6)),canvas.width*.64,canvas.height*.43,canvas.width*(.45+pose.burp*.45),canvas.height*.24,Math.sin(Math.PI*pose.burp)*.85);
 }
 function Se(e, g, time = 0, u = { hat: "none", outfit: "plain" }) {
   const { x, y } = g.body.position,
@@ -655,6 +660,7 @@ function Se(e, g, time = 0, u = { hat: "none", outfit: "plain" }) {
     skin = g.skin || "#efc5a0",
     shape = Ze(g.mass ?? 60),
     pose = g.presentationPose;
+  if(pose?.belly)shape.fullness+=pose.belly*2;
   e.save();
   e.translate(x, y);
   const bounce =
@@ -765,7 +771,9 @@ function Se(e, g, time = 0, u = { hat: "none", outfit: "plain" }) {
   e.translate(0, shape.headY + (pose?.headBob || 0));
   e.rotate(pose?.headTurn || 0);
   e.scale(shape.headScale, shape.headScale);
-  if (!drawEquippedHead(e, u.hat)) {
+  const expressiveHead=pose ? getCeremonyHead(Math.max(0,CEREMONY_HEAD_IDS.indexOf(u.hat)),pose.expression||0):null;
+  if(expressiveHead)e.drawImage(expressiveHead,-1,.11-333/128,2,3);
+  if (!expressiveHead && !drawEquippedHead(e, u.hat)) {
     const hat = null;
 
     if (!u.hat.startsWith("hat_")) ellipse(0, -0.39, 0.52, 0.51, "#724831");
@@ -1625,22 +1633,25 @@ function Qt({ start: e, appearance: g }) {
         c.fillText(Y.toLocaleString("fr-FR") + " kg", J, 310));
     }
   }
-  L("#preview-podium-animation").onclick = () => {
-    const canvas = L("#avatar-preview"),
-      animation = B().podium;
-    canvas.className = "";
-    if (
-      cosmeticMotion() === "full" &&
-      animation &&
-      animation !== "podium_none"
-    ) {
-      void canvas.offsetWidth;
-      canvas.className = "podium-animation " + animation;
-    }
+  let previewRAF=0;
+  L('#preview-podium-animation').onclick=()=>{
+    cancelAnimationFrame(previewRAF);
+    const canvas=L('#avatar-preview'),person={id:0,name:'Ton gourmand',mass:Number(L('#wardrobe-weight').value)||60,cosmetics:{...B()}};
+    if(cosmeticMotion()!=='full'||!person.cosmetics.podium||person.cosmetics.podium==='podium_none')return;
+    const actor={person,enabled:true,kind:'champion',celebrateAt:performance.now()};let burped=false;
+    canvas.className='';
+    const animate=time=>{
+      if(!L('#shop-dialog').open||B().podium!==person.cosmetics.podium||cosmeticMotion()!=='full'||time-actor.celebrateAt>3800){k();return;}
+      const pose=poseAt(actor,time);renderPodiumAvatar(canvas,person,pose);
+      if(pose.burp>.015&&!burped){burped=true;motionAudio.burp();}
+      previewRAF=requestAnimationFrame(animate);
+    };
+    previewRAF=requestAnimationFrame(animate);
   };
-  L("#wardrobe-weight").oninput = k;
+  L("#wardrobe-weight").oninput = ()=>{cancelAnimationFrame(previewRAF);k();};
   (lA.addEventListener("load", k), DA.addEventListener("load", k));
   document.addEventListener("gourmand-heads-loaded", k);
+  document.addEventListener("gourmand-presentation-loaded", k);
   document.addEventListener("extra-cosmetics-loaded", k);
   function t() {
     journey?.refresh();
@@ -1760,6 +1771,7 @@ function Qt({ start: e, appearance: g }) {
               podium: "podium_none",
               title: "title_none",
               slide: "slide_standard",
+              collision: "collision_none",
             }[R.slot]) === R.id,
         m = document.createElement("article");
       m.className = "shop-card";
@@ -1793,7 +1805,7 @@ function Qt({ start: e, appearance: g }) {
         (Z.onclick = () => s(R.id)),
         m.append(Z),
         l.append(m));
-      if (R.slot === "slide") {
+      if ((R.slot === "slide" || R.slot === "collision") && R.file) {
         const listen = document.createElement("button");
         listen.type = "button";
         listen.className = "sound-listen";
@@ -3010,6 +3022,8 @@ document
   .forEach((button) => (button.onclick = openGameOptions));
 gameAudio.prime();
 const motionAudio = createMotionAudio();
+document.addEventListener("pointerdown",preloadGameEffects,{once:true});
+document.addEventListener("podium-burp",()=>motionAudio.burp());
 document.addEventListener("pointerdown", () => motionAudio.unlock(), {
   capture: true,
 });
@@ -3123,7 +3137,7 @@ function OA() {
         if (o?.id === 0) motionAudio.bounce();
         return;
       }
-      if (g === "bounce" || g === "impact") motionAudio.collision(
+      if (g === "bounce") motionAudio.collision(
         o && {...o,human:o.id===0}, u && {...u,human:u.id===0},K.round,K.elapsed,
       );
       if (
@@ -3998,7 +4012,7 @@ online = setupMultiplayer({
   onEvent(event) {
     if (event.kind === "slide") {
       const person = onlinePeople[event.person];
-      if (person) motionAudio.slide(person, K.round);
+      if (person) motionAudio.slide(person, K.round, event.speed);
       return;
     }
     if(event.kind==='bounce'||event.kind==='impact') {

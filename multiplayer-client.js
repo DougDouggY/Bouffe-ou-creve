@@ -1,4 +1,4 @@
-import { equippedTitle } from "./cosmetic-effects.js?v=sounds-44";
+import { equippedTitle } from "./cosmetic-effects.js?v=showtime-45";
 import { ReplayClock } from "./replay-clock.js?v=podium-35";
 import { createOnlineProfileClient } from "./multiplayer-profile-client.js?v=rivalries-33";
 import {
@@ -10,7 +10,7 @@ import { MULTIPLAYER_MAPS } from "./multiplayer-maps.js?v=collection-37";
 import {
   normalizeCosmetics,
   COSMETIC_CATALOG,
-} from "./cosmetic-catalog.js?v=sounds-44";
+} from "./cosmetic-catalog.js?v=showtime-45";
 import { decodeFrame } from "./multiplayer-protocol.js?v=social-28";
 const VERSION = "multi-21";
 const SERVER = ["localhost", "127.0.0.1"].includes(location.hostname)

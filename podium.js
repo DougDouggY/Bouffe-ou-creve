@@ -1,4 +1,4 @@
-import { cosmeticMotion } from "./cosmetic-effects.js?v=sounds-44";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=showtime-45";
 import { teamSurface } from "./teams.js?v=rivalries-33";
 let scene = null;
 export function podiumActive() {
@@ -10,6 +10,7 @@ export function clearPodium() {
     scene.webgl?.dispose();
     clearTimeout(scene.timer);
     document.removeEventListener("extra-cosmetics-loaded", scene.redraw);
+    document.removeEventListener("gourmand-presentation-loaded", scene.redraw);
     scene = null;
   }
   const root = document.querySelector("#match-podium");
@@ -17,78 +18,92 @@ export function clearPodium() {
   if (root) root.hidden = true;
   document.body.classList.remove("ceremony-open");
 }
-function poseAt(actor, time) {
+export function poseAt(actor, time) {
   const phase = time * 0.001,
     id = actor.person.id,
     age = (time - actor.celebrateAt) / 1000;
-  const blink = (phase + id * 0.71) % 4;
   const pose = {
     time,
     breath: Math.sin(phase * 2.5 + id),
     headBob: Math.sin(phase * 2.5 + id) * 0.012,
     headTurn: Math.sin(phase * 0.6 + id) * 0.025,
     look: Math.sin(phase * 0.9 + id) * 0.025,
-    blink: blink > 3.84 ? Math.sin(((blink - 3.84) / 0.16) * Math.PI) : 0,
+    blink: 0,
     armL: Math.sin(phase * 1.5 + id) * 0.04,
     armR: Math.sin(phase * 1.5 + id + 0.7) * 0.04,
     legL: 0,
     legR: 0,
     jump: 0,
     mouth: 0,
+    expression: 0,
+    belly: 0,
+    twist: 0,
+    headPitch: 0,
+    burp: 0,
   };
-  if (!actor.enabled || age < 0 || age > 2.7) return pose;
-  const t = Math.min(1, Math.max(0, age / 2.7)),
-    weight =
-      Math.sin((Math.min(1, t * 6) * Math.PI) / 2) * Math.min(1, (1 - t) * 5),
-    beat = Math.sin(age * 7);
-  const animation = actor.person.cosmetics?.podium;
-  const kind =
-    animation && animation !== "podium_none"
-      ? animation
+  const selected = actor.person.cosmetics?.podium;
+  pose.animation =
+    selected && selected !== "podium_none"
+      ? selected
       : {
           champion: "podium_champion",
           predator: "podium_belly",
           first: "podium_despair",
         }[actor.kind];
-  if (kind === "podium_champion") {
-    pose.armL = weight * (1.8 + beat * 0.3);
-    pose.armR = -weight * (2.1 - beat * 0.25);
-    pose.headTurn = beat * 0.09 * weight;
-    pose.mouth = 0.65 * weight;
-    pose.legL = beat * 0.18 * weight;
-    pose.legR = -beat * 0.18 * weight;
+  if (!actor.enabled || age < 0 || age > 3.8) return pose;
+  const weight = Math.min(1, age / 0.25, (3.8 - age) / 0.4),
+    beat = Math.sin(age * 10);
+  if (pose.animation === "podium_champion") {
+    pose.armL = (2.3 + beat * 0.25) * weight;
+    pose.armR = (-2.5 + beat * 0.3) * weight;
+    pose.headTurn = beat * 0.07 * weight;
+    pose.expression = 3;
+    pose.legL = beat * 0.14 * weight;
+    pose.legR = -pose.legL;
+    pose.twist = Math.sin(age * 5) * 0.09 * weight;
   }
-  if (kind === "podium_belly") {
-    pose.armL = (-0.65 + beat * 0.28) * weight;
-    pose.armR = (0.65 + beat * 0.28) * weight;
-    pose.headTurn = beat * 0.1 * weight;
-    pose.legL = beat * 0.13 * weight;
-    pose.legR = -beat * 0.13 * weight;
-    pose.mouth = 0.25 * weight;
+  if (pose.animation === "podium_belly") {
+    pose.armL = (2.1 + beat * 0.2) * weight;
+    pose.armR = (-2.1 + beat * 0.2) * weight;
+    pose.belly = (0.15 + beat * 0.13) * weight;
+    pose.twist = beat * 0.12 * weight;
+    pose.headTurn = -beat * 0.12 * weight;
+    pose.legL = beat * 0.14 * weight;
+    pose.legR = -pose.legL;
+    pose.expression = 4;
+    pose.mouth = 0.6;
   }
-  if (kind === "podium_burp") {
-    pose.armL = -0.9 * weight;
-    pose.armR = 0.5 * weight;
-    pose.headTurn = -0.12 * weight;
-    pose.mouth = Math.max(0, Math.sin(age * 3)) * weight;
+  if (pose.animation === "podium_burp") {
+    const inhale = Math.sin(Math.min(1, age / 0.9) * Math.PI * 0.5);
+    pose.belly =
+      (age < 0.9 ? 0.2 * inhale : 0.05 * Math.sin(age * 12)) * weight;
+    pose.armL = (-0.8 - inhale * 0.25) * weight;
+    pose.armR = (0.8 + inhale * 0.25) * weight;
+    pose.headPitch = (age < 0.9 ? -0.16 : 0.12) * weight;
+    pose.expression = age < 0.2 ? 0 : age < 0.9 ? 1 : age < 2.15 ? 2 : 3;
+    pose.burp = age >= 0.9 && age < 2.2 ? (age - 0.9) / 1.3 : 0;
+    pose.mouth = age >= 0.9 && age < 2.15 ? 1 : 0;
   }
-  if (kind === "podium_jump") {
+  if (pose.animation === "podium_jump") {
     pose.armL = 2.4 * weight;
     pose.armR = -2.4 * weight;
-    pose.legL = Math.sin(age * 8) * 0.5 * weight;
-    pose.legR = -Math.sin(age * 8) * 0.5 * weight;
-    pose.jump = Math.max(0, Math.sin(age * 7)) * 25 * weight;
-    pose.mouth = 0.8 * weight;
+    pose.legL = Math.sin(age * 7) * 0.45 * weight;
+    pose.legR = -pose.legL;
+    pose.jump = Math.max(0, Math.sin(age * 6)) * 32 * weight;
+    pose.expression = age < 2.6 ? 4 : 3;
+    pose.mouth = 0.9;
   }
-  if (kind === "podium_despair") {
-    pose.armL = -1.45 * weight;
-    pose.armR = 0.8 * weight;
-    pose.headBob = 0.09 * weight;
-    pose.headTurn = (0.18 + Math.sin(age * 24) * 0.04) * weight;
-    pose.coverFace = weight > 0.3;
+  if (pose.animation === "podium_despair") {
+    pose.armL = -1.4 * weight;
+    pose.armR = 0.9 * weight;
+    pose.headBob = 0.18 * weight;
+    pose.headTurn = (0.16 + Math.sin(age * 25) * 0.06) * weight;
+    pose.coverFace = age > 0.8 && age < 2.5;
+    pose.expression = age < 1.5 ? 6 : 8 - 1;
     pose.sad = true;
     pose.legL = -0.12 * weight;
     pose.legR = 0.1 * weight;
+    pose.twist = Math.sin(age * 24) * 0.025 * weight;
   }
   return pose;
 }
@@ -108,6 +123,7 @@ export function showPodium(results, people, renderAvatar) {
   skip.type = "button";
   skip.className = "ceremony-skip";
   skip.textContent = "Passer l’introduction";
+  skip.hidden = cosmeticMotion()!=="full";
   root.append(header, skip);
   const rig = document.createElement("div");
   rig.className = "ceremony-lights";
@@ -212,7 +228,7 @@ export function showPodium(results, people, renderAvatar) {
           }
         actor.enabled = true;
         actor.canvas.dataset.animation = "celebration";
-        actor.celebrateAt = performance.now();
+        actor.celebrateAt = scene?.visualTime ?? performance.now();
         figure.classList.remove("replay");
         void figure.offsetWidth;
         figure.classList.add("replay");
@@ -267,21 +283,33 @@ export function showPodium(results, people, renderAvatar) {
   skip.onclick = () => {
     skippedByUser = true;
     finish();
-    for (const actor of actors) actor.celebrateAt = performance.now();
+    for (const actor of actors) actor.celebrateAt = scene?.visualTime ?? performance.now();
   };
   const draw = (time) => {
     if (!scene) return;
     if (time - scene.lastFrame >= 33) {
+      const delta=scene.lastFrame===-Infinity?0:Math.min(80,Math.max(0,time-scene.lastFrame));
       scene.lastFrame = time;
+      scene.visualTime+=delta;
+      const visualTime=scene.visualTime;
+      if(root.dataset.intro==='playing'&&visualTime>=scene.finishAt)finish();
+      if (!scene.webgl)
+        for (const actor of actors) {
+          const pose = poseAt(actor, visualTime);
+          if (pose.burp > 0.015 && actor.burpCycle !== actor.celebrateAt) {
+            actor.burpCycle = actor.celebrateAt;
+            document.dispatchEvent(new Event("podium-burp"));
+          }
+        }
       if (scene.webgl?.disposed) scene.webgl = null;
       if (scene.webgl)
-        scene.webgl.frame(time, poseAt, cosmeticMotion() === "full");
+        scene.webgl.frame(visualTime, poseAt, cosmeticMotion() === "full");
       else
         for (const actor of actors)
           renderAvatar(
             actor.canvas,
             actor.person,
-            cosmeticMotion() === "full" ? poseAt(actor, time) : null,
+            cosmeticMotion() === "full" ? poseAt(actor, visualTime) : null,
           );
     }
     if (cosmeticMotion() === "full") scene.raf = requestAnimationFrame(draw);
@@ -289,22 +317,25 @@ export function showPodium(results, people, renderAvatar) {
   scene = {
     actors,
     lastFrame: -Infinity,
+    visualTime:start,
+    finishAt:start+3800,
     raf: 0,
     redraw: () => {
       for (const actor of actors)
         renderAvatar(
           actor.canvas,
           actor.person,
-          cosmeticMotion() === "full" ? poseAt(actor, performance.now()) : null,
+          cosmeticMotion() === "full" ? poseAt(actor, scene?.visualTime ?? performance.now()) : null,
         );
     },
-    timer: setTimeout(finish, 2900),
+    timer: 0,
   };
   document.addEventListener("extra-cosmetics-loaded", scene.redraw);
+  document.addEventListener("gourmand-presentation-loaded", scene.redraw);
   scene.redraw();
   scene.raf = requestAnimationFrame(draw);
   const owner = scene;
-  import("./podium-3d.js?v=secret-42")
+  import("./podium-3d.js?v=showtime-45")
     .then(({ createCeremony3D }) => {
       if (scene !== owner) return null;
       return createCeremony3D(
@@ -332,12 +363,12 @@ export function showPodium(results, people, renderAvatar) {
           actor.celebrateAt =
             readyAt +
             (actor.kind === "champion"
-              ? 900
+              ? 2600
               : actor.kind === "predator"
-                ? 1200
-                : 1500);
+                ? 2900
+                : 3200);
         clearTimeout(owner.timer);
-        owner.timer = setTimeout(finish, 2900);
+        owner.visualTime=readyAt;owner.lastFrame=performance.now();owner.finishAt=readyAt+3800;
       }
     })
     .catch(() => {

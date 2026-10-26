@@ -1,3 +1,4 @@
+import { drawAuraThumbnail } from "./presentation-art.js?v=showtime-45";
 // One illustrated atlas, fetched only when the Dressing needs a thumbnail.
 const ids = [
   ...["ketchup", "mayo", "gold", "flame", "toxic"].map((id) => "aura_" + id),
@@ -8,6 +9,7 @@ const ids = [
 ];
 let atlas, slides, natural;
 export function drawShopArt(canvas, item) {
+  if (drawAuraThumbnail(canvas, item)) return;
   const ctx = canvas.getContext("2d");
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -35,7 +37,8 @@ export function drawShopArt(canvas, item) {
     }
     if (
       item.naturalArt === undefined &&
-      item.slot === "slide" &&
+      ["slide", "collision"].includes(item.slot) &&
+      item.art !== undefined &&
       slides?.complete &&
       slides.naturalWidth
     ) {
@@ -124,7 +127,11 @@ export function drawShopArt(canvas, item) {
     if (!natural.complete)
       natural.addEventListener("load", draw, { once: true });
   }
-  if (item.slot === "slide" && item.naturalArt === undefined) {
+  if (
+    ["slide", "collision"].includes(item.slot) &&
+    item.art !== undefined &&
+    item.naturalArt === undefined
+  ) {
     if (!slides) {
       slides = new Image();
       slides.src = new URL(
