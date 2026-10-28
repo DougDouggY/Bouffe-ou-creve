@@ -5,10 +5,10 @@ import {
   AURA_IDS,
   vfxAtlas,
   ceremonyBackdrop,
-} from "./presentation-art.js?v=quiet-46";
+} from "./presentation-art.js?v=auras-47";
 // Loaded only for the ceremony. Local Three.js (MIT), no CDN or game physics.
 import * as T from "./assets/vendor/three.module.min.js";
-import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=quiet-46";
+import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=auras-47";
 import { extraCosmeticImage } from "./cosmetics.js?v=podium-35";
 const HEAD_IDS = [
   "none",
@@ -520,8 +520,8 @@ export async function createCeremony3D(
         side: T.DoubleSide,
       });
       resources.add(mat);
-      aura = mesh(new T.PlaneGeometry(3.4, 1.35), mat, group, 0, 0.08, 0.1);
-      aura.rotation.x = -Math.PI * 0.36;
+      aura = mesh(new T.PlaneGeometry(5.1, 1.7), mat, group, 0, 0.08, 0.1);
+      aura.rotation.x = -Math.PI / 2;
       aura.castShadow = false;
     }
     const smokeTexture = new T.Texture(vfxAtlas());

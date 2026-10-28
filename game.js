@@ -1,11 +1,11 @@
-import {getCeremonyHead,drawVFX,preloadGameEffects} from "./presentation-art.js?v=quiet-46";
+import {getCeremonyHead,drawVFX,preloadGameEffects} from "./presentation-art.js?v=auras-47";
 import {
   drawEquippedHead,
   drawHeadThumbnail,
   hasHead,
   equippedHeadTop,
   CEREMONY_HEAD_IDS,
-} from "./head-sprites.js?v=quiet-46";
+} from "./head-sprites.js?v=auras-47";
 import {
   trophyCounters,
   trophyProgress,
@@ -15,13 +15,13 @@ import {
 import { setupRestaurantHome } from "./restaurant-home.js?v=burger-43";
 import { recordPerformance } from "./performance-metrics.js?v=ceremony-38";
 import { extractSilhouette } from "./silhouette.js?v=ceremony-38";
-import { createMotionAudio } from "./motion-audio.js?v=quiet-46";
+import { createMotionAudio } from "./motion-audio.js?v=auras-47";
 import {
   bindEffectsControls,
   effectsGain,
 } from "./audio-settings.js?v=ceremony-38";
 import { eventPoints, MATCH_POINTS_CAP } from "./economy.js?v=ceremony-38";
-import { drawShopArt } from "./shop-art.js?v=quiet-46";
+import { drawShopArt } from "./shop-art.js?v=auras-47";
 import { gameplayViewport } from "./viewport.js?v=phone-36";
 import {
   COSMETIC_SLOTS,
@@ -30,13 +30,13 @@ import {
   cosmeticMotion,
   setCosmeticMotion,
   equippedTitle,
-} from "./cosmetic-effects.js?v=quiet-46";
+} from "./cosmetic-effects.js?v=auras-47";
 import {
   showPodium,
   clearPodium,
   podiumActive,
   poseAt,
-} from "./podium.js?v=quiet-46";
+} from "./podium.js?v=auras-47";
 import { createTeamHud, deathNotice } from "./team-hud.js?v=rivalries-33";
 import {
   drawTailoredOutfit,
@@ -46,8 +46,8 @@ import {
   MULTIPLAYER_TROPHIES,
   onlineProfile,
 } from "./multiplayer-trophy-catalog.js?v=wardrobe-41";
-import { mergeProfileProgress } from "./profile-storage.js?v=quiet-46";
-import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=quiet-46";
+import { mergeProfileProgress } from "./profile-storage.js?v=auras-47";
+import { COSMETIC_CATALOG as KA } from "./cosmetic-catalog.js?v=auras-47";
 import {
   sameTeam,
   localTeamWon,
@@ -55,7 +55,7 @@ import {
   teamSurface,
   teamLabel,
 } from "./teams.js?v=rivalries-33";
-import { setupMultiplayer } from "./multiplayer-client.js?v=quiet-46";
+import { setupMultiplayer } from "./multiplayer-client.js?v=auras-47";
 import {
   CA,
   Ee,
@@ -68,7 +68,7 @@ import {
   eA,
   XA,
   zt,
-} from "./simulation-core.js?v=quiet-46";
+} from "./simulation-core.js?v=auras-47";
 import { drawSurvivalFloor } from "./survival.js?v=burger-43";
 import { setupSecretTrophyLab } from "./secret-trophy-lab.js?v=filmovore-15";
 import {
@@ -97,7 +97,7 @@ import {
   drawArenaFloor,
   drawArenaActors,
   drawArenaPowers,
-} from "./arena-render.js?v=quiet-46";
+} from "./arena-render.js?v=auras-47";
 import {
   EXTRA_HAT_BOUNDS,
   drawExtraCosmetic,

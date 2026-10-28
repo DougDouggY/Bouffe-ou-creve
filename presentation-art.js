@@ -22,7 +22,7 @@ function source(file) {
 }
 export async function preparePresentationArt() {
   const files = [
-    "cosmetics/auras-frames-45.webp",
+    "cosmetics/auras-frames-47.webp",
     "cosmetics/face-frames-45.webp",
     "cosmetics/fire-burp-frames-45.webp",
     "cosmetics/heads-equipped.webp",
@@ -36,7 +36,7 @@ export async function preparePresentationArt() {
     }),
   );
 }
-export const auraAtlas = () => source("cosmetics/auras-frames-45.webp");
+export const auraAtlas = () => source("cosmetics/auras-frames-47.webp");
 export const vfxAtlas = () => source("cosmetics/fire-burp-frames-45.webp");
 export const ceremonyBackdrop = () => source("ceremony-restaurant-45.webp");
 export function drawGroundAura(ctx, id, time = 0, animated = true) {
@@ -46,14 +46,15 @@ export function drawGroundAura(ctx, id, time = 0, animated = true) {
   const cycle = animated ? time / 180 : 0,
     frame = Math.floor(cycle) % 4,
     next = (frame + 1) % 4,
-    blend = animated ? (cycle % 1) * 0.45 : 0;
+    blend = animated ? cycle % 1 : 0;
   ctx.save();
+  if (animated) ctx.scale(1 + 0.025 * Math.sin(time / 480), 1);
   const opacity = ctx.globalAlpha;
   ctx.globalAlpha = opacity * (1 - blend);
-  ctx.drawImage(im, col * 256, frame * 160, 256, 160, -1.5, 0.44, 3, 0.82);
+  ctx.drawImage(im, col * 256, frame * 160, 256, 160, -2.25, 0.36, 4.5, 1.05);
   if (blend) {
     ctx.globalAlpha = opacity * blend;
-    ctx.drawImage(im, col * 256, next * 160, 256, 160, -1.5, 0.44, 3, 0.82);
+    ctx.drawImage(im, col * 256, next * 160, 256, 160, -2.25, 0.36, 4.5, 1.05);
   }
   ctx.restore();
   return true;
@@ -79,7 +80,7 @@ export function drawAuraThumbnail(canvas, item) {
     canvas.dataset.illustrated = "true";
   };
   paint();
-  const im = images.get("cosmetics/auras-frames-45.webp");
+  const im = images.get("cosmetics/auras-frames-47.webp");
   if (im && !im.complete) im.addEventListener("load", paint, { once: true });
   return true;
 }
@@ -149,6 +150,6 @@ export function drawVFX(ctx, kind, frame, x, y, w, h, alpha = 1) {
 }
 
 export function preloadGameEffects() {
-  source("cosmetics/auras-frames-45.webp");
+  source("cosmetics/auras-frames-47.webp");
   source("cosmetics/fire-burp-frames-45.webp");
 }

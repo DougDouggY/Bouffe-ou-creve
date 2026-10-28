@@ -106,9 +106,9 @@ test("new slides are quieter, fade in and out, and stretch gently with synchroni
   assert.deepEqual(person, before);
   voice.finish();
   bus.reset();
-  assert.equal(SLIDE_SOUNDS.filter((s) => s.recordingGain === 0.5).length, 8);
+  assert.equal(SLIDE_SOUNDS.filter((s) => s.recordingGain === 0.175).length, 8);
 });
-test("collision voices are quiet, spaced and limited to one human per impact; AI and peer mute remain silent", async () => {
+test("both equipped humans contribute their own collision voice; none, AI and peer mute remain silent", async () => {
   changeEffects({ volume: 0.5, others: true });
   Voice.all = [];
   let clock = 1000;
@@ -117,13 +117,9 @@ test("collision voices are quiet, spaced and limited to one human per impact; AI
     b = { id: 1, human: true, cosmetics: { collision: "collision_wouf" } };
   assert(bus.collision(a, b, 1));
   await flush();
-  assert.equal(Voice.all.filter((v) => v.playing).length, 1);
-  assert(Voice.all.some((v) => v.src.endsWith("collision-smack-46.mp3")));
-  assert(!Voice.all.some((v) => v.playing && v.src.endsWith("collision-wouf-46.mp3")));
-  clock += 2600;
-  assert.equal(bus.collision(a, b, 2), false);
-  assert.equal(bus.collision(a, { ...b, id: 2 }, 2), true);
-  await flush();
+  assert.equal(Voice.all.filter((v) => v.playing).length, 2);
+  assert(Voice.all.some((v) => v.src.endsWith("collision-smack-44.mp3")));
+  assert(Voice.all.some((v) => v.src.endsWith("collision-wouf-44.mp3")));
   bus.reset();
   clock += 1000;
   assert.equal(

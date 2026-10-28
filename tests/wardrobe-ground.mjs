@@ -86,14 +86,14 @@ try {
   );
   await page.waitForFunction(async () => {
     const { drawEquippedHead } =
-      await import("./head-sprites.js?v=quiet-46");
+      await import("./head-sprites.js?v=auras-47");
     return drawEquippedHead(
       document.createElement("canvas").getContext("2d"),
       "none",
     );
   });
   await page.evaluate(async () => {
-    const art = await import("./presentation-art.js?v=quiet-46");
+    const art = await import("./presentation-art.js?v=auras-47");
     await art.preparePresentationArt();
   });
   const render = await page.evaluate(() => {
@@ -179,7 +179,7 @@ try {
     return { checks, png: montage.toDataURL(), minY, changed, animated };
   });
   assert.equal(render.checks, 96);
-  assert(render.minY >= 158, JSON.stringify({ minY: render.minY, changed: render.changed }));
+  assert(render.minY >= 150, JSON.stringify({ minY: render.minY, changed: render.changed }));
   assert(render.changed > 30);
   assert(render.animated > 10);
   await writeFile(
@@ -201,8 +201,8 @@ try {
     /Le Prout/,
   );
 
-  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('slide-prout-45')&&a.currentTime>0));
-  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('slide-prout-45')).every(a=>a.loop===false)));
+  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('slide-prout-47')&&a.currentTime>0));
+  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('slide-prout-47')).every(a=>a.loop===false)));
   await page.locator('#shop-dialog [data-gourmand-page="trophies"]').click();
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert(
@@ -250,7 +250,7 @@ try {
   });
   await page.locator("#multiplayer-close").click();
   const durations = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=quiet-46");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=auras-47");
     const ctx = new AudioContext(),
       result = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {

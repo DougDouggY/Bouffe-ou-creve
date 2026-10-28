@@ -181,8 +181,8 @@ try {
   await mobile.locator('[data-group="available"] .book-cover').click();
   await mobile.locator('[data-map="cantine"]').click();
   await mobile.locator("#start-game").click();
-  await mobile.locator("#phone-rotate").waitFor({ state: "visible" });
-  await mobile.locator("#phone-portrait").click();
+  assert(await mobile.locator("#phone-rotate").isHidden());
+  assert.equal(await mobile.evaluate(() => !!document.fullscreenElement), false);
   assert(await mobile.locator("#phone-rotate").isHidden());
   await mobile.locator("#close-briefing").click();
   await mobile.setViewportSize({ width: 844, height: 390 });

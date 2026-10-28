@@ -100,7 +100,7 @@ try {
   await page.waitForFunction(() => window.__gameTest);
   await page.evaluate(async () => {
     await (
-      await import("./presentation-art.js?v=quiet-46")
+      await import("./presentation-art.js?v=auras-47")
     ).preparePresentationArt();
   });
   await openGourmand(page);
@@ -122,7 +122,7 @@ try {
     .click();
   await page.waitForFunction(() =>
     window.__voices45.some(
-      (a) => a.src.includes("collision-smack-46") && a.currentTime > 0,
+      (a) => a.src.includes("collision-smack-44") && a.currentTime > 0,
     ),
   );
   await page.screenshot({
@@ -148,12 +148,12 @@ try {
     .click();
   await page.waitForFunction(() =>
     window.__voices45.some(
-      (a) => a.src.includes("slide-kisscount-45") && a.currentTime > 0.1,
+      (a) => a.src.includes("slide-kisscount-47") && a.currentTime > 0.1,
     ),
   );
   const kiss = await page.evaluate(() => {
     const a = window.__voices45.find((a) =>
-      a.src.includes("slide-kisscount-45"),
+      a.src.includes("slide-kisscount-47"),
     );
     return { duration: a.duration, rate: a.playbackRate, volume: a.volume };
   });
@@ -162,7 +162,7 @@ try {
   assert.equal(kiss.rate, 1);
   await page.evaluate(async () => {
     const { createMotionAudio } =
-      await import("./motion-audio.js?v=quiet-46");
+      await import("./motion-audio.js?v=auras-47");
     window.__bus45 = createMotionAudio();
     window.__bus45.slide(
       { id: 0, human: true, cosmetics: { slide: "slide_kisscount" } },
@@ -172,7 +172,7 @@ try {
   });
   await page.waitForFunction(() =>
     window.__voices45
-      .filter((a) => a.src.includes("slide-kisscount-45"))
+      .filter((a) => a.src.includes("slide-kisscount-47"))
       .some((a) => a.playbackRate < 0.9 && a.currentTime > 0),
   );
   await page.evaluate(() => window.__bus45.reset());
@@ -256,7 +256,7 @@ try {
   });
   await page.evaluate(async () => {
     document.querySelector("#match-podium").dataset.intro = "done";
-    (await import("./podium.js?v=quiet-46")).testFreezeFrame(4, 1.25);
+    (await import("./podium.js?v=auras-47")).testFreezeFrame(4, 1.25);
   });
   assert(
     (await page.locator("#match-podium").getAttribute("data-expressions"))
@@ -271,13 +271,13 @@ try {
     .screenshot({ path: path.join(output, "showtime45-burp-and-belly.png") });
   const a = await page.locator(".ceremony-webgl").screenshot();
   await page.evaluate(async () => {
-    (await import("./podium.js?v=quiet-46")).testFreezeFrame(4.3, 1.47);
+    (await import("./podium.js?v=auras-47")).testFreezeFrame(4.3, 1.47);
   });
   const b = await page.locator(".ceremony-webgl").screenshot();
   assert(!a.equals(b));
   await page.locator(".podium-course--predator .ceremony-person").click();
   await page.evaluate(async () => {
-    (await import("./podium.js?v=quiet-46")).testFreezeFrame(4, 0.15);
+    (await import("./podium.js?v=auras-47")).testFreezeFrame(4, 0.15);
   });
   assert(
     (await page.locator("#match-podium").getAttribute("data-body-widths"))
@@ -287,7 +287,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(100);
   await page.evaluate(async () => {
-    (await import("./podium.js?v=quiet-46")).testFreezeFrame(4, 1.2);
+    (await import("./podium.js?v=auras-47")).testFreezeFrame(4, 1.2);
   });
   assert(
     await page
@@ -300,9 +300,9 @@ try {
   await page.evaluate(() => window.__gameTest.clearPodium());
   assert.equal(await page.locator(".ceremony-webgl").count(), 0);
   const fx = await page.evaluate(async () => {
-    const { drawAura } = await import("./cosmetic-effects.js?v=quiet-46"),
+    const { drawAura } = await import("./cosmetic-effects.js?v=auras-47"),
       { drawVFX, preparePresentationArt } =
-        await import("./presentation-art.js?v=quiet-46");
+        await import("./presentation-art.js?v=auras-47");
     await preparePresentationArt();
     const canvas = document.createElement("canvas");
     canvas.width = 1000;

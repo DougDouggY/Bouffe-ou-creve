@@ -3,7 +3,7 @@ import {
   COLLISION_SOUNDS,
   slideSound,
   collisionSound,
-} from "./sound-catalog.js?v=quiet-46";
+} from "./sound-catalog.js?v=auras-47";
 import {
   effectsGain,
   effectsSettings,
@@ -184,10 +184,10 @@ export function createMotionAudio({
       const time = now(),
         a = person?.networkSeat ?? person?.id ?? -1,
         b = other?.networkSeat ?? other?.id ?? -1;
-      const pair = Math.min(a, b) + ":" + Math.max(a, b);
+      const pair = turn + ":" + Math.min(a, b) + ":" + Math.max(a, b);
       if (
-        time - impactAt < 2500 ||
-        time - (impacts.get(pair) ?? -Infinity) < 6000 ||
+        time - impactAt < 400 ||
+        time - (impacts.get(pair) ?? -Infinity) < 900 ||
         active.size >= 3 ||
         queue.length > 1
       )
@@ -195,7 +195,7 @@ export function createMotionAudio({
       impacts.set(pair, time);
       impactAt = time;
       const unique = new Map(humans.map((p) => [p.networkSeat ?? p.id, p]));
-      for (const human of [...unique.values()].sort((a, b) => Number(b.id === 0) - Number(a.id === 0)).slice(0, 1))
+      for (const human of unique.values())
         enqueue({
           file: collisionSound(human.cosmetics.collision).file,
           remote: human.id !== 0,
