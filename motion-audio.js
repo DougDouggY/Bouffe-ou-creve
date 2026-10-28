@@ -3,7 +3,7 @@ import {
   COLLISION_SOUNDS,
   slideSound,
   collisionSound,
-} from "./sound-catalog.js?v=auras-47";
+} from "./sound-catalog.js?v=audio-48";
 import {
   effectsGain,
   effectsSettings,

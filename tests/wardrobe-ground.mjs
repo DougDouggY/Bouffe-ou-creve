@@ -86,14 +86,14 @@ try {
   );
   await page.waitForFunction(async () => {
     const { drawEquippedHead } =
-      await import("./head-sprites.js?v=auras-47");
+      await import("./head-sprites.js?v=audio-48");
     return drawEquippedHead(
       document.createElement("canvas").getContext("2d"),
       "none",
     );
   });
   await page.evaluate(async () => {
-    const art = await import("./presentation-art.js?v=auras-47");
+    const art = await import("./presentation-art.js?v=audio-48");
     await art.preparePresentationArt();
   });
   const render = await page.evaluate(() => {
@@ -201,8 +201,8 @@ try {
     /Le Prout/,
   );
 
-  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('slide-prout-47')&&a.currentTime>0));
-  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('slide-prout-47')).every(a=>a.loop===false)));
+  await page.waitForFunction(()=>window.__audios44.some(a=>a.src.includes('slide-prout-48')&&a.currentTime>0));
+  assert(await page.evaluate(()=>window.__audios44.filter(a=>a.src.includes('slide-prout-48')).every(a=>a.loop===false)));
   await page.locator('#shop-dialog [data-gourmand-page="trophies"]').click();
   await page.locator("#trophies-dialog").waitFor({ state: "visible" });
   assert(
@@ -250,7 +250,7 @@ try {
   });
   await page.locator("#multiplayer-close").click();
   const durations = await page.evaluate(async () => {
-    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=auras-47");
+    const { SLIDE_SOUNDS } = await import("./sound-catalog.js?v=audio-48");
     const ctx = new AudioContext(),
       result = [];
     for (const s of SLIDE_SOUNDS.filter((s) => !s.disabled)) {

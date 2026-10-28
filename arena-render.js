@@ -1,5 +1,5 @@
-import {drawVFX} from "./presentation-art.js?v=auras-47";
-import { cosmeticMotion } from "./cosmetic-effects.js?v=auras-47";
+import {drawVFX} from "./presentation-art.js?v=audio-48";
+import { cosmeticMotion } from "./cosmetic-effects.js?v=audio-48";
 import { isVisible } from "./visibility.js?v=filmovore-15";
 import { hungerZone } from "./hunger-games.js?v=filmovore-15";
 const images = new Map();

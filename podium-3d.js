@@ -5,10 +5,10 @@ import {
   AURA_IDS,
   vfxAtlas,
   ceremonyBackdrop,
-} from "./presentation-art.js?v=auras-47";
+} from "./presentation-art.js?v=audio-48";
 // Loaded only for the ceremony. Local Three.js (MIT), no CDN or game physics.
 import * as T from "./assets/vendor/three.module.min.js";
-import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=auras-47";
+import { COSMETIC_CATALOG } from "./cosmetic-catalog.js?v=audio-48";
 import { extraCosmeticImage } from "./cosmetics.js?v=podium-35";
 const HEAD_IDS = [
   "none",

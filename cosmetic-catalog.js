@@ -1,7 +1,7 @@
 import {
   EFFECT_COSMETICS,
   COSMETIC_SLOTS,
-} from "./cosmetic-effects.js?v=auras-47";
+} from "./cosmetic-effects.js?v=audio-48";
 // The Dressing catalog is shared by solo, multiplayer clients and server validation.
 import { EXTRA_COSMETICS } from "./cosmetics.js?v=podium-35";
 export const COSMETIC_CATALOG = [

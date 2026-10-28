@@ -1,0 +1,98 @@
+[
+  {
+    "file": "natural-slide-48.mp3",
+    "source": "natural-slide-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5058
+  },
+  {
+    "file": "move-spring-48.mp3",
+    "source": "move-spring-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5029
+  },
+  {
+    "file": "zip-out-soft-48.mp3",
+    "source": "zip-out-soft-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5008
+  },
+  {
+    "file": "move-spin-48.mp3",
+    "source": "move-spin-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.502
+  },
+  {
+    "file": "whoosh-fast-medium-48.mp3",
+    "source": "whoosh-fast-medium-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5056
+  },
+  {
+    "file": "natural-duck-48.mp3",
+    "source": "natural-duck-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5041
+  },
+  {
+    "file": "natural-pig-48.mp3",
+    "source": "natural-pig-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5167
+  },
+  {
+    "file": "natural-burp-48.mp3",
+    "source": "natural-burp-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5009
+  },
+  {
+    "file": "slide-prout-48.mp3",
+    "source": "slide-prout-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5159
+  },
+  {
+    "file": "slide-contresens-48.mp3",
+    "source": "slide-contresens-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5025
+  },
+  {
+    "file": "slide-doofy-48.mp3",
+    "source": "slide-doofy-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5032
+  },
+  {
+    "file": "slide-dalle-48.mp3",
+    "source": "slide-dalle-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.4993
+  },
+  {
+    "file": "slide-neons-48.mp3",
+    "source": "slide-neons-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5004
+  },
+  {
+    "file": "slide-youhou-48.mp3",
+    "source": "slide-youhou-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.4997
+  },
+  {
+    "file": "slide-bonnie-48.mp3",
+    "source": "slide-bonnie-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5031
+  },
+  {
+    "file": "slide-kisscount-48.mp3",
+    "source": "slide-kisscount-47.mp3",
+    "gain": 0.5,
+    "rmsRatio": 0.5028
+  }
+]

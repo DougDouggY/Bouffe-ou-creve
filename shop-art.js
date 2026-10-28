@@ -1,4 +1,4 @@
-import { drawAuraThumbnail } from "./presentation-art.js?v=auras-47";
+import { drawAuraThumbnail } from "./presentation-art.js?v=audio-48";
 // One illustrated atlas, fetched only when the Dressing needs a thumbnail.
 const ids = [
   ...["ketchup", "mayo", "gold", "flame", "toxic"].map((id) => "aura_" + id),

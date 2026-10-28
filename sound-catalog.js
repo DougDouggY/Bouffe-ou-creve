@@ -4,7 +4,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Glissade de la maison",
     price: 0,
-    file: "natural-slide-47.mp3",
+    file: "natural-slide-48.mp3",
     art: 0,
   },
   {
@@ -12,7 +12,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Ressort",
     price: 180,
-    file: "move-spring-47.mp3",
+    file: "move-spring-48.mp3",
     art: 1,
   },
   {
@@ -20,7 +20,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "La Savonnette",
     price: 200,
-    file: "zip-out-soft-47.mp3",
+    file: "zip-out-soft-48.mp3",
     art: 2,
   },
   {
@@ -28,7 +28,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "La Toupie",
     price: 220,
-    file: "move-spin-47.mp3",
+    file: "move-spin-48.mp3",
     art: 3,
   },
   {
@@ -36,7 +36,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Décollage express",
     price: 240,
-    file: "whoosh-fast-medium-47.mp3",
+    file: "whoosh-fast-medium-48.mp3",
     art: 4,
   },
   {
@@ -44,7 +44,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Canard",
     price: 220,
-    file: "natural-duck-47.mp3",
+    file: "natural-duck-48.mp3",
     naturalArt: 0,
   },
   {
@@ -52,7 +52,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Cochon",
     price: 240,
-    file: "natural-pig-47.mp3",
+    file: "natural-pig-48.mp3",
     naturalArt: 1,
   },
   {
@@ -60,7 +60,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Rot du Buffet",
     price: 260,
-    file: "natural-burp-47.mp3",
+    file: "natural-burp-48.mp3",
     naturalArt: 2,
   },
   {
@@ -68,7 +68,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Le Prout",
     price: 200,
-    file: "slide-prout-47.mp3",
+    file: "slide-prout-48.mp3",
     art: 5,
   },
   {
@@ -76,7 +76,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "En contresens",
     price: 220,
-    file: "slide-contresens-47.mp3",
+    file: "slide-contresens-48.mp3",
     art: 0,
   },
   {
@@ -84,7 +84,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Agent spécial Doofy",
     price: 240,
-    file: "slide-doofy-47.mp3",
+    file: "slide-doofy-48.mp3",
     art: 4,
   },
   {
@@ -92,7 +92,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "J’ai la dalle",
     price: 220,
-    file: "slide-dalle-47.mp3",
+    file: "slide-dalle-48.mp3",
     art: 0,
   },
   {
@@ -100,7 +100,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Sous les néons",
     price: 260,
-    file: "slide-neons-47.mp3",
+    file: "slide-neons-48.mp3",
     art: 3,
   },
   {
@@ -108,7 +108,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Youhouu",
     price: 220,
-    file: "slide-youhou-47.mp3",
+    file: "slide-youhou-48.mp3",
     art: 1,
   },
   {
@@ -116,7 +116,7 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Bonnie and Clyde",
     price: 240,
-    file: "slide-bonnie-47.mp3",
+    file: "slide-bonnie-48.mp3",
     art: 2,
   },
   {
@@ -124,13 +124,13 @@ export const SLIDE_SOUNDS = [
     slot: "slide",
     name: "Kisscount",
     price: 240,
-    file: "slide-kisscount-47.mp3",
+    file: "slide-kisscount-48.mp3",
     art: 3,
   },
 ].map((item) => ({
   ...item,
   gain: 1,
-  recordingGain: item.file?.startsWith("slide-") ? 0.175 : 0.35,
+  recordingGain: item.file?.startsWith("slide-") ? 0.0875 : 0.175,
 }));
 export const slideSound = (id) =>
   SLIDE_SOUNDS.find((s) => s.id === id && !s.disabled) || SLIDE_SOUNDS[0];

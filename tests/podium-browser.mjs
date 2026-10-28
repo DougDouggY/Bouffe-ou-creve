@@ -137,7 +137,7 @@ try {
   await page.locator("#close-shop").click();
   const visual = await page.evaluate(async () => {
     const { COSMETIC_CATALOG } =
-      await import("./cosmetic-catalog.js?v=auras-47");
+      await import("./cosmetic-catalog.js?v=audio-48");
     const { extraCosmeticImage } = await import("./cosmetics.js?v=podium-35");
     await Promise.all(
       COSMETIC_CATALOG.map((c) => extraCosmeticImage(c.id))
@@ -224,7 +224,7 @@ try {
   });
   assert.equal(outfitsChecked, 84);
   const visibility = await page.evaluate(async () => {
-    const { drawAura } = await import("./cosmetic-effects.js?v=auras-47");
+    const { drawAura } = await import("./cosmetic-effects.js?v=audio-48");
     const canvas = document.createElement("canvas");
     canvas.width = 100;
     canvas.height = 100;
@@ -242,9 +242,9 @@ try {
     "Aura should stay clearly visible at phone-sized avatar scale",
   );
   const trampoline = await page.evaluate(async () => {
-    const { drawArenaFloor } = await import("./arena-render.js?v=auras-47");
+    const { drawArenaFloor } = await import("./arena-render.js?v=audio-48");
     const { setCosmeticMotion } =
-      await import("./cosmetic-effects.js?v=auras-47");
+      await import("./cosmetic-effects.js?v=audio-48");
     const g = new window.__gameTest.Game(1400, 900, () => 0.5, {
       mapId: "trampoline",
       count: 8,

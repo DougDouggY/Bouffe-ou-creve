@@ -1,8 +1,8 @@
-import { drawGroundAura } from "./presentation-art.js?v=auras-47";
+import { drawGroundAura } from "./presentation-art.js?v=audio-48";
 import {
   SLIDE_SOUNDS,
   COLLISION_SOUNDS,
-} from "./sound-catalog.js?v=auras-47";
+} from "./sound-catalog.js?v=audio-48";
 export const COSMETIC_SLOTS = [
   "hat",
   "outfit",

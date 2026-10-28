@@ -293,9 +293,9 @@ try {
       () => !document.querySelector("#multiplayer-create").disabled,
     );
   }
-  assert(resources.has("game.js?v=auras-47"));
-  assert(resources.has("style.css?v=auras-47"));
-  assert(resources.has("multiplayer-client.js?v=auras-47"));
+  assert(resources.has("game.js?v=audio-48"));
+  assert(resources.has("style.css?v=audio-48"));
+  assert(resources.has("multiplayer-client.js?v=audio-48"));
   assert(resources.has("multiplayer-protocol.js?v=social-28"));
   async function dress(page, hat, outfit, extra = {}) {
     await openGourmand(page);

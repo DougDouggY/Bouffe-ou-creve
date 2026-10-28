@@ -106,7 +106,7 @@ test("new slides are quieter, fade in and out, and stretch gently with synchroni
   assert.deepEqual(person, before);
   voice.finish();
   bus.reset();
-  assert.equal(SLIDE_SOUNDS.filter((s) => s.recordingGain === 0.175).length, 8);
+  assert.equal(SLIDE_SOUNDS.filter((s) => s.recordingGain === 0.0875).length, 8);
 });
 test("both equipped humans contribute their own collision voice; none, AI and peer mute remain silent", async () => {
   changeEffects({ volume: 0.5, others: true });
